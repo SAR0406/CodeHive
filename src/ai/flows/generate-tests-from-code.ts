@@ -32,13 +32,13 @@ const prompt = ai.definePrompt({
   output: {schema: GenerateTestsFromCodeOutputSchema},
   prompt: `You are an AI test generator expert. You will generate unit tests for the given code.
 
-      Code:
-      ```{{{language}}}
-      {{{code}}}
-      ```
+Code:
+\`\`\`{{language}}
+{{{code}}}
+\`\`\`
 
-      Tests:
-      `,
+Tests:
+`,
 });
 
 const generateTestsFromCodeFlow = ai.defineFlow(
