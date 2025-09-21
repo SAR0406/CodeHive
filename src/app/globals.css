@@ -4,53 +4,41 @@
 
 @layer base {
   :root {
-    --background: 0 0% 0%;
+    --background: 240 4% 6%;
     --foreground: 0 0% 98%;
+
     --card: 240 4% 10%;
     --card-foreground: 0 0% 95%;
-    --popover: 20 14% 4%;
-    --popover-foreground: 0 0% 98%;
+
+    --popover: 240 4% 10%;
+    --popover-foreground: 0 0% 95%;
+
     --primary: 0 0% 98%;
     --primary-foreground: 0 0% 9%;
+
     --secondary: 240 4% 15%;
-    --secondary-foreground: 0 0% 90%;
-    --muted: 240 4% 12%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 4% 15%;
     --muted-foreground: 0 0% 65%;
-    --accent: 0 0% 98%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 72% 51%;
+    
+    --accent: 240 4% 15%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
+
     --border: 240 4% 15%;
-    --input: 240 4% 12%;
+    --input: 240 4% 15%;
     --ring: 0 0% 83%;
+
+    --radius: 0.75rem;
 
     --chart-1: 0 0% 80%;
     --chart-2: 0 0% 70%;
     --chart-3: 0 0% 60%;
     --chart-4: 0 0% 50%;
     --chart-5: 0 0% 40%;
-  }
-
-  .dark {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 98%;
-    --card: 240 4% 10%;
-    --card-foreground: 0 0% 95%;
-    --popover: 20 14% 4%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 240 4% 15%;
-    --secondary-foreground: 0 0% 90%;
-    --muted: 240 4% 12%;
-    --muted-foreground: 0 0% 65%;
-    --accent: 0 0% 98%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 4% 15%;
-    --input: 240 4% 12%;
-    --ring: 0 0% 83%;
   }
 }
 
@@ -60,5 +48,22 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  .app-container {
+    background-image:
+      radial-gradient(ellipse at top, transparent 60%, hsl(var(--background))),
+      radial-gradient(ellipse at bottom, hsl(var(--background)), transparent),
+      repeating-radial-gradient(circle at center, hsl(var(--foreground) / 0.04), hsl(var(--foreground) / 0.04) 1px, transparent 1px, transparent 100%);
+    background-size: 100% 100%, 100% 100%, 10px 10px;
+    animation: move-particles 30s linear infinite;
+  }
+
+  @keyframes move-particles {
+    0% {
+      background-position: 0 0, 0 0, 0 0;
+    }
+    100% {
+      background-position: 0 0, 0 0, 100px 100px;
+    }
   }
 }
