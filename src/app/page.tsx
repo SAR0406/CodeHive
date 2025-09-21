@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { CodeHiveIcon } from '@/components/icons';
 import Link from 'next/link';
-import { ArrowRight, Code, LayoutDashboard, Star } from 'lucide-react';
+import { ArrowRight, Code, LayoutDashboard } from 'lucide-react';
 import Image from 'next/image';
 
 const logos = [
@@ -14,9 +14,12 @@ const logos = [
 
 export default function LandingPage() {
   return (
-    <div className="dark bg-transparent text-foreground min-h-screen flex flex-col overflow-x-hidden">
+    <div className="dark bg-background text-foreground min-h-screen flex flex-col overflow-x-hidden">
+       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
+       <div className="absolute left-0 top-0 -z-10 h-2/3 w-full bg-gradient-to-b from-primary/10 to-transparent" />
+
       <div className="flex flex-col flex-1">
-        <header className="sticky top-0 z-50 w-full bg-background/30 backdrop-blur-lg border-b border-white/10">
+        <header className="sticky top-0 z-50 w-full bg-transparent">
           <div className="container flex h-20 max-w-screen-2xl items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <CodeHiveIcon className="size-8 text-primary" />
@@ -42,9 +45,9 @@ export default function LandingPage() {
                   Log In
                 </Link>
               </Button>
-               <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_hsl(var(--primary)/0.4)]">
+               <Button asChild variant="outline" className="text-primary border-primary hover:bg-primary/10 hover:text-primary">
                 <Link href="/dashboard">
-                  Start Building <ArrowRight className="ml-2" />
+                  Go to Dashboard <ArrowRight className="ml-2" />
                 </Link>
               </Button>
             </div>
@@ -53,28 +56,22 @@ export default function LandingPage() {
 
         <main className="flex-1 flex flex-col">
           <section className="relative py-24 md:py-32 lg:py-40 text-center">
-            <div className="absolute inset-0 -z-10 overflow-hidden">
-                <div className="absolute inset-0 bg-grid-white/5 [mask-image:radial-gradient(ellipse_100%_50%_at_50%_50%,#000_20%,transparent_70%)]" />
-            </div>
-
             <div className="container relative flex flex-col items-center">
-                <h1 className="font-headline font-bold text-5xl md:text-7xl bg-clip-text text-transparent bg-gradient-to-b from-white to-neutral-300 leading-tight max-w-4xl">
-                Build & Collaborate with AI
+                <h1 className="font-headline font-bold text-5xl md:text-7xl lg:text-8xl bg-clip-text text-transparent bg-gradient-to-b from-white to-neutral-400 leading-tight max-w-4xl">
+                AI Beyond Your <br/> Business Limits
                 </h1>
                 <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl">
-                An open-source platform for software creation, learning, and collaboration, supercharged by generative AI.
+                Achieve more with less. Our intelligent automation allows you to innovate, generate and evolve your business effectively, and step into the future of technology.
                 </p>
                 <div className="mt-10 flex flex-wrap justify-center gap-4">
                 <Button size="lg" asChild className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_hsl(var(--primary)/0.4)] transition-all duration-300 hover:shadow-[0_0_30px_hsl(var(--primary)/0.6)]">
                     <Link href="/dashboard">
-                    <LayoutDashboard className="mr-2" />
-                    Explore Demo
+                    Start a Project
                     </Link>
                 </Button>
-                <Button size="lg" asChild variant="outline" className="bg-white/5 border-white/20 hover:bg-white/10 text-white">
+                <Button size="lg" asChild variant="outline" className="bg-transparent border-white/50 hover:bg-white/10 text-white">
                     <Link href="#">
-                    <Code className="mr-2" />
-                    View on GitHub
+                    Explore our Solution
                     </Link>
                 </Button>
                 </div>
