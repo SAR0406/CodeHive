@@ -17,7 +17,7 @@ export function CodeHiveIcon(props: SVGProps<SVGSVGElement>) {
       <defs>
         <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 1 }} />
-          <stop offset="100%" style={{ stopColor: 'hsl(var(--accent))', stopOpacity: 1 }} />
+          <stop offset="100%" style={{ stopColor: 'hsl(var(--accent))', stopOpacity: 0.5 }} />
         </linearGradient>
       </defs>
       <path d="M12 2l10 6.5v7L12 22 2 15.5v-7L12 2z" stroke="url(#icon-gradient)"></path>

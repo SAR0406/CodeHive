@@ -4,32 +4,32 @@
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
+    --background: 240 10% 2%;
     --foreground: 0 0% 98%;
-    --card: 240 10% 6%;
+    --card: 240 10% 4%;
     --card-foreground: 0 0% 95%;
-    --popover: 240 10% 3.9%;
+    --popover: 240 10% 2%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 90%;
-    --primary-foreground: 240 10% 3.9%;
+    --primary: 150 100% 45%;
+    --primary-foreground: 240 10% 2%;
     --secondary: 240 4% 15%;
     --secondary-foreground: 0 0% 90%;
     --muted: 240 4% 12%;
     --muted-foreground: 0 0% 65%;
-    --accent: 0 0% 80%;
-    --accent-foreground: 240 10% 3.9%;
+    --accent: 150 100% 45%;
+    --accent-foreground: 240 10% 2%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 4% 15%;
     --input: 240 4% 12%;
-    --ring: 0 0% 90%;
+    --ring: 150 100% 45%;
     --radius: 0.5rem;
 
-    --chart-1: 0 0% 90%;
-    --chart-2: 0 0% 80%;
-    --chart-3: 0 0% 60%;
-    --chart-4: 0 0% 50%;
-    --chart-5: 0 0% 40%;
+    --chart-1: 150 100% 45%;
+    --chart-2: 150 80% 35%;
+    --chart-3: 150 60% 25%;
+    --chart-4: 150 40% 20%;
+    --chart-5: 150 30% 15%;
 
     --sidebar-background: 240 10% 3.9%;
     --sidebar-foreground: 0 0% 98%;
@@ -42,32 +42,32 @@
   }
 
   .dark {
-    --background: 240 10% 3.9%;
+    --background: 240 10% 2%;
     --foreground: 0 0% 98%;
-    --card: 240 10% 6%;
+    --card: 240 10% 4%;
     --card-foreground: 0 0% 95%;
-    --popover: 240 10% 3.9%;
+    --popover: 240 10% 2%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 90%;
-    --primary-foreground: 240 10% 3.9%;
+    --primary: 150 100% 45%;
+    --primary-foreground: 240 10% 2%;
     --secondary: 240 4% 15%;
     --secondary-foreground: 0 0% 90%;
     --muted: 240 4% 12%;
     --muted-foreground: 0 0% 65%;
-    --accent: 0 0% 80%;
-    --accent-foreground: 240 10% 3.9%;
+    --accent: 150 100% 45%;
+    --accent-foreground: 240 10% 2%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 4% 15%;
     --input: 240 4% 12%;
-    --ring: 0 0% 90%;
+    --ring: 150 100% 45%;
     --radius: 0.5rem;
 
-    --chart-1: 0 0% 90%;
-    --chart-2: 0 0% 80%;
-    --chart-3: 220 13% 40%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 150 100% 45%;
+    --chart-2: 150 80% 35%;
+    --chart-3: 150 60% 25%;
+    --chart-4: 150 40% 20%;
+    --chart-5: 150 30% 15%;
 
     --sidebar-background: 240 10% 3.9%;
     --sidebar-foreground: 0 0% 98%;
@@ -106,11 +106,10 @@
     left: 0;
     z-index: -20;
     background:
-      radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--primary) / 0.05), transparent),
-      radial-gradient(ellipse 80% 50% at 50% 120%, hsl(var(--accent) / 0.05), transparent);
+      radial-gradient(ellipse 80% 50% at 50% 120%, hsl(var(--primary) / 0.1), transparent);
     animation: glow 10s ease-in-out infinite;
   }
-
+  
   .sparkle-bg {
     position: fixed;
     width: 100%;
@@ -118,36 +117,21 @@
     top: 0;
     left: 0;
     z-index: -10;
-    background-image:
-      radial-gradient(circle at 10% 20%, hsl(0 0% 100% / 0.03), transparent 0.5px),
-      radial-gradient(circle at 90% 30%, hsl(0 0% 100% / 0.03), transparent 0.5px),
-      radial-gradient(circle at 50% 80%, hsl(0 0% 100% / 0.03), transparent 0.5px),
-      radial-gradient(circle at 25% 60%, hsl(0 0% 100% / 0.02), transparent 0.5px),
-      radial-gradient(circle at 75% 50%, hsl(0 0% 100% / 0.02), transparent 0.5px);
-    background-size: 150% 150%;
-    background-position: 0 0;
-    animation: sparkle 20s linear infinite;
   }
 
   @keyframes glow {
     0% {
-      transform: scale(1);
+      transform: translateY(0) scale(1);
       opacity: 0.8;
     }
     50% {
-      transform: scale(1.5);
+      transform: translateY(-20%) scale(1.5);
       opacity: 1;
     }
     100% {
-      transform: scale(1);
+      transform: translateY(0) scale(1);
       opacity: 0.8;
     }
-  }
-
-  @keyframes sparkle {
-    0% { background-position: 0% 0%; }
-    50% { background-position: 100% 100%; }
-    100% { background-position: 0% 0%; }
   }
 
   .card-glow {
