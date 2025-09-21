@@ -80,8 +80,8 @@ export default function LandingPage() {
 
       <main className="flex-1 flex flex-col z-10 px-4">
         <section className="w-full py-20 md:py-32 relative">
-          <div className="container mx-auto grid md:grid-cols-5 gap-12 items-center relative z-10">
-            <div className="flex flex-col items-start text-left gap-6 md:col-span-2">
+          <div className="container mx-auto grid md:grid-cols-1 gap-12 items-center relative z-10">
+            <div className="flex flex-col items-center text-center gap-6">
                 <div className="inline-flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm">
                     <div className="flex -space-x-2 overflow-hidden">
                         <Avatar className="inline-block h-6 w-6 rounded-full ring-2 ring-card">
@@ -113,11 +113,11 @@ export default function LandingPage() {
                 </Button>
               </div>
             </div>
-             <div className="relative h-[400px] md:h-[600px] flex items-center justify-center md:col-span-3">
-                {splineViewerHtml && <div className="absolute inset-0 w-full h-full" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />}
+             <div className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none">
+                {splineViewerHtml && <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />}
             </div>
           </div>
-           <Card className="absolute bottom-0 left-1/2 -translate-x-1/2 md:left-20 md:translate-x-0 w-[300px] glass-container z-20">
+           <Card className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[300px] glass-container z-20">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardContent className="p-0">
                         <div className="text-sm text-muted-foreground">Total traffic</div>
@@ -191,7 +191,7 @@ export default function LandingPage() {
             <h4 className="font-semibold">Company</h4>
             <Link href="#" className="text-muted-foreground hover:text-foreground">About</Link>
             <Link href="#" className="text-muted-foreground hover:text-foreground">Blog</Link>
-            <Link href="#" className="text-muted-foreground hover:text-foreground">Careers</Link>
+            <Link href="#" className="text-muted-foreground hovertext-foreground">Careers</Link>
           </div>
           <div className="flex flex-col gap-3">
              <h4 className="font-semibold">Product</h4>
