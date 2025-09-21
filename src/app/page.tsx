@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, BarChart2, Zap, ShieldCheck, Accessibility, Scaling, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
 
 const features = [
   {
@@ -48,7 +49,12 @@ const companyLogos = [
 
 
 export default function LandingPage() {
-  const splineViewerHtml = `<spline-viewer loading-anim-type="spinner-small-dark" url="https://prod.spline.design/A5b2RUW3uQJ0T33p/scene.splinecode"></spline-viewer>`;
+  const [splineViewerHtml, setSplineViewerHtml] = useState('');
+
+  useEffect(() => {
+    // Spline viewer is loaded only on the client-side to prevent SSR issues
+    setSplineViewerHtml(`<spline-viewer loading-anim-type="spinner-small-dark" url="https://prod.spline.design/A5b2RUW3uQJ0T33p/scene.splinecode"></spline-viewer>`);
+  }, []);
   
   return (
     <div className="dark bg-background text-foreground min-h-screen flex flex-col">
@@ -89,7 +95,7 @@ export default function LandingPage() {
 
       <main className="flex-1 flex flex-col z-10 px-4">
         <section className="w-full py-20 md:py-32 relative">
-           <div className="absolute top-0 left-0 w-full h-full z-0 opacity-50" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />
+           {splineViewerHtml && <div className="absolute top-0 left-0 w-full h-full z-0 opacity-50" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />}
           <div className="container mx-auto text-center flex flex-col items-center gap-8 relative z-10">
             <h1 className="font-headline font-bold text-5xl md:text-6xl lg:text-7xl tracking-tighter leading-tight">
               Build, Ship, and Collaborate <br /> Like Never Before
