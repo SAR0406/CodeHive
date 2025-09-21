@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'CodeHive',
@@ -49,6 +50,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@300..700&display=swap"
           rel="stylesheet"
         />
+        <Script type="module" src="https://unpkg.com/@splinetool/viewer@1.10.64/build/spline-viewer.js" />
       </head>
       <body className="font-body antialiased dark bg-background">
         {children}

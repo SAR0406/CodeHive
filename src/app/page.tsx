@@ -40,6 +40,8 @@ const integrations = [
 ]
 
 export default function LandingPage() {
+  const splineViewerHtml = `<spline-viewer loading-anim-type="spinner-small-dark" url="https://prod.spline.design/gm0ksJtPHZQblNTV/scene.splinecode"></spline-viewer>`;
+  
   return (
     <div className="dark bg-background text-foreground min-h-screen flex flex-col">
       <header className="sticky top-0 z-50 w-full p-4">
@@ -65,6 +67,7 @@ export default function LandingPage() {
           <div className="hidden md:flex items-center justify-end gap-4">
             <Button variant="ghost" asChild>
                 <Link href="#">
+                    <BookOpen />
                     Book a call
                 </Link>
             </Button>
@@ -79,9 +82,7 @@ export default function LandingPage() {
 
       <main className="flex-1 flex flex-col z-10 px-4">
         <section className="w-full py-20 md:py-32 relative">
-            <div className="absolute top-0 left-0 w-full h-full z-0">
-                <iframe src='https://my.spline.design/untitled-fbbab4dbf9574e6280abdb64165f6df-5c58b4f2c98099a53d5a2f5888e2c0f5/' frameBorder='0' width='100%' height='100%'></iframe>
-            </div>
+           <div className="absolute top-0 left-0 w-full h-full z-0" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />
           <div className="container mx-auto text-center flex flex-col items-center gap-8 relative z-10">
             
             <div className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground bg-card/80 border border-border px-3 py-1 rounded-full">
@@ -229,7 +230,7 @@ export default function LandingPage() {
           </div>
           <div className="flex flex-col gap-3">
             <h4 className="font-semibold text-white">Need consulting?</h4>
-            <Button variant="link" className="p-0 justify-start text-muted-foreground hover:text-white h-auto">Book a call</Button>
+            <Button variant="link" className="p-0 justify-start text-muted-foreground hover:text-white h-auto"><BookOpen className="mr-2" /> Book a call</Button>
           </div>
           <div className="flex flex-col gap-3">
              <h4 className="font-semibold text-white">Launching a product?</h4>
