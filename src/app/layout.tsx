@@ -7,6 +7,34 @@ export const metadata: Metadata = {
   description: 'Build, learn, and collaborate with AI.',
 };
 
+const Stars = () => {
+  const stars = Array.from({ length: 100 }).map((_, i) => ({
+    id: i,
+    top: `${Math.random() * 100}%`,
+    left: `${Math.random() * 100}%`,
+    delay: `${Math.random() * 2.4}s`,
+  }));
+
+  return (
+    <div className="stars" aria-hidden="true">
+      {stars.map((star) => (
+        <div
+          key={star.id}
+          className="star"
+          style={
+            {
+              '--star-top': star.top,
+              '--star-left': star.left,
+              '--star-delay': star.delay,
+            } as React.CSSProperties
+          }
+        />
+      ))}
+    </div>
+  );
+};
+
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,6 +51,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased dark bg-background">
+        <Stars />
         {children}
         <Toaster />
       </body>

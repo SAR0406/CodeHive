@@ -4,32 +4,32 @@
 
 @layer base {
   :root {
-    --background: 240 6% 10%; /* Deep charcoal */
-    --foreground: 0 0% 98%; /* White */
+    --background: 0 0% 4%; /* Near black for the body */
+    --foreground: 0 0% 98%;
 
-    --card: 240 6% 14%; /* Slightly lighter charcoal for cards */
+    --card: 240 4% 14% / 0.5; /* Semi-transparent charcoal for cards */
     --card-foreground: 0 0% 95%;
 
     --popover: 240 6% 10%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 0 0% 98%; /* White */
-    --primary-foreground: 240 6% 10%; /* Black */
+    --primary: 0 0% 98%; /* White for primary actions */
+    --primary-foreground: 0 0% 9%;
 
-    --secondary: 240 6% 20%;
+    --secondary: 240 5% 18%; /* Dark gray for secondary elements */
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 240 6% 20%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 240 5% 22%;
+    --muted-foreground: 0 0% 60%;
     
-    --accent: 240 6% 25%;
+    --accent: 240 4% 20%; /* Slightly lighter gray for accents */
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 6% 20%;
-    --input: 240 6% 20%;
+    --border: 240 4% 25%; /* Soft border color */
+    --input: 240 5% 18%;
     --ring: 0 0% 83%;
 
     --radius: 0.75rem;
@@ -48,9 +48,56 @@
   }
   body {
     @apply bg-background text-foreground;
+    overflow: hidden; /* Prevent body scroll with glass container */
   }
   .app-container {
-    background-image:
-      radial-gradient(ellipse at 50% 50%, hsl(var(--background)), transparent 70%);
+    height: 100vh;
+    width: 100vw;
+    overflow-y: auto;
+    overflow-x: hidden;
+    perspective: 10px;
+    background-color: hsl(var(--background));
+    position: relative;
+  }
+
+  .stars {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    background: transparent;
+  }
+
+  .stars .star {
+    position: absolute;
+    left: var(--star-left);
+    top: var(--star-top);
+    width: 1px;
+    height: 1px;
+    background-color: white;
+    border-radius: 50%;
+    animation: twinkle 1.2s infinite;
+    opacity: 0;
+    animation-delay: var(--star-delay);
+  }
+
+  @keyframes twinkle {
+    0%, 20%, 80%, 100% { opacity: 0; }
+    50% { opacity: 0.6; }
+  }
+}
+
+@layer utilities {
+  .glass-container {
+    background-color: hsl(var(--card));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   }
 }

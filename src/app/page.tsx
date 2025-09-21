@@ -2,33 +2,39 @@ import { Button } from '@/components/ui/button';
 import { CodeHiveIcon } from '@/components/icons';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Briefcase, Mountain, Zap } from 'lucide-react';
+import { ArrowRight, CheckCircle } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 
 export default function LandingPage() {
   return (
     <div className="dark bg-background text-foreground min-h-screen flex flex-col overflow-x-hidden">
       <div className="app-container absolute inset-0 z-0" />
       <header className="sticky top-0 z-50 w-full">
-        <div className="container flex h-20 max-w-screen-xl items-center justify-between mx-auto">
+        <div className="container flex h-20 max-w-screen-xl items-center justify-between mx-auto px-4">
           <Link href="/" className="flex items-center gap-2">
             <CodeHiveIcon className="size-7 text-white" />
             <span className="font-bold text-lg font-headline text-white">CodeHive</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
             <Link href="#" className="text-muted-foreground hover:text-white transition-colors">
-              About Us
+              Features
             </Link>
             <Link href="#" className="text-muted-foreground hover:text-white transition-colors">
-              Products
+              Pricing
             </Link>
             <Link href="#" className="text-muted-foreground hover:text-white transition-colors">
-              News
+              Docs
             </Link>
-            <Link href="#" className="text-muted-foreground hover:text-white transition-colors">
-              Contact
+             <Link href="#" className="text-muted-foreground hover:text-white transition-colors">
+              Company
             </Link>
           </nav>
           <div className="hidden md:flex items-center justify-end gap-4">
+            <Button variant="ghost" asChild>
+                <Link href="#">
+                    Log in
+                </Link>
+            </Button>
             <Button asChild className="bg-primary text-primary-foreground hover:bg-neutral-200">
               <Link href="/dashboard">
                 Discover Platform
@@ -38,66 +44,59 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col justify-center z-10">
-        <section className="w-full">
-          <div className="container grid grid-cols-1 md:grid-cols-2 gap-12 items-center max-w-screen-xl mx-auto">
-            <div className="flex flex-col gap-8">
-              <h1 className="font-headline font-extrabold text-5xl md:text-6xl lg:text-7xl text-white tracking-tighter">
-                Build better sites, faster
-              </h1>
-              <div className="grid grid-cols-2 gap-8 text-sm text-muted-foreground">
-                 <p>
-                  Harness the power of AI to create sophisticated, high-performance applications with unparalleled ease and elegance.
-                </p>
-                <p>
-                  Our platform provides the tools and infrastructure to bring your most ambitious software visions to life.
-                </p>
-              </div>
-              <div className="flex items-center gap-4 mt-6">
-                <Button size="lg" variant="outline" asChild className="bg-transparent hover:bg-white hover:text-black border-2 border-white text-white">
-                  <Link href="#">
-                    Get In Touch
-                  </Link>
-                </Button>
-              </div>
-            </div>
-            <div className="relative aspect-square">
-              <Image
-                src="https://images.unsplash.com/photo-1740059024857-9cdb2303a16e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxOHx8YnVpbGQlMjB5b3VyJTIwd2Vic2l0ZXMlMjB3aXRoJTIwQUl8ZW58MHx8fHwxNzU4NDI4NTA1fDA&ixlib=rb-4.1.0&q=80&w=1080"
-                alt="Luxury Abstract AI"
-                fill
-                data-ai-hint="dark dashboard UI"
-                className="object-contain"
-              />
-            </div>
-          </div>
-        </section>
-        
-        <section className="py-24">
-            <div className="container max-w-screen-xl mx-auto">
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-8 items-center justify-items-center">
-                    <div className="flex items-center gap-2 text-muted-foreground font-bold text-2xl grayscale opacity-60">
-                        <Briefcase />
-                        <span>Workday</span>
-                    </div>
-                     <div className="flex items-center gap-2 text-muted-foreground font-bold text-2xl grayscale opacity-60">
-                        <Mountain />
-                        <span>Everest</span>
-                    </div>
-                     <div className="flex items-center gap-2 text-muted-foreground font-bold text-2xl grayscale opacity-60">
-                        <Zap />
-                        <span>PowerCo</span>
-                    </div>
-                     <div className="flex items-center gap-2 text-muted-foreground font-bold text-2xl grayscale opacity-60">
-                        <CodeHiveIcon className="size-8"/>
-                        <span>Innovate</span>
-                    </div>
-                     <div className="flex items-center gap-2 text-muted-foreground font-bold text-2xl grayscale opacity-60">
-                        <Briefcase />
-                        <span>Quantum</span>
-                    </div>
+      <main className="flex-1 flex flex-col justify-center z-10 px-4">
+        <section className="w-full py-20 md:py-32">
+          <div className="container max-w-screen-md mx-auto text-center flex flex-col items-center gap-8">
+            
+            <div className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground bg-card/80 border border-border px-3 py-1 rounded-full">
+                <div className="flex -space-x-2 overflow-hidden">
+                    <Image className="inline-block h-5 w-5 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p1/40/40" alt="p1" width={20} height={20}/>
+                    <Image className="inline-block h-5 w-5 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p2/40/40" alt="p2" width={20} height={20}/>
+                    <Image className="inline-block h-5 w-5 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p3/40/40" alt="p3" width={20} height={20}/>
                 </div>
+                <span>Trusted by 35,000+ people</span>
             </div>
+
+            <h1 className="font-headline font-bold text-5xl md:text-6xl lg:text-7xl text-white tracking-tighter leading-tight">
+              Build better sites, faster
+            </h1>
+            <p className="max-w-2xl text-lg text-muted-foreground">
+              An open source content management system that uses AI to automate various aspects of content creation, optimization, and distribution.
+            </p>
+            <div className="flex items-center gap-4">
+              <Button size="lg" asChild className="bg-primary text-primary-foreground hover:bg-neutral-200">
+                <Link href="/dashboard">
+                  Get started for free <ArrowRight className="ml-2"/>
+                </Link>
+              </Button>
+            </div>
+            
+            <Card className="mt-16 w-full max-w-4xl p-4 glass-container">
+                 <div className="flex justify-between items-center p-2 border-b border-border/50">
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                    <div className="text-sm text-muted-foreground flex items-center gap-4">
+                        <span><CheckCircle className="inline mr-1 h-4 w-4"/> Create Content</span>
+                        <span><CheckCircle className="inline mr-1 h-4 w-4"/> Content Optimization</span>
+                        <span><CheckCircle className="inline mr-1 h-4 w-4"/> Distribute</span>
+                    </div>
+                    <div></div>
+                 </div>
+                 <div className="p-4">
+                    <Image
+                        src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop"
+                        alt="Dashboard UI"
+                        width={1200}
+                        height={600}
+                        data-ai-hint="dashboard charts"
+                        className="rounded-lg shadow-2xl"
+                    />
+                 </div>
+            </Card>
+          </div>
         </section>
       </main>
     </div>
