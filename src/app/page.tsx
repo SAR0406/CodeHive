@@ -1,14 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { CodeHiveIcon } from '@/components/icons';
 import Link from 'next/link';
-import { ArrowRight, Code, Zap } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 
 export default function LandingPage() {
   return (
     <div className="dark bg-background text-foreground min-h-screen flex flex-col sparkle-bg">
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-transparent backdrop-blur-sm supports-[backdrop-filter]:bg-transparent">
         <div className="container flex h-16 max-w-screen-2xl items-center">
           <Link href="/" className="flex items-center gap-2 mr-6">
             <CodeHiveIcon className="size-8 text-foreground" />
@@ -18,10 +17,10 @@ export default function LandingPage() {
             <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
               Features
             </Link>
-            <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/marketplace" className="text-muted-foreground hover:text-foreground transition-colors">
               Marketplace
             </Link>
-             <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+             <Link href="/learn" className="text-muted-foreground hover:text-foreground transition-colors">
               Learn
             </Link>
             <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -43,8 +42,7 @@ export default function LandingPage() {
 
       <main className="flex-1">
         <div className="container relative pt-24 pb-40 md:pt-32">
-           <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] rounded-full bg-accent/5 blur-3xl -z-10" />
-           <div className="absolute bottom-0 right-0 translate-x-1/3 translate-y-1/2 w-[800px] h-[800px] rounded-full bg-primary/5 blur-3xl -z-10" />
+           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/3 w-[800px] h-[800px] rounded-full bg-primary/5 blur-3xl -z-10" />
 
           <div className="mx-auto max-w-4xl text-center">
              <div className="flex justify-center items-center gap-2 mb-4 text-sm text-muted-foreground">
@@ -56,13 +54,13 @@ export default function LandingPage() {
               <span>Trusted by 10,000+ builders</span>
             </div>
             <h1 className="font-headline font-bold text-5xl md:text-7xl mt-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-neutral-400 leading-tight">
-              Build, Collaborate, and Monetize Your Code
+              Managing your projects with AI
             </h1>
             <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              An open source platform that uses AI to automate various aspects of software creation, skill acquisition, and project collaboration.
+             An open source platform to automate various aspects of software creation, skill acquisition, and project collaboration.
             </p>
             <div className="mt-10 flex justify-center gap-4">
-              <Button size="lg" asChild>
+              <Button size="lg" asChild className="bg-white text-black hover:bg-neutral-200">
                 <Link href="/dashboard">
                   Get Started for Free
                   <ArrowRight className="ml-2" />
@@ -72,9 +70,9 @@ export default function LandingPage() {
           </div>
           
           <div className="relative mt-24">
-             <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-primary/10 via-transparent to-accent/10 rounded-xl blur-2xl -z-10" />
+             <div className="absolute -inset-4 w-full h-full bg-gradient-to-br from-primary/10 via-transparent to-accent/10 rounded-2xl blur-2xl -z-10" />
             <div
-              className="rounded-xl border-2 border-border/80 bg-background/50 shadow-2xl shadow-black/40 backdrop-blur-md"
+              className="rounded-xl border border-white/10 bg-white/5 shadow-2xl shadow-black/80 backdrop-blur-lg"
             >
               <div className="p-2">
                 <Image
@@ -83,7 +81,7 @@ export default function LandingPage() {
                   width={1200}
                   height={800}
                   data-ai-hint="dark dashboard UI"
-                  className="rounded-lg border border-border"
+                  className="rounded-lg border border-white/10"
                 />
               </div>
             </div>
@@ -91,7 +89,7 @@ export default function LandingPage() {
         </div>
       </main>
       
-      <footer className="border-t border-border/40 bg-background/50">
+      <footer className="border-t border-white/10 bg-transparent">
         <div className="container py-8 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} CodeHive. All rights reserved.</p>
             <div className="flex gap-4">

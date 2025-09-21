@@ -41,10 +41,10 @@
   }
 
   .dark {
-    --background: 225 10% 8%; /* Near-black */
-    --foreground: 0 0% 98%; /* White */
+    --background: 225 10% 6%; /* Deep Charcoal */
+    --foreground: 0 0% 90%; /* Light Gray */
     --card: 225 10% 10%;
-    --card-foreground: 0 0% 98%;
+    --card-foreground: 0 0% 90%;
     --popover: 225 10% 8%;
     --popover-foreground: 0 0% 98%;
     --primary: 0 0% 90%; /* Light gray for primary buttons */
