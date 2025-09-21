@@ -80,8 +80,8 @@ export default function LandingPage() {
 
       <main className="flex-1 flex flex-col z-10 px-4">
         <section className="w-full py-20 md:py-32 relative">
-          <div className="container mx-auto grid md:grid-cols-2 gap-12 items-center relative z-10">
-            <div className="flex flex-col items-start text-left gap-6">
+          <div className="container mx-auto grid md:grid-cols-5 gap-12 items-center relative z-10">
+            <div className="flex flex-col items-start text-left gap-6 md:col-span-2">
                 <div className="inline-flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm">
                     <div className="flex -space-x-2 overflow-hidden">
                         <Avatar className="inline-block h-6 w-6 rounded-full ring-2 ring-card">
@@ -113,7 +113,7 @@ export default function LandingPage() {
                 </Button>
               </div>
             </div>
-             <div className="relative h-[400px] md:h-full flex items-center justify-center">
+             <div className="relative h-[400px] md:h-[600px] flex items-center justify-center md:col-span-3">
                 {splineViewerHtml && <div className="absolute inset-0 w-full h-full" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />}
             </div>
           </div>
