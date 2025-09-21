@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card';
 export default function LandingPage() {
   return (
     <div className="dark bg-background text-foreground min-h-screen flex flex-col">
-      <div className="stars absolute inset-0 z-0" />
+      <div className="stars absolute inset-0 -z-10" />
       <header className="sticky top-0 z-50 w-full">
         <div className="container flex h-20 max-w-screen-xl items-center justify-between mx-auto px-4">
           <Link href="/" className="flex items-center gap-2">
@@ -17,7 +17,10 @@ export default function LandingPage() {
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
             <Link href="#" className="text-muted-foreground hover:text-white transition-colors">
-              Features
+              Resources
+            </Link>
+            <Link href="#" className="text-muted-foreground hover:text-white transition-colors">
+              Blog
             </Link>
             <Link href="#" className="text-muted-foreground hover:text-white transition-colors">
               Pricing
@@ -25,19 +28,16 @@ export default function LandingPage() {
             <Link href="#" className="text-muted-foreground hover:text-white transition-colors">
               Docs
             </Link>
-             <Link href="#" className="text-muted-foreground hover:text-white transition-colors">
-              Company
-            </Link>
           </nav>
           <div className="hidden md:flex items-center justify-end gap-4">
             <Button variant="ghost" asChild>
-                <Link href="/dashboard">
-                    Log in
+                <Link href="#">
+                    Book a call
                 </Link>
             </Button>
             <Button asChild className="bg-primary text-primary-foreground hover:bg-neutral-200">
               <Link href="/dashboard">
-                Discover Platform
+                Discover the platform
               </Link>
             </Button>
           </div>
