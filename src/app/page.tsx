@@ -53,7 +53,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     // Spline viewer is loaded only on the client-side to prevent SSR issues
-    setSplineViewerHtml(`<spline-viewer loading-anim-type="spinner-small-dark" url="https://prod.spline.design/gm0ksJtPHZQblNTV/scene.splinecode"></spline-viewer>`);
+    setSplineViewerHtml(`<iframe src='https://my.spline.design/untitled-5MqbcCtmDWU0UEZq3diI3KVb/' frameborder='0' width='100%' height='100%'></iframe>`);
   }, []);
   
   return (
