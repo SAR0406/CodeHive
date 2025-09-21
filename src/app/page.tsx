@@ -6,8 +6,9 @@ import Image from 'next/image';
 
 export default function LandingPage() {
   return (
-    <div className="dark bg-background text-foreground min-h-screen flex flex-col sparkle-bg">
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-transparent backdrop-blur-sm supports-[backdrop-filter]:bg-transparent">
+    <div className="dark bg-background text-foreground min-h-screen flex flex-col overflow-x-hidden">
+      <div className="fixed top-0 left-0 w-full h-full sparkle-bg -z-10" />
+      <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/50 backdrop-blur-sm">
         <div className="container flex h-16 max-w-screen-2xl items-center">
           <Link href="/" className="flex items-center gap-2 mr-6">
             <CodeHiveIcon className="size-8 text-foreground" />
@@ -31,7 +32,7 @@ export default function LandingPage() {
             <Button variant="ghost" asChild>
               <Link href="/dashboard">Login</Link>
             </Button>
-            <Button asChild variant="default" size="lg" className="shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow">
+            <Button asChild variant="default" className="bg-white text-black hover:bg-neutral-200">
               <Link href="/dashboard">
                 Discover the platform
               </Link>
@@ -42,17 +43,7 @@ export default function LandingPage() {
 
       <main className="flex-1">
         <div className="container relative pt-24 pb-40 md:pt-32">
-           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/3 w-[800px] h-[800px] rounded-full bg-primary/5 blur-3xl -z-10" />
-
           <div className="mx-auto max-w-4xl text-center">
-             <div className="flex justify-center items-center gap-2 mb-4 text-sm text-muted-foreground">
-              <div className="flex -space-x-2 overflow-hidden">
-                <Image className="inline-block h-6 w-6 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p1/40/40" alt="User 1" width={40} height={40}/>
-                <Image className="inline-block h-6 w-6 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p2/40/40" alt="User 2" width={40} height={40}/>
-                <Image className="inline-block h-6 w-6 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p3/40/40" alt="User 3" width={40} height={40}/>
-              </div>
-              <span>Trusted by 10,000+ builders</span>
-            </div>
             <h1 className="font-headline font-bold text-5xl md:text-7xl mt-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-neutral-400 leading-tight">
               Managing your projects with AI
             </h1>
