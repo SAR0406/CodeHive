@@ -78,9 +78,9 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col z-10 px-4">
+      <main className="flex-1 flex flex-col z-10">
         <section className="w-full py-20 md:py-32 relative">
-          <div className="container mx-auto grid md:grid-cols-1 gap-12 items-center relative z-10">
+          <div className="container mx-auto grid md:grid-cols-1 gap-12 items-center relative z-10 px-4">
             <div className="flex flex-col items-center text-center gap-6">
                 <div className="inline-flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm">
                     <div className="flex -space-x-2 overflow-hidden">
@@ -113,7 +113,7 @@ export default function LandingPage() {
                 </Button>
               </div>
             </div>
-             <div className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none">
+             <div className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none -z-10">
                 {splineViewerHtml && <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />}
             </div>
           </div>
@@ -131,7 +131,7 @@ export default function LandingPage() {
             </Card>
         </section>
 
-        <section className="w-full py-20 md:py-32">
+        <section className="w-full py-20 md:py-32 px-4">
             <div className="container mx-auto">
                 <div className="text-center mb-12">
                     <h2 className="font-headline font-bold text-4xl md:text-5xl tracking-tighter leading-tight">
@@ -161,7 +161,7 @@ export default function LandingPage() {
             </div>
         </section>
 
-         <section className="w-full py-20 md:py-32">
+         <section className="w-full py-20 md:py-32 px-4">
             <div className="container mx-auto text-center flex flex-col items-center gap-6">
                 <p className="font-semibold text-accent">Start exploring today</p>
                  <h2 className="font-headline font-bold text-4xl md:text-5xl tracking-tighter leading-tight">
