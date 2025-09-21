@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { ArrowRight, BookOpen, BarChart2, Zap, ShieldCheck, Accessibility, Scaling } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { DashboardCharts } from '@/components/dashboard-charts';
-import Spline from '@splinetool/react-spline';
 
 const features = [
   {
@@ -43,8 +42,8 @@ const integrations = [
 export default function LandingPage() {
   return (
     <div className="dark bg-background text-foreground min-h-screen flex flex-col">
-      <header className="sticky top-0 z-50 w-full">
-        <div className="container flex h-20 max-w-screen-xl items-center justify-between mx-auto px-4">
+      <header className="sticky top-0 z-50 w-full p-4">
+        <div className="container flex h-16 max-w-screen-xl items-center justify-between mx-auto px-4 glass-container">
           <Link href="/" className="flex items-center gap-2">
             <CodeHiveIcon className="size-7 text-white" />
             <span className="font-bold text-lg font-headline text-white">CodeHive</span>
@@ -80,8 +79,8 @@ export default function LandingPage() {
 
       <main className="flex-1 flex flex-col z-10 px-4">
         <section className="w-full py-20 md:py-32 relative">
-            <div className="absolute top-0 left-0 w-full h-full">
-                 <Spline scene="https://prod.spline.design/gm0ksJtPHZQblNTV/scene.splinecode" />
+            <div className="absolute top-0 left-0 w-full h-full z-0">
+                <iframe src='https://my.spline.design/untitled-fbbab4dbf9574e6280abdb64165f6df-5c58b4f2c98099a53d5a2f5888e2c0f5/' frameBorder='0' width='100%' height='100%'></iframe>
             </div>
           <div className="container mx-auto text-center flex flex-col items-center gap-8 relative z-10">
             
@@ -213,7 +212,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-       <footer className="w-full z-10 px-4 py-16 border-t border-white/10">
+       <footer className="w-full z-10 px-4 py-16">
         <div className="container mx-auto grid grid-cols-1 md:grid-cols-5 gap-8">
           <div className="md:col-span-2 flex flex-col gap-4">
              <Link href="/" className="flex items-center gap-2">
