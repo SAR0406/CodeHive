@@ -1,11 +1,13 @@
 'use client';
 import { Button } from '@/components/ui/button';
-import { AmazonLogo, CodeHiveIcon, DellLogo, MicrosoftLogo, OracleLogo, SapLogo, ShopifyLogo, SlackLogo, WebflowLogo, WixLogo, WordpressLogo, ZapierLogo } from '@/components/icons';
+import { CodeHiveIcon, CreateContentIcon } from '@/components/icons';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, BarChart2, Zap, ShieldCheck, Accessibility, Scaling, BookOpen } from 'lucide-react';
+import { ArrowRight, BookOpen, BarChart2, Zap, ShieldCheck, Accessibility } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 
 const features = [
   {
@@ -30,35 +32,17 @@ const features = [
   },
 ];
 
-const integrations = [
-    { icon: <WordpressLogo className="w-10 h-10" />, name: 'Wordpress' },
-    { icon: <WixLogo className="w-10 h-10" />, name: 'Wix' },
-    { icon: <WebflowLogo className="w-10 h-10" />, name: 'Webflow' },
-    { icon: <ShopifyLogo className="w-10 h-10" />, name: 'Shopify' },
-    { icon: <ZapierLogo className="w-10 h-10" />, name: 'Zapier' },
-    { icon: <SlackLogo className="w-10 h-10" />, name: 'Slack' },
-];
-
-const companyLogos = [
-  { icon: <AmazonLogo className="w-24 h-auto" />, name: "Amazon" },
-  { icon: <DellLogo className="w-24 h-auto" />, name: "Dell" },
-  { icon: <SapLogo className="w-20 h-auto" />, name: "SAP" },
-  { icon: <MicrosoftLogo className="w-28 h-auto" />, name: "Microsoft" },
-  { icon: <OracleLogo className="w-24 h-auto" />, name: "Oracle" },
-];
-
-
 export default function LandingPage() {
   const [splineViewerHtml, setSplineViewerHtml] = useState('');
 
   useEffect(() => {
     // Spline viewer is loaded only on the client-side to prevent SSR issues
-    setSplineViewerHtml(`<spline-viewer loading-anim-type="spinner-small-dark" url="https://prod.spline.design/gm0ksJtPHZQblNTV/scene.splinecode"></spline-viewer>`);
+    setSplineViewerHtml(`<spline-viewer loading-anim-type="spinner-small-dark" url="https://prod.spline.design/TNe0GS1vGkI-N4p9/scene.splinecode"></spline-viewer>`);
   }, []);
   
   return (
     <div className="dark bg-background text-foreground min-h-screen flex flex-col">
-      <header className="sticky top-0 z-50 w-full p-4">
+       <header className="sticky top-0 z-50 w-full p-4">
         <div className="container flex h-16 max-w-screen-xl items-center justify-between mx-auto px-4 glass-container">
           <Link href="/" className="flex items-center gap-2">
             <CodeHiveIcon className="size-7 text-accent" />
@@ -80,7 +64,8 @@ export default function LandingPage() {
           </nav>
           <div className="hidden md:flex items-center justify-end gap-4">
             <Button variant="ghost" asChild>
-                <Link href="#">
+                <Link href="#" className="flex items-center gap-2">
+                    <BookOpen />
                     Book a call
                 </Link>
             </Button>
@@ -95,39 +80,56 @@ export default function LandingPage() {
 
       <main className="flex-1 flex flex-col z-10 px-4">
         <section className="w-full py-20 md:py-32 relative">
-           <div className="absolute top-0 left-0 w-full h-full z-0 opacity-50" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />
-          <div className="container mx-auto text-center flex flex-col items-center gap-8 relative z-10">
-            <h1 className="font-headline font-bold text-5xl md:text-6xl lg:text-7xl tracking-tighter leading-tight">
-              Build, Ship, and Collaborate <br /> Like Never Before
-            </h1>
-            <p className="max-w-2xl text-lg text-muted-foreground">
-              An open source platform that uses AI to automate various aspects of development, optimization, and distribution.
-            </p>
-            <div className="flex items-center gap-4">
-              <Button size="lg" asChild>
-                <Link href="/dashboard">
-                  Get started for free
-                  <ArrowRight className="ml-2" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href="#">
-                  Learn More
-                </Link>
-              </Button>
-            </div>
-            
-            <div className="mt-16 w-full max-w-4xl text-center">
-                <p className="text-sm text-muted-foreground mb-4">TRUSTED BY THE WORLD'S BEST COMPANIES</p>
-                <div className="flex items-center justify-center flex-wrap gap-x-8 gap-y-4 text-muted-foreground">
-                  {companyLogos.map((logo, index) => (
-                      <div key={index} title={logo.name}>
-                          {logo.icon}
-                      </div>
-                  ))}
+          <div className="container mx-auto grid md:grid-cols-2 gap-12 items-center relative z-10">
+            <div className="flex flex-col items-start text-left gap-6">
+                <div className="inline-flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm">
+                    <div className="flex -space-x-2 overflow-hidden">
+                        <Avatar className="inline-block h-6 w-6 rounded-full ring-2 ring-card">
+                            <AvatarImage src="https://picsum.photos/seed/p1/32/32" />
+                            <AvatarFallback>A</AvatarFallback>
+                        </Avatar>
+                         <Avatar className="inline-block h-6 w-6 rounded-full ring-2 ring-card">
+                            <AvatarImage src="https://picsum.photos/seed/p2/32/32" />
+                            <AvatarFallback>B</AvatarFallback>
+                        </Avatar>
+                         <Avatar className="inline-block h-6 w-6 rounded-full ring-2 ring-card">
+                            <AvatarImage src="https://picsum.photos/seed/p3/32/32" />
+                            <AvatarFallback>C</AvatarFallback>
+                        </Avatar>
+                    </div>
+                    <span className="font-medium text-muted-foreground">Trusted by 35,000+ people</span>
                 </div>
+              <h1 className="font-headline font-bold text-5xl md:text-6xl lg:text-7xl tracking-tighter leading-tight">
+                Build better sites, faster.
+              </h1>
+              <p className="max-w-xl text-lg text-muted-foreground">
+                An open source content management system that uses AI to automate various aspects of content creation, optimization, and distribution.
+              </p>
+              <div className="flex items-center gap-4">
+                <Button size="lg" asChild>
+                  <Link href="/dashboard">
+                    Get started for free
+                  </Link>
+                </Button>
+              </div>
+            </div>
+             <div className="relative h-[400px] md:h-full flex items-center justify-center">
+                <div className="absolute inset-0 w-full h-full" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />
+                <p className="absolute bottom-4 text-sm text-muted-foreground">Click 1,2,3,4 to see magic</p>
             </div>
           </div>
+           <Card className="absolute bottom-0 left-1/2 -translate-x-1/2 md:left-20 md:translate-x-0 w-[300px] glass-container z-20">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardContent className="p-0">
+                        <div className="text-sm text-muted-foreground">Total traffic</div>
+                        <div className="text-3xl font-bold">240.8K</div>
+                    </CardContent>
+                    <Button>
+                        <CreateContentIcon />
+                        Create Content
+                    </Button>
+                </CardHeader>
+            </Card>
         </section>
 
         <section className="w-full py-20 md:py-32">
@@ -157,31 +159,6 @@ export default function LandingPage() {
                         </Card>
                     ))}
                 </div>
-            </div>
-        </section>
-
-        <section className="w-full py-20 md:py-32">
-            <div className="container mx-auto text-center flex flex-col items-center gap-8">
-                 <h2 className="font-headline font-bold text-4xl md:text-5xl tracking-tighter leading-tight">
-                    Integrations and Extensibility
-                </h2>
-                <p className="max-w-2xl text-lg text-muted-foreground">
-                    Integrate seamlessly with your favorite platforms and extend functionality through plugins and APIs.
-                </p>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6 w-full max-w-4xl mt-8">
-                    {integrations.map((integration, index) => (
-                        <div key={index} className="flex flex-col items-center justify-center gap-4 p-6 rounded-xl bg-card/80 border border-border transition-all duration-300 hover:bg-card hover:border-accent">
-                            {integration.icon}
-                            <span className="text-sm font-medium">{integration.name}</span>
-                        </div>
-                    ))}
-                </div>
-
-                <Button variant="outline" size="lg" className="mt-8">
-                    Show all integrations
-                    <ArrowRight className="ml-2"/>
-                </Button>
             </div>
         </section>
 
