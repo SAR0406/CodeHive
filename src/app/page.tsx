@@ -53,7 +53,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     // Spline viewer is loaded only on the client-side to prevent SSR issues
-    setSplineViewerHtml(`<iframe src='https://my.spline.design/untitled-5MqbcCtmDWU0UEZq3diI3KVb/' frameborder='0' width='100%' height='100%'></iframe>`);
+    setSplineViewerHtml(`<spline-viewer loading-anim-type="spinner-small-dark" url="https://prod.spline.design/gm0ksJtPHZQblNTV/scene.splinecode"></spline-viewer>`);
   }, []);
   
   return (
@@ -95,7 +95,7 @@ export default function LandingPage() {
 
       <main className="flex-1 flex flex-col z-10 px-4">
         <section className="w-full py-20 md:py-32 relative">
-           {splineViewerHtml && <div className="absolute top-0 left-0 w-full h-full z-0 opacity-50" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />}
+           <div className="absolute top-0 left-0 w-full h-full z-0 opacity-50" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />
           <div className="container mx-auto text-center flex flex-col items-center gap-8 relative z-10">
             <h1 className="font-headline font-bold text-5xl md:text-6xl lg:text-7xl tracking-tighter leading-tight">
               Build, Ship, and Collaborate <br /> Like Never Before
