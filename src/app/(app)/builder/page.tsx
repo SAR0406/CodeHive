@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Bot, Code, Figma, Loader2, Sparkles } from 'lucide-react';
+import { Bot, Code, Figma, Loader2, Sparkles, Rocket } from 'lucide-react';
 
 export default function AIBuilderPage() {
   const [prompt, setPrompt] = useState('');
@@ -46,11 +46,11 @@ export default function AIBuilderPage() {
     <div className="h-full flex flex-col gap-8">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="font-headline text-3xl md:text-4xl font-semibold flex items-center gap-2 bg-clip-text text-transparent bg-gradient-to-b from-white to-neutral-400">
-            <Bot className="size-8" />
-            <span>AI Builder</span>
+          <h1 className="font-headline text-3xl md:text-4xl font-semibold flex items-center gap-3">
+            <Bot className="size-8 text-accent" />
+            <span>AI App Builder</span>
           </h1>
-          <p className="text-muted-foreground mt-2">Generate an application from a natural language prompt.</p>
+          <p className="text-muted-foreground mt-2">Generate a full-stack application from a single prompt.</p>
         </div>
          <Button variant="outline" disabled>
           <Figma className="mr-2" />
@@ -61,9 +61,9 @@ export default function AIBuilderPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1">
         <Card className="flex flex-col">
           <CardHeader>
-            <CardTitle className="font-headline">Describe Your App</CardTitle>
+            <CardTitle>Describe Your App</CardTitle>
             <CardDescription>
-              Enter a detailed prompt describing the application you want to build. Include features, UI elements, and overall purpose.
+              Enter a detailed prompt describing the application you want to build. The more detail, the better the result.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col flex-grow gap-4">
@@ -74,7 +74,7 @@ export default function AIBuilderPage() {
               className="flex-grow text-base"
               rows={15}
             />
-            <Button onClick={handleGenerate} disabled={isLoading} size="lg" className="bg-white text-black hover:bg-neutral-200">
+            <Button onClick={handleGenerate} disabled={isLoading} size="lg">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -92,21 +92,22 @@ export default function AIBuilderPage() {
 
         <Card className="flex flex-col">
           <CardHeader>
-            <CardTitle className="font-headline">Live Preview & Code</CardTitle>
-            <CardDescription>The generated code and a preview of your application will appear here.</CardDescription>
+            <CardTitle>Generated Code</CardTitle>
+            <CardDescription>The code for your application will appear here. You can then deploy it.</CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex flex-col gap-4">
-            <div className="border rounded-lg bg-muted/40 flex-grow p-4 overflow-auto">
+            <div className="border rounded-lg bg-muted/20 flex-grow p-4 overflow-auto">
               {isLoading && (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                   <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-                  <span>Generating...</span>
+                  <span>Generating code...</span>
                 </div>
               )}
               {!isLoading && !generatedCode && (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  <Code className="mr-2 h-8 w-8" />
-                  <span>Code will appear here</span>
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center">
+                  <Code className="mr-2 h-10 w-10 mb-2" />
+                  <span className="font-semibold">Your generated code will appear here.</span>
+                  <p className="text-sm">Describe your app and click "Generate App" to start.</p>
                 </div>
               )}
               {generatedCode && (
@@ -116,6 +117,7 @@ export default function AIBuilderPage() {
               )}
             </div>
             <Button variant="secondary" disabled={!generatedCode}>
+              <Rocket className="mr-2" />
               Deploy to CodeHive
             </Button>
           </CardContent>

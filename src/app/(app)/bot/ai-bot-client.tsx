@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Sparkles, Code } from "lucide-react"
+import { Loader2, Sparkles } from "lucide-react"
 import { explainCodeSnippet } from "@/ai/flows/explain-code-snippet"
 import { suggestCodeFixes } from "@/ai/flows/suggest-code-fixes"
 import { generateTestsFromCode } from "@/ai/flows/generate-tests-from-code"
@@ -57,9 +57,9 @@ export default function AIBotClient() {
   }
 
   const renderResult = (isLoading: boolean, result: string, placeholder: string) => (
-    <Card className="mt-4 flex-grow bg-muted/40">
+    <Card className="mt-4 flex-grow bg-muted/20">
         <CardHeader>
-            <CardTitle className="font-headline text-lg">Result</CardTitle>
+            <CardTitle className="text-lg">Result</CardTitle>
         </CardHeader>
         <CardContent>
         {isLoading ? (
@@ -83,7 +83,7 @@ export default function AIBotClient() {
       <TabsContent value="explain">
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Explain Code Snippet</CardTitle>
+            <CardTitle>Explain Code Snippet</CardTitle>
             <CardDescription>Get a plain English explanation of a piece of code.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -105,7 +105,7 @@ export default function AIBotClient() {
       <TabsContent value="fix">
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Suggest Code Fixes</CardTitle>
+            <CardTitle>Suggest Code Fixes</CardTitle>
             <CardDescription>Provide code and error messages to get suggested fixes.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -127,7 +127,7 @@ export default function AIBotClient() {
       <TabsContent value="test">
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Generate Unit Tests</CardTitle>
+            <CardTitle>Generate Unit Tests</CardTitle>
             <CardDescription>Automatically generate unit tests for your code.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

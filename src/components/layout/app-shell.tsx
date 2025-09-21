@@ -57,7 +57,7 @@ export default function AppShell({ children }: PropsWithChildren) {
       <Sidebar>
         <SidebarHeader className="p-4">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <CodeHiveIcon className="size-8 text-primary" />
+            <CodeHiveIcon className="size-8 text-accent" />
             <span className="font-headline text-xl font-semibold text-sidebar-foreground">CodeHive</span>
           </Link>
         </SidebarHeader>
@@ -67,7 +67,7 @@ export default function AppShell({ children }: PropsWithChildren) {
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === item.href}
+                  isActive={pathname.startsWith(item.href)}
                   tooltip={{ children: item.label, side: 'right' }}
                 >
                   <Link href={item.href}>
@@ -101,28 +101,28 @@ export default function AppShell({ children }: PropsWithChildren) {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset className="flex flex-col">
-        <div className="sticky top-0 z-10 w-full px-4 pt-4 md:px-6 md:pt-6">
-          <header className="flex h-16 shrink-0 items-center gap-4 rounded-xl border border-border bg-card px-4 md:px-6">
+        <header className="sticky top-0 z-10 w-full px-4 pt-4 md:px-6 md:pt-6">
+          <div className="flex h-16 shrink-0 items-center gap-4 rounded-xl border border-border bg-card/60 px-4 shadow-lg backdrop-blur-xl md:px-6">
             <SidebarTrigger className="md:hidden" />
             <div className="flex-1" />
-            <div className="flex flex-shrink-0 items-center gap-4">
+            <div className="flex flex-shrink-0 items-center gap-2">
               <div className="relative hidden w-full max-w-sm md:block">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-                <Input placeholder="Search tasks, templates..." className="pl-9 bg-white/5 border-white/10" />
+                <Input placeholder="Search tasks, templates..." className="pl-9" />
               </div>
-              <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
+              <Button variant="ghost" size="icon" className="rounded-full">
                 <Bell className="h-5 w-5" />
                 <span className="sr-only">Notifications</span>
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative flex items-center gap-2 rounded-full p-1 h-auto hover:bg-white/10">
-                    <Avatar className="h-9 w-9 border-2 border-white/10">
+                  <Button variant="ghost" className="relative flex items-center gap-2 rounded-full p-1 h-auto">
+                    <Avatar className="h-9 w-9 border-2 border-border">
                       <AvatarImage src="https://picsum.photos/seed/user/40/40" alt="User" data-ai-hint="person portrait" />
                       <AvatarFallback>U</AvatarFallback>
                     </Avatar>
                     <div className="hidden text-left lg:block">
-                      <p className="text-sm font-medium font-headline">Alex Ray</p>
+                      <p className="text-sm font-medium">Alex Ray</p>
                       <p className="text-xs text-muted-foreground">Credits: 1,250</p>
                     </div>
                     <ChevronDown className="ml-1 hidden size-4 text-muted-foreground lg:block" />
@@ -139,9 +139,9 @@ export default function AppShell({ children }: PropsWithChildren) {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          </header>
-        </div>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 pt-0">{children}</main>
+          </div>
+        </header>
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

@@ -31,9 +31,9 @@ export default function TemplatesPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="font-headline text-3xl md:text-4xl font-semibold flex items-center gap-2 bg-clip-text text-transparent bg-gradient-to-b from-white to-neutral-400">
-          <Library className="size-8" />
-          <span>Templates Library</span>
+        <h1 className="font-headline text-3xl md:text-4xl font-semibold flex items-center gap-3">
+          <Library className="size-8 text-accent" />
+          <span>Template Library</span>
         </h1>
         <p className="text-muted-foreground mt-2">Fork a template to get a head start on your next project.</p>
       </div>
@@ -41,7 +41,7 @@ export default function TemplatesPage() {
         {templates.map((template) => {
           const placeholder = PlaceHolderImages.find((p) => p.id === template.id)
           return (
-            <Card key={template.id} className="overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-accent/40 hover:shadow-2xl group">
+            <Card key={template.id} className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:shadow-accent/10 hover:-translate-y-1">
               {placeholder && (
                 <div className="aspect-video bg-muted overflow-hidden">
                    <Image
@@ -50,16 +50,16 @@ export default function TemplatesPage() {
                     width={600}
                     height={400}
                     data-ai-hint={placeholder.imageHint}
-                    className="object-cover w-full h-full transition-transform group-hover:scale-105"
+                    className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
                   />
                 </div>
               )}
               <CardHeader>
-                <CardTitle className="font-headline text-xl">{template.title}</CardTitle>
+                <CardTitle className="text-xl">{template.title}</CardTitle>
                 <CardDescription>{template.description}</CardDescription>
               </CardHeader>
               <CardFooter>
-                <Button className="w-full bg-white text-black hover:bg-neutral-200">
+                <Button className="w-full">
                   <GitFork className="mr-2 h-4 w-4" />
                   Fork Template
                 </Button>
