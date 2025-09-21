@@ -115,7 +115,6 @@ export default function LandingPage() {
             </div>
              <div className="relative h-[400px] md:h-full flex items-center justify-center">
                 {splineViewerHtml && <div className="absolute inset-0 w-full h-full" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />}
-                <p className="absolute bottom-4 text-sm text-muted-foreground">Click 1,2,3,4 to see magic</p>
             </div>
           </div>
            <Card className="absolute bottom-0 left-1/2 -translate-x-1/2 md:left-20 md:translate-x-0 w-[300px] glass-container z-20">
