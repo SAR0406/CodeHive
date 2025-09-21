@@ -1,3 +1,52 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "template-1",
+      "description": "A modern e-commerce storefront template.",
+      "imageUrl": "https://picsum.photos/seed/t1/600/400",
+      "imageHint": "ecommerce website"
+    },
+    {
+      "id": "template-2",
+      "description": "A clean and professional blog template.",
+      "imageUrl": "https://picsum.photos/seed/t2/600/400",
+      "imageHint": "blog design"
+    },
+    {
+      "id": "template-3",
+      "description": "A portfolio template for creative professionals.",
+      "imageUrl": "https://picsum.photos/seed/t3/600/400",
+      "imageHint": "portfolio website"
+    },
+    {
+      "id": "template-4",
+      "description": "A landing page template for a SaaS product.",
+      "imageUrl": "https://picsum.photos/seed/t4/600/400",
+      "imageHint": "saas landingpage"
+    },
+    {
+      "id": "mentor-1",
+      "description": "Avatar for Jane Doe.",
+      "imageUrl": "https://picsum.photos/seed/m1/100/100",
+      "imageHint": "woman portrait"
+    },
+    {
+      "id": "mentor-2",
+      "description": "Avatar for John Smith.",
+      "imageUrl": "https://picsum.photos/seed/m2/100/100",
+      "imageHint": "man portrait"
+    },
+    {
+      "id": "mentor-3",
+      "description": "Avatar for Alex Ray.",
+      "imageUrl": "https://picsum.photos/seed/m3/100/100",
+      "imageHint": "person portrait"
+    },
+    {
+      "id": "mentor-4",
+      "description": "Avatar for Sarah Chen.",
+      "imageUrl": "https://picsum.photos/seed/m4/100/100",
+      "imageHint": "woman smiling"
+    }
+  ]
 }
