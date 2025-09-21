@@ -41,14 +41,14 @@
   }
 
   .dark {
-    --background: 225 10% 6%; /* Deep Charcoal */
+    --background: 224 71.4% 4.1%; /* Deep Navy */
     --foreground: 0 0% 98%; /* Almost white */
     --card: 225 10% 10%;
     --card-foreground: 0 0% 95%;
     --popover: 225 10% 8%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%; /* White for primary buttons */
-    --primary-foreground: 225 10% 8%; /* Dark text for primary buttons */
+    --primary: 262.1 83.3% 57.8%; /* Vibrant Purple */
+    --primary-foreground: 0 0% 98%;
     --secondary: 225 10% 20%;
     --secondary-foreground: 0 0% 90%;
     --muted: 225 10% 15%;
@@ -57,10 +57,10 @@
     --accent-foreground: 0 0% 98%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 225 10% 18%;
+    --border: 225 10% 25%;
     --input: 225 10% 18%;
-    --ring: 0 0% 90%;
-    --chart-1: 0 0% 90%;
+    --ring: 262.1 83.3% 57.8%;
+    --chart-1: 262.1 83.3% 57.8%;
     --chart-2: 330 90% 65%;
     --chart-3: 220 13% 40%;
     --chart-4: 43 74% 66%;
@@ -82,11 +82,27 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-black text-foreground;
+  }
+  .app-container {
+    @apply relative z-10 mx-auto w-full max-w-[1600px] min-h-[calc(100vh-4rem)] my-8 bg-black/50 border border-white/10 rounded-2xl shadow-2xl shadow-black/80 backdrop-blur-lg overflow-hidden;
   }
 }
 
-@layer components {
+@layer utilities {
+  .animated-gradient-bg {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -20;
+    background:
+        radial-gradient(ellipse 80% 50% at 50% -20%, hsl(262 83% 58% / 0.3), transparent),
+        radial-gradient(ellipse 80% 50% at 50% 120%, hsl(330 90% 65% / 0.3), transparent);
+    animation: glow 10s ease-in-out infinite;
+  }
+
   .sparkle-bg {
     position: fixed;
     width: 100%;
@@ -95,21 +111,34 @@
     left: 0;
     z-index: -10;
     background-image:
-      radial-gradient(circle at 10% 20%, hsl(0 0% 100% / 0.1), transparent 1px),
-      radial-gradient(circle at 90% 30%, hsl(0 0% 100% / 0.08), transparent 1px),
-      radial-gradient(circle at 50% 80%, hsl(0 0% 100% / 0.1), transparent 1px),
+      radial-gradient(circle at 10% 20%, hsl(0 0% 100% / 0.08), transparent 0.8px),
+      radial-gradient(circle at 90% 30%, hsl(0 0% 100% / 0.08), transparent 0.8px),
+      radial-gradient(circle at 50% 80%, hsl(0 0% 100% / 0.08), transparent 0.8px),
       radial-gradient(circle at 25% 60%, hsl(0 0% 100% / 0.05), transparent 0.5px),
       radial-gradient(circle at 75% 50%, hsl(0 0% 100% / 0.05), transparent 0.5px);
     background-size: 150% 150%;
     background-position: 0 0;
-    animation: sparkle 30s linear infinite;
+    animation: sparkle 20s linear infinite;
+  }
+
+  @keyframes glow {
+    0% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1.5);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
   }
 
   @keyframes sparkle {
     0% { background-position: 0% 0%; }
-    25% { background-position: 25% 50%; }
-    50% { background-position: 50% 100%; }
-    75% { background-position: 75% 50%; }
-    100% { background-position: 100% 0%; }
+    50% { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
   }
 }

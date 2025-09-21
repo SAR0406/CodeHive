@@ -3,8 +3,7 @@ import AppShell from '@/components/layout/app-shell';
 
 export default function AppLayout({ children }: PropsWithChildren) {
   return (
-    <div className="dark">
-      <div className="fixed top-0 left-0 w-full h-full sparkle-bg -z-10" />
+    <div className="dark app-container">
       <AppShell>{children}</AppShell>
     </div>
   );
