@@ -81,7 +81,7 @@ export default function LandingPage() {
       <main className="flex-1 flex flex-col z-10 px-4">
         <section className="w-full py-20 md:py-32 relative">
             <div className="absolute top-0 left-0 w-full h-full">
-                 <Spline scene="https://prod.spline.design/gm0ksJtPHZQblNTV/scene.splinecode" className="z-0" />
+                 <Spline scene="https://prod.spline.design/gm0ksJtPHZQblNTV/scene.splinecode" />
             </div>
           <div className="container mx-auto text-center flex flex-col items-center gap-8 relative z-10">
             
