@@ -67,7 +67,7 @@ export default function LandingPage() {
             >
               <div className="p-2">
                 <Image
-                  src="https://images.unsplash.com/photo-1579820010410-c10411aaaa88?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxOHx8Y29kZSUyMHNldHVwJTIwcHJvZmZlc2lvbmFsJTIwcGhvdG8lMjB8ZW58MHx8fHwxNzU4NDI4MzgzfDA&ixlib=rb-4.1.0&q=80&w=1080"
+                  src="https://images.unsplash.com/photo-1740059024857-9cdb2303a16e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxOHx8YnVpbGQlMjB5b3VyJTIwd2Vic2l0ZXMlMjB3aXRoJTIwQUl8ZW58MHx8fHwxNzU4NDI4NTA1fDA&ixlib=rb-4.1.0&q=80&w=1080"
                   alt="CodeHive Dashboard"
                   width={1200}
                   height={800}
