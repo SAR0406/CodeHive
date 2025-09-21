@@ -1,9 +1,9 @@
 'use client';
 import { Button } from '@/components/ui/button';
-import { CodeHiveIcon, CreateContentIcon } from '@/components/icons';
+import { CodeHiveIcon, CreateContentIcon, MicrosoftLogo, OracleLogo, SapLogo, DellLogo, AmazonLogo, WordpressLogo, WixLogo, WebflowLogo, ShopifyLogo, ZapierLogo, SlackLogo } from '@/components/icons';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, BookOpen, BarChart2, Zap, ShieldCheck, Accessibility } from 'lucide-react';
+import { ArrowRight, BookOpen, BarChart2, Zap, ShieldCheck, Accessibility, CheckCircleIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -32,12 +32,21 @@ const features = [
   },
 ];
 
+const integrations = [
+    { name: 'Wordpress', icon: <WordpressLogo className="w-full h-full" /> },
+    { name: 'Wix', icon: <WixLogo className="w-full h-full" /> },
+    { name: 'Webflow', icon: <WebflowLogo className="w-full h-full" /> },
+    { name: 'Shopify', icon: <ShopifyLogo className="w-full h-full" /> },
+    { name: 'Zapier', icon: <ZapierLogo className="w-full h-full" /> },
+    { name: 'Slack', icon: <SlackLogo className="w-full h-full" /> },
+];
+
 export default function LandingPage() {
   const [splineViewerHtml, setSplineViewerHtml] = useState('');
 
   useEffect(() => {
     // Spline viewer is loaded only on the client-side to prevent SSR issues
-    setSplineViewerHtml(`<spline-viewer loading-anim-type="spinner-small-dark" url="https://prod.spline.design/gm0ksJtPHZQblNTV/scene.splinecode"></spline-viewer>`);
+    setSplineViewerHtml(`<spline-viewer style="width: 800px; height: 600px;" loading-anim-type="spinner-small-dark" url="https://prod.spline.design/gm0ksJtPHZQblNTV/scene.splinecode"></spline-viewer>`);
   }, []);
   
   return (
@@ -79,7 +88,7 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1 flex flex-col z-10">
-        <section className="w-full py-20 md:py-32 relative">
+        <section className="w-full py-20 md:py-32 relative overflow-hidden">
           <div className="container mx-auto grid md:grid-cols-1 gap-12 items-center relative z-10 px-4">
             <div className="flex flex-col items-center text-center gap-6">
                 <div className="inline-flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm">
@@ -113,7 +122,7 @@ export default function LandingPage() {
                 </Button>
               </div>
             </div>
-             <div className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none -z-10">
+             <div className="absolute inset-0 w-full h-full flex items-center justify-end pointer-events-none -z-10">
                 {splineViewerHtml && <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />}
             </div>
           </div>
@@ -129,6 +138,32 @@ export default function LandingPage() {
                     </Button>
                 </CardHeader>
             </Card>
+        </section>
+
+         <section className="py-16">
+            <div className="container mx-auto text-center">
+                <p className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">Trusted by leading companies</p>
+                <div className="mt-6 grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-6">
+                    <div className="col-span-1 flex justify-center text-muted-foreground hover:text-foreground transition-colors">
+                        <MicrosoftLogo className="h-8" />
+                    </div>
+                    <div className="col-span-1 flex justify-center text-muted-foreground hover:text-foreground transition-colors">
+                        <OracleLogo className="h-8" />
+                    </div>
+                    <div className="col-span-1 flex justify-center text-muted-foreground hover:text-foreground transition-colors">
+                        <SapLogo className="h-8" />
+                    </div>
+                    <div className="col-span-1 flex justify-center text-muted-foreground hover:text-foreground transition-colors">
+                        <DellLogo className="h-8" />
+                    </div>
+                     <div className="col-span-1 flex justify-center text-muted-foreground hover:text-foreground transition-colors">
+                        <AmazonLogo className="h-8" />
+                    </div>
+                     <div className="col-span-1 flex justify-center text-muted-foreground hover:text-foreground transition-colors">
+                        <CodeHiveIcon className="h-8" />
+                    </div>
+                </div>
+            </div>
         </section>
 
         <section className="w-full py-20 md:py-32 px-4">
@@ -158,6 +193,32 @@ export default function LandingPage() {
                         </Card>
                     ))}
                 </div>
+            </div>
+        </section>
+
+         <section className="w-full py-20 md:py-24 px-4 bg-card/50">
+            <div className="container mx-auto grid md:grid-cols-2 gap-12 items-center">
+                 <div className="flex flex-col gap-6">
+                     <h2 className="font-headline font-bold text-4xl md:text-5xl tracking-tighter leading-tight">
+                        Seamless Integrations
+                    </h2>
+                    <p className="text-lg text-muted-foreground">
+                        Connect CodeHive with your favorite tools to streamline your workflow and enhance productivity. Our platform is designed to be extensible and developer-friendly.
+                    </p>
+                    <ul className="grid grid-cols-2 gap-y-4 gap-x-8 text-muted-foreground">
+                        <li className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-accent" /> API & Webhooks</li>
+                        <li className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-accent" /> Authentication Providers</li>
+                        <li className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-accent" /> Custom Plugins</li>
+                        <li className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-accent" /> Version Control</li>
+                    </ul>
+                 </div>
+                 <div className="grid grid-cols-3 gap-6">
+                    {integrations.map((integration) => (
+                        <div key={integration.name} className="flex items-center justify-center p-6 bg-background rounded-lg shadow-inner text-muted-foreground/60 hover:text-foreground transition-colors">
+                            {integration.icon}
+                        </div>
+                    ))}
+                 </div>
             </div>
         </section>
 
