@@ -20,9 +20,11 @@ export function CodeHiveIcon(props: SVGProps<SVGSVGElement>) {
           <stop offset="100%" style={{ stopColor: 'hsl(var(--accent))', stopOpacity: 1 }} />
         </linearGradient>
       </defs>
-      <polygon points="12 2 2 7 12 12 22 7 12 2" stroke="url(#icon-gradient)"></polygon>
-      <polyline points="2 17 12 22 22 17" stroke="url(#icon-gradient)"></polyline>
-      <polyline points="2 12 12 17 22 12" stroke="url(#icon-gradient)"></polyline>
+      <path d="M12 2l10 6.5v7L12 22 2 15.5v-7L12 2z" stroke="url(#icon-gradient)"></path>
+      <path d="M12 22v-6.5" stroke="url(#icon-gradient)"></path>
+      <path d="M22 8.5l-10 6-10-6" stroke="url(#icon-gradient)"></path>
+      <path d="M2 15.5l10-6 10 6" stroke="url(#icon-gradient)"></path>
+      <path d="M12 2v6.5" stroke="url(#icon-gradient)"></path>
     </svg>
   );
 }
