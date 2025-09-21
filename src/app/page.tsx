@@ -43,14 +43,14 @@ export default function LandingPage() {
 
       <main className="flex-1">
         <div className="container relative grid lg:grid-cols-2 gap-12 items-center pt-24 pb-40 md:pt-32">
-          <div className="lg:pr-8">
+          <div className="lg:pr-8 text-center">
             <h1 className="font-headline font-bold text-5xl md:text-7xl mt-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-neutral-400 leading-tight">
               Managing your projects with AI
             </h1>
             <p className="mt-6 text-lg md:text-xl text-muted-foreground">
              An open source platform to automate various aspects of software creation, skill acquisition, and project collaboration.
             </p>
-            <div className="mt-10 flex gap-4">
+            <div className="mt-10 flex justify-center gap-4">
               <Button size="lg" asChild className="bg-white text-black hover:bg-neutral-200">
                 <Link href="/dashboard">
                   Get Started for Free
