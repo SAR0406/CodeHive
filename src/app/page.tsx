@@ -42,8 +42,8 @@ export default function LandingPage() {
         <section className="w-full">
           <div className="container grid grid-cols-1 md:grid-cols-2 gap-12 items-center max-w-screen-xl mx-auto">
             <div className="flex flex-col gap-8">
-              <h1 className="font-headline font-extrabold text-5xl md:text-6xl lg:text-7xl text-white tracking-tighter uppercase">
-                Build Better, Build Luxury
+              <h1 className="font-headline font-extrabold text-5xl md:text-6xl lg:text-7xl text-white tracking-tighter">
+                Build better sites, faster
               </h1>
               <div className="grid grid-cols-2 gap-8 text-sm text-muted-foreground">
                  <p>
@@ -63,10 +63,10 @@ export default function LandingPage() {
             </div>
             <div className="relative aspect-square">
               <Image
-                src="https://images.unsplash.com/photo-1620065263251-195c4a45a3c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxhYnN0cmFjdCUyMGRhcmslMjBjYXJ8ZW58MHx8fHwxNzU4NDM0NDAyfDA&ixlib=rb-4.1.0&q=80&w=1080"
+                src="https://images.unsplash.com/photo-1740059024857-9cdb2303a16e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxOHx8YnVpbGQlMjB5b3VyJTIwd2Vic2l0ZXMlMjB3aXRoJTIwQUl8ZW58MHx8fHwxNzU4NDI4NTA1fDA&ixlib=rb-4.1.0&q=80&w=1080"
                 alt="Luxury Abstract AI"
                 fill
-                data-ai-hint="dark abstract"
+                data-ai-hint="dark dashboard UI"
                 className="object-contain"
               />
             </div>
