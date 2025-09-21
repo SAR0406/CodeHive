@@ -102,7 +102,7 @@ export default function AppShell({ children }: PropsWithChildren) {
       </Sidebar>
       <SidebarInset className="flex flex-col">
         <div className="sticky top-0 z-10 w-full px-4 pt-4 md:px-6 md:pt-6">
-          <header className="flex h-16 shrink-0 items-center gap-4 rounded-xl border border-white/10 bg-black/30 px-4 backdrop-blur-lg md:px-6">
+          <header className="flex h-16 shrink-0 items-center gap-4 rounded-xl border border-border bg-card px-4 md:px-6">
             <SidebarTrigger className="md:hidden" />
             <div className="flex-1" />
             <div className="flex flex-shrink-0 items-center gap-4">
