@@ -10,9 +10,15 @@ export function CodeHiveIcon(props: SVGProps<SVGSVGElement>) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
+      <defs>
+        <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style={{ stopColor: 'hsl(var(--foreground))', stopOpacity: 0.8 }} />
+          <stop offset="100%" style={{ stopColor: 'hsl(var(--foreground))', stopOpacity: 0.4 }} />
+        </linearGradient>
+      </defs>
       <path
         d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"
-        stroke="currentColor"
+        stroke="url(#icon-gradient)"
         strokeWidth="2"
       />
       <path

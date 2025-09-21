@@ -4,32 +4,32 @@
 
 @layer base {
   :root {
-    --background: 240 4% 6%;
-    --foreground: 0 0% 98%;
+    --background: 240 6% 10%; /* Deep charcoal */
+    --foreground: 0 0% 98%; /* White */
 
-    --card: 240 4% 10%;
+    --card: 240 6% 14%; /* Slightly lighter charcoal for cards */
     --card-foreground: 0 0% 95%;
 
-    --popover: 240 4% 10%;
+    --popover: 240 6% 10%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
+    --primary: 0 0% 98%; /* White */
+    --primary-foreground: 240 6% 10%; /* Black */
 
-    --secondary: 240 4% 15%;
+    --secondary: 240 6% 20%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 240 4% 15%;
+    --muted: 240 6% 20%;
     --muted-foreground: 0 0% 65%;
     
-    --accent: 240 4% 15%;
+    --accent: 240 6% 25%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 4% 15%;
-    --input: 240 4% 15%;
+    --border: 240 6% 20%;
+    --input: 240 6% 20%;
     --ring: 0 0% 83%;
 
     --radius: 0.75rem;
@@ -51,19 +51,6 @@
   }
   .app-container {
     background-image:
-      radial-gradient(ellipse at top, transparent 60%, hsl(var(--background))),
-      radial-gradient(ellipse at bottom, hsl(var(--background)), transparent),
-      repeating-radial-gradient(circle at center, hsl(var(--foreground) / 0.04), hsl(var(--foreground) / 0.04) 1px, transparent 1px, transparent 100%);
-    background-size: 100% 100%, 100% 100%, 10px 10px;
-    animation: move-particles 30s linear infinite;
-  }
-
-  @keyframes move-particles {
-    0% {
-      background-position: 0 0, 0 0, 0 0;
-    }
-    100% {
-      background-position: 0 0, 0 0, 100px 100px;
-    }
+      radial-gradient(ellipse at 50% 50%, hsl(var(--background)), transparent 70%);
   }
 }
