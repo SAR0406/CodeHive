@@ -1,10 +1,11 @@
 import { Button } from '@/components/ui/button';
-import { AmazonLogo, CodeHiveIcon, DellLogo, MicrosoftLogo, OracleLogo, SapLogo, ShopifyLogo, SlackLogo, WebflowLogo, WixLogo, WordpressLogo, ZapierLogo } from '@/components/icons';
+import { AmazonLogo, CodeHiveIcon, DellLogo, MicrosoftLogo, OracleLogo, SapLogo, ShopifyLogo, SlackLogo, WebflowLogo, WixLogo, WordpressLogo, ZapierLogo, ContentiumIcon, CreateContentIcon, OptimizeContentIcon, DistributeContentIcon, CheckCircleIcon } from '@/components/icons';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, CheckCircle, BarChart2, Zap, ShieldCheck, Accessibility, BookOpen, Scaling } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { DashboardCharts } from '@/components/dashboard-charts';
 
 const features = [
   {
@@ -44,8 +45,8 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 w-full">
         <div className="container flex h-20 max-w-screen-xl items-center justify-between mx-auto px-4">
           <Link href="/" className="flex items-center gap-2">
-            <CodeHiveIcon className="size-7 text-white" />
-            <span className="font-bold text-lg font-headline text-white">CodeHive</span>
+            <ContentiumIcon className="size-7 text-white" />
+            <span className="font-bold text-lg font-headline text-white">Contentium</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
             <Link href="#" className="text-muted-foreground hover:text-white transition-colors">
@@ -86,7 +87,7 @@ export default function LandingPage() {
                     <Image className="inline-block h-5 w-5 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p2/40/40" alt="p2" width={20} height={20}/>
                     <Image className="inline-block h-5 w-5 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p3/40/40" alt="p3" width={20} height={20}/>
                 </div>
-                <span>Trusted by 35,000+ people</span>
+                <span>Trusted by 35.000+ people</span>
             </div>
 
             <h1 className="font-headline font-bold text-5xl md:text-6xl lg:text-7xl text-white tracking-tighter leading-tight">
@@ -98,35 +99,41 @@ export default function LandingPage() {
             <div className="flex items-center gap-4">
               <Button size="lg" asChild className="bg-primary text-primary-foreground hover:bg-neutral-200">
                 <Link href="/dashboard">
-                  Get started for free <ArrowRight className="ml-2"/>
+                  Get started for free
                 </Link>
               </Button>
             </div>
             
-            <Card className="mt-16 w-full max-w-4xl p-4 glass-container">
+            <Card className="mt-16 w-full max-w-4xl p-0.5 glass-container overflow-hidden">
                  <div className="flex justify-between items-center p-2 border-b border-border/50">
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-red-500"></div>
                         <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                         <div className="w-3 h-3 rounded-full bg-green-500"></div>
                     </div>
-                    <div className="text-sm text-muted-foreground flex-grow text-center">
-                        <span>New Post</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <CheckCircle className="inline h-4 w-4"/>
-                        <span className="text-sm text-muted-foreground">Saved</span>
-                    </div>
                  </div>
-                 <div className="p-4">
-                    <Image
-                        src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop"
-                        alt="Dashboard UI"
-                        width={1200}
-                        height={600}
-                        data-ai-hint="dashboard charts"
-                        className="rounded-lg shadow-2xl"
-                    />
+                 <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className='flex flex-col gap-2'>
+                        <p className='text-sm text-muted-foreground text-left'>Total traffic</p>
+                        <p className='text-3xl font-bold text-left'>240.8K</p>
+                         <div className="h-32">
+                           <DashboardCharts />
+                        </div>
+                    </div>
+                    <div className='flex flex-col gap-4 justify-center'>
+                         <div className='flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10'>
+                            <CreateContentIcon className='w-5 h-5 text-white' />
+                            <span className='text-sm font-medium'>Create Content</span>
+                        </div>
+                        <div className='flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10'>
+                            <OptimizeContentIcon className='w-5 h-5 text-white' />
+                            <span className='text-sm font-medium'>Content Optimization</span>
+                        </div>
+                        <div className='flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10'>
+                            <DistributeContentIcon className='w-5 h-5 text-white' />
+                            <span className='text-sm font-medium'>Distribute</span>
+                        </div>
+                    </div>
                  </div>
             </Card>
 
@@ -206,8 +213,8 @@ export default function LandingPage() {
         <div className="container mx-auto grid grid-cols-1 md:grid-cols-5 gap-8">
           <div className="md:col-span-2 flex flex-col gap-4">
              <Link href="/" className="flex items-center gap-2">
-                <CodeHiveIcon className="size-7 text-white" />
-                <span className="font-bold text-lg font-headline text-white">CodeHive</span>
+                <ContentiumIcon className="size-7 text-white" />
+                <span className="font-bold text-lg font-headline text-white">Contentium</span>
             </Link>
             <p className="text-muted-foreground max-w-sm">
                 Join us to shape the future of open-source software together.
@@ -231,7 +238,7 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="container mx-auto mt-12 pt-8 border-t border-white/10 flex justify-between items-center text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} CodeHive. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Contentium. All rights reserved.</p>
             <div className="flex gap-4">
                 <Link href="#" className="hover:text-white">Terms of service</Link>
                 <Link href="#" className="hover:text-white">Privacy Policy</Link>

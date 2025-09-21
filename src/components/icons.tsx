@@ -40,6 +40,50 @@ export function CodeHiveIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function ContentiumIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...props} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2ZM12 20C7.582 20 4 16.418 4 12C4 7.582 7.582 4 12 4C16.418 4 20 7.582 20 12C20 16.418 16.418 20 12 20Z" fill="currentColor"/>
+    </svg>
+  );
+}
+
+export function CreateContentIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg {...props} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 4L16.29 6.29L13.41 9.17L14.83 10.59L17.71 7.71L20 10V4H14Z" fill="currentColor"/>
+            <path d="M4 4H10V10H4V4Z" fill="currentColor" opacity="0.6"/>
+            <path d="M4 14H10V20H4V14Z" fill="currentColor" opacity="0.6"/>
+            <path d="M14 14H20V20H14V14Z" fill="currentColor" opacity="0.6"/>
+        </svg>
+    );
+}
+
+export function OptimizeContentIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg {...props} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="currentColor"/>
+            <path d="M12 18C15.31 18 18 15.31 18 12H16C16 14.21 14.21 16 12 16V18Z" fill="currentColor"/>
+        </svg>
+    );
+}
+
+export function DistributeContentIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg {...props} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" fill="currentColor"/>
+        </svg>
+    );
+}
+
+export function CheckCircleIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg {...props} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor" />
+        </svg>
+    );
+}
+
 export function AmazonLogo(props: SVGProps<SVGSVGElement>) {
     return (
         <svg {...props} viewBox="0 0 102 31" fill="none" xmlns="http://www.w3.org/2000/svg">
