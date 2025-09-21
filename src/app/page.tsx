@@ -97,6 +97,7 @@ export default function LandingPage() {
             <h1 className="font-headline font-bold text-5xl md:text-6xl lg:text-7xl text-white tracking-tighter leading-tight">
               Build better sites, faster.
             </h1>
+            <p className="text-xl text-white my-4">click 1 2 3 4</p>
             <p className="max-w-2xl text-lg text-muted-foreground">
               An open source content management system that uses AI to automate various aspects of content creation, optimization, and distribution.
             </p>
