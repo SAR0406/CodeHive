@@ -42,15 +42,15 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1">
-        <div className="container relative pt-24 pb-40 md:pt-32">
-          <div className="mx-auto max-w-4xl text-center">
+        <div className="container relative grid lg:grid-cols-2 gap-12 items-center pt-24 pb-40 md:pt-32">
+          <div className="lg:pr-8">
             <h1 className="font-headline font-bold text-5xl md:text-7xl mt-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-neutral-400 leading-tight">
               Managing your projects with AI
             </h1>
-            <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="mt-6 text-lg md:text-xl text-muted-foreground">
              An open source platform to automate various aspects of software creation, skill acquisition, and project collaboration.
             </p>
-            <div className="mt-10 flex justify-center gap-4">
+            <div className="mt-10 flex gap-4">
               <Button size="lg" asChild className="bg-white text-black hover:bg-neutral-200">
                 <Link href="/dashboard">
                   Get Started for Free
@@ -60,7 +60,7 @@ export default function LandingPage() {
             </div>
           </div>
           
-          <div className="relative mt-24">
+          <div className="relative">
              <div className="absolute -inset-4 w-full h-full bg-gradient-to-br from-primary/10 via-transparent to-accent/10 rounded-2xl blur-2xl -z-10" />
             <div
               className="rounded-xl border border-white/10 bg-white/5 shadow-2xl shadow-black/80 backdrop-blur-lg"
