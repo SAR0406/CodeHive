@@ -1,3 +1,4 @@
+'use client';
 import { Button } from '@/components/ui/button';
 import { AmazonLogo, CodeHiveIcon, DellLogo, MicrosoftLogo, OracleLogo, SapLogo, ShopifyLogo, SlackLogo, WebflowLogo, WixLogo, WordpressLogo, ZapierLogo, ContentiumIcon, CreateContentIcon, OptimizeContentIcon, DistributeContentIcon, CheckCircleIcon } from '@/components/icons';
 import Link from 'next/link';
@@ -6,6 +7,7 @@ import { ArrowRight, CheckCircle, BarChart2, Zap, ShieldCheck, Accessibility, Bo
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardCharts } from '@/components/dashboard-charts';
+import Spline from '@splinetool/react-spline';
 
 const features = [
   {
@@ -78,8 +80,11 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1 flex flex-col z-10 px-4">
-        <section className="w-full py-20 md:py-32">
-          <div className="container mx-auto text-center flex flex-col items-center gap-8">
+        <section className="w-full py-20 md:py-32 relative">
+            <div className="absolute top-0 left-0 w-full h-full z-0">
+                 <Spline scene="https://prod.spline.design/PuaO2yAVAMw1uj-8/scene.splinecode" />
+            </div>
+          <div className="container mx-auto text-center flex flex-col items-center gap-8 relative z-10">
             
             <div className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground bg-card/80 border border-border px-3 py-1 rounded-full">
                 <div className="flex -space-x-2 overflow-hidden">
@@ -91,7 +96,7 @@ export default function LandingPage() {
             </div>
 
             <h1 className="font-headline font-bold text-5xl md:text-6xl lg:text-7xl text-white tracking-tighter leading-tight">
-              Managing your content with AI
+              Build better sites, faster.
             </h1>
             <p className="max-w-2xl text-lg text-muted-foreground">
               An open source content management system that uses AI to automate various aspects of content creation, optimization, and distribution.
