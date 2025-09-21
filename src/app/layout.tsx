@@ -22,7 +22,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-body antialiased dark">
+      <body className="font-body antialiased dark bg-background">
         <div className="animated-gradient-bg" />
         <div className="sparkle-bg" />
         {children}
