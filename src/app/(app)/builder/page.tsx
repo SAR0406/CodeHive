@@ -46,7 +46,7 @@ export default function AIBuilderPage() {
     <div className="h-full flex flex-col gap-8">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="font-headline text-3xl md:text-4xl font-semibold flex items-center gap-2">
+          <h1 className="font-headline text-3xl md:text-4xl font-semibold flex items-center gap-2 bg-clip-text text-transparent bg-gradient-to-b from-white to-neutral-400">
             <Bot className="size-8" />
             <span>AI Builder</span>
           </h1>
@@ -74,7 +74,7 @@ export default function AIBuilderPage() {
               className="flex-grow text-base"
               rows={15}
             />
-            <Button onClick={handleGenerate} disabled={isLoading} size="lg">
+            <Button onClick={handleGenerate} disabled={isLoading} size="lg" className="bg-white text-black hover:bg-neutral-200">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />

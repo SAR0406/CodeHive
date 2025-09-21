@@ -46,7 +46,7 @@ export default function MarketplacePage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="font-headline text-3xl md:text-4xl font-semibold flex items-center gap-2">
+        <h1 className="font-headline text-3xl md:text-4xl font-semibold flex items-center gap-2 bg-clip-text text-transparent bg-gradient-to-b from-white to-neutral-400">
             <LayoutTemplate className="size-8" />
             <span>Community Marketplace</span>
         </h1>
@@ -55,7 +55,7 @@ export default function MarketplacePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {tasks.map((task, index) => (
-          <Card key={index} className="flex flex-col">
+          <Card key={index} className="flex flex-col transition-all duration-300 hover:scale-[1.02] hover:shadow-accent/40 hover:shadow-2xl">
             <CardHeader>
               <CardTitle className="font-headline text-lg">{task.title}</CardTitle>
               <CardDescription className="line-clamp-3">{task.description}</CardDescription>
@@ -72,7 +72,7 @@ export default function MarketplacePage() {
                 <Star className="w-5 h-5" />
                 <span>{task.credits}</span>
               </div>
-              <Button>Claim Task</Button>
+              <Button className="bg-white text-black hover:bg-neutral-200">Claim Task</Button>
             </CardFooter>
           </Card>
         ))}

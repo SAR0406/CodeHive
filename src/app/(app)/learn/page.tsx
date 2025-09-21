@@ -24,7 +24,7 @@ export default function LearnPage() {
   return (
     <div className="flex flex-col gap-12">
       <div>
-        <h1 className="font-headline text-3xl md:text-4xl font-semibold flex items-center gap-2">
+        <h1 className="font-headline text-3xl md:text-4xl font-semibold flex items-center gap-2 bg-clip-text text-transparent bg-gradient-to-b from-white to-neutral-400">
           <GraduationCap className="size-8" />
           <span>Learn & Mentor</span>
         </h1>
@@ -37,7 +37,7 @@ export default function LearnPage() {
           {mentors.map((mentor) => {
             const placeholder = PlaceHolderImages.find((p) => p.id === mentor.id)
             return (
-              <Card key={mentor.id} className="text-center">
+              <Card key={mentor.id} className="text-center transition-all duration-300 hover:scale-[1.02] hover:shadow-accent/40 hover:shadow-2xl">
                 <CardContent className="pt-6 flex flex-col items-center gap-4">
                   <Avatar className="h-24 w-24 border-2 border-primary">
                     {placeholder && <AvatarImage src={placeholder.imageUrl} alt={mentor.name} data-ai-hint={placeholder.imageHint} />}
@@ -63,7 +63,7 @@ export default function LearnPage() {
                     <Star className="w-4 h-4 text-primary" />
                     <span>{mentor.reputation} Reputation</span>
                   </div>
-                   <Button className="w-full">Request Session</Button>
+                   <Button className="w-full bg-white text-black hover:bg-neutral-200">Request Session</Button>
                 </CardFooter>
               </Card>
             )
@@ -75,7 +75,7 @@ export default function LearnPage() {
         <h2 className="font-headline text-2xl font-semibold mb-6">Learning Modules</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {modules.map((mod, index) => (
-                <Card key={index} className="flex items-center">
+                <Card key={index} className="flex items-center transition-all duration-300 hover:shadow-accent/40 hover:shadow-2xl">
                     <CardHeader className="pr-0">
                         <div className="bg-primary/10 p-4 rounded-lg">
                            <BookOpen className="h-8 w-8 text-primary" />

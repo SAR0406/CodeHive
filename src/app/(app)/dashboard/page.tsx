@@ -8,7 +8,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="font-headline text-3xl md:text-4xl font-semibold">Welcome to CodeHive</h1>
+        <h1 className="font-headline text-3xl md:text-4xl font-semibold bg-clip-text text-transparent bg-gradient-to-b from-white to-neutral-400">Welcome to CodeHive</h1>
         <p className="text-muted-foreground mt-2">Your hub for building, learning, and collaborating.</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -72,7 +72,7 @@ export default function DashboardPage() {
               <CardTitle className="font-headline">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4 flex-grow justify-center">
-              <Button asChild size="lg" className="w-full">
+              <Button asChild size="lg" className="w-full bg-white text-black hover:bg-neutral-200">
                 <Link href="/builder">
                   Start Building with AI
                   <ArrowUpRight className="ml-2 h-4 w-4" />
