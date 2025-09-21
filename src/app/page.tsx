@@ -9,7 +9,7 @@ export default function LandingPage() {
     <div className="dark bg-background text-foreground min-h-screen flex flex-col overflow-x-hidden">
       <div className="fixed top-0 left-0 w-full h-full sparkle-bg -z-10" />
       <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/50 backdrop-blur-sm">
-        <div className="container flex h-16 max-w-screen-2xl items-center">
+        <div className="container flex h-16 max-w-screen-2xl items-center justify-center">
           <Link href="/" className="flex items-center gap-2 mr-6">
             <CodeHiveIcon className="size-8 text-foreground" />
             <span className="font-bold text-xl font-headline">CodeHive</span>
@@ -28,7 +28,7 @@ export default function LandingPage() {
               Docs
             </Link>
           </nav>
-          <div className="flex flex-1 items-center justify-end gap-2">
+          <div className="hidden md:flex flex-1 items-center justify-end gap-2">
             <Button variant="ghost" asChild>
               <Link href="/dashboard">Login</Link>
             </Button>
