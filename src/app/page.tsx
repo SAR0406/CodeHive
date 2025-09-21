@@ -7,8 +7,8 @@ import { Card } from '@/components/ui/card';
 
 export default function LandingPage() {
   return (
-    <div className="dark bg-background text-foreground min-h-screen flex flex-col overflow-x-hidden">
-      <div className="app-container absolute inset-0 z-0" />
+    <div className="dark bg-background text-foreground min-h-screen flex flex-col">
+      <div className="stars absolute inset-0 z-0" />
       <header className="sticky top-0 z-50 w-full">
         <div className="container flex h-20 max-w-screen-xl items-center justify-between mx-auto px-4">
           <Link href="/" className="flex items-center gap-2">
@@ -31,7 +31,7 @@ export default function LandingPage() {
           </nav>
           <div className="hidden md:flex items-center justify-end gap-4">
             <Button variant="ghost" asChild>
-                <Link href="#">
+                <Link href="/dashboard">
                     Log in
                 </Link>
             </Button>
@@ -46,7 +46,7 @@ export default function LandingPage() {
 
       <main className="flex-1 flex flex-col justify-center z-10 px-4">
         <section className="w-full py-20 md:py-32">
-          <div className="container max-w-screen-md mx-auto text-center flex flex-col items-center gap-8">
+          <div className="container mx-auto text-center flex flex-col items-center gap-8">
             
             <div className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground bg-card/80 border border-border px-3 py-1 rounded-full">
                 <div className="flex -space-x-2 overflow-hidden">

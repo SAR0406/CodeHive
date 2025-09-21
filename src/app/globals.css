@@ -48,7 +48,6 @@
   }
   body {
     @apply bg-background text-foreground;
-    overflow: hidden; /* Prevent body scroll with glass container */
   }
   .app-container {
     height: 100vh;

@@ -51,7 +51,6 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased dark bg-background">
-        <Stars />
         {children}
         <Toaster />
       </body>
