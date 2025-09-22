@@ -1,0 +1,168 @@
+'use server';
+
+/**
+ * @fileOverview This file contains all the AI-related server actions for the application.
+ * It uses Genkit to interact with Google's AI models to perform tasks like
+ * code explanation, story generation, and more.
+ */
+
+import { ai } from '@/ai/genkit';
+import { z } from 'zod';
+
+// Helper to generate a unique ID
+function generateId() {
+  return Math.random().toString(36).substring(2, 9);
+}
+
+// In-memory store for generated stories (replace with a database in production)
+const storyStore: Record<string, GenerateStoryOutput> = {};
+
+// Schemas for AI Actions
+const ExplainCodeSnippetInputSchema = z.object({
+  codeSnippet: z.string(),
+  programmingLanguage: z.string(),
+});
+export type ExplainCodeSnippetInput = z.infer<typeof ExplainCodeSnippetInputSchema>;
+
+const ExplainCodeSnippetOutputSchema = z.object({
+  explanation: z.string(),
+});
+export type ExplainCodeSnippetOutput = z.infer<typeof ExplainCodeSnippetOutputSchema>;
+
+const SuggestCodeFixesInputSchema = z.object({
+  code: z.string(),
+  errors: z.string(),
+});
+export type SuggestCodeFixesInput = z.infer<typeof SuggestCodeFixesInputSchema>;
+
+const SuggestCodeFixesOutputSchema = z.object({
+  fixes: z.string(),
+});
+export type SuggestCodeFixesOutput = z.infer<typeof SuggestCodeFixesOutputSchema>;
+
+const GenerateTestsFromCodeInputSchema = z.object({
+  code: z.string(),
+  language: z.string(),
+});
+export type GenerateTestsFromCodeInput = z.infer<typeof GenerateTestsFromCodeInputSchema>;
+
+const GenerateTestsFromCodeOutputSchema = z.object({
+  tests: z.string(),
+});
+export type GenerateTestsFromCodeOutput = z.infer<typeof GenerateTestsFromCodeOutputSchema>;
+
+
+const GenerateAppInputSchema = z.object({
+  prompt: z.string(),
+});
+export type GenerateAppInput = z.infer<typeof GenerateAppInputSchema>;
+
+const GenerateAppOutputSchema = z.object({
+  code: z.string(),
+});
+export type GenerateAppOutput = z.infer<typeof GenerateAppOutputSchema>;
+
+const GenerateStoryInputSchema = z.object({
+  prompt: z.string(),
+});
+export type GenerateStoryInput = z.infer<typeof GenerateStoryInputSchema>;
+
+const StoryPageSchema = z.object({
+  pageNumber: z.number(),
+  content: z.string(),
+});
+
+const GenerateStoryOutputSchema = z.object({
+  title: z.string(),
+  pages: z.array(StoryPageSchema),
+});
+export type GenerateStoryOutput = z.infer<typeof GenerateStoryOutputSchema>;
+
+
+// AI Actions
+
+export async function explainCodeSnippet(input: ExplainCodeSnippetInput): Promise<ExplainCodeSnippetOutput> {
+  const { output } = await ai.generate({
+    prompt: `You are an AI code assistant that explains code snippets in plain English. Explain the following code snippet in plain English, so that a developer can quickly understand it.
+
+Programming Language: ${input.programmingLanguage}
+Code Snippet:
+\`\`\`${input.programmingLanguage}
+${input.codeSnippet}
+\`\`\`
+`,
+    output: {
+      schema: ExplainCodeSnippetOutputSchema,
+    },
+  });
+  return output!;
+}
+
+export async function suggestCodeFixes(input: SuggestCodeFixesInput): Promise<SuggestCodeFixesOutput> {
+  const { output } = await ai.generate({
+    prompt: `You are an AI collaboration bot that suggests code fixes based on errors and warnings in the code.
+
+Analyze the following code and suggest fixes for the given errors and warnings.
+
+Code:
+${input.code}
+
+Errors and Warnings:
+${input.errors}
+
+Suggested Fixes:`,
+    output: {
+      schema: SuggestCodeFixesOutputSchema,
+    },
+  });
+  return output!;
+}
+
+export async function generateTestsFromCode(input: GenerateTestsFromCodeInput): Promise<GenerateTestsFromCodeOutput> {
+  const { output } = await ai.generate({
+    prompt: `You are an AI test generator expert. You will generate unit tests for the given code.
+
+Code (${input.language}):
+${input.code}
+
+Tests:
+`,
+    output: {
+      schema: GenerateTestsFromCodeOutputSchema,
+    },
+  });
+  return output!;
+}
+
+
+export async function generateApp(input: GenerateAppInput): Promise<GenerateAppOutput> {
+  const { output } = await ai.generate({
+    prompt: `You are an expert software engineer. Generate the code for a basic application based on the following prompt: ${input.prompt}. Return only the code. Do not include any explanations or comments outside of the code.`,
+    output: {
+      schema: GenerateAppOutputSchema,
+    },
+  });
+  return output!;
+}
+
+
+export async function generateStory(input: GenerateStoryInput): Promise<{ storyId: string }> {
+  const { output } = await ai.generate({
+    prompt: `You are an expert storyteller. Generate a short, multi-page story based on the user's prompt. The story should have a clear title and be broken down into several pages.
+
+Prompt: ${input.prompt}`,
+    output: {
+      schema: GenerateStoryOutputSchema,
+    },
+  });
+
+  const storyId = generateId();
+  if (output) {
+    storyStore[storyId] = output;
+  }
+  return { storyId };
+}
+
+export async function getStory(storyId: string): Promise<GenerateStoryOutput | null> {
+  return storyStore[storyId] || null;
+}

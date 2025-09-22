@@ -9,9 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Sparkles } from "lucide-react"
-import { explainCodeSnippet } from "@/ai/flows/explain-code-snippet"
-import { suggestCodeFixes } from "@/ai/flows/suggest-code-fixes"
-import { generateTestsFromCode } from "@/ai/flows/generate-tests-from-code"
+import { explainCodeSnippet, suggestCodeFixes, generateTestsFromCode } from "@/ai/actions"
 
 export default function AIBotClient() {
   const { toast } = useToast()

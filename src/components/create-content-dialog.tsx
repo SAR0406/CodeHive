@@ -15,7 +15,7 @@ import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { generateStory } from '@/ai/flows/generate-story-flow';
+import { generateStory } from '@/ai/actions';
 import { Loader2, Sparkles } from 'lucide-react';
 
 export function CreateContentDialog({ children }: PropsWithChildren) {

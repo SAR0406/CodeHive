@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getStory } from '@/ai/flows/generate-story-flow';
-import type { GenerateStoryOutput } from '@/ai/flows/story-schema';
+import { getStory } from '@/ai/actions';
+import type { GenerateStoryOutput } from '@/ai/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, ArrowRight, BookOpen, Loader2 } from 'lucide-react';
