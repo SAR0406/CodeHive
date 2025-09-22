@@ -1,4 +1,5 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { AmazonLogo, CodeHiveIcon, DellLogo, MicrosoftLogo, OracleLogo, SapLogo, ShopifyLogo, SlackLogo, WebflowLogo, WixLogo, WordpressLogo, CreateContentIcon, OptimizeContentIcon, DistributeContentIcon, ZapierLogo } from '@/components/icons';
 import Link from 'next/link';
@@ -40,7 +41,11 @@ const integrations = [
 ]
 
 export default function LandingPage() {
-  const splineViewerHtml = `<spline-viewer loading-anim-type="spinner-small-dark" url="https://prod.spline.design/410-summary-e05423851586522e8976b5b43b9e4a86/scene.splinecode"></spline-viewer>`;
+  const [splineViewerHtml, setSplineViewerHtml] = useState('');
+
+  useEffect(() => {
+    setSplineViewerHtml(`<spline-viewer loading-anim-type="spinner-small-dark" url="https://prod.spline.design/410-summary-e05423851586522e8976b5b43b9e4a86/scene.splinecode"></spline-viewer>`);
+  }, []);
   
   return (
     <div className="dark bg-background text-foreground min-h-screen flex flex-col">
@@ -82,7 +87,7 @@ export default function LandingPage() {
 
       <main className="flex-1 flex flex-col z-10 px-4">
         <section className="w-full py-20 md:py-32 relative">
-           <div className="absolute top-0 right-0 w-1/2 h-full z-0" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />
+           {splineViewerHtml && <div className="absolute top-0 right-0 w-1/2 h-full z-0" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />}
           <div className="container mx-auto text-center flex flex-col items-center gap-8 relative z-10">
             
             <div className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground bg-card/80 border border-border px-3 py-1 rounded-full">
