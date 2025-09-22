@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Sidebar,
@@ -53,7 +54,7 @@ const navItems = [
 
 export default function AppShell({ children }: PropsWithChildren) {
   const pathname = usePathname();
-  const { user, logOut } = useAuth();
+  const { user, credits, logOut } = useAuth();
 
   return (
     <SidebarProvider>
@@ -126,7 +127,9 @@ export default function AppShell({ children }: PropsWithChildren) {
                     </Avatar>
                     <div className="hidden text-left lg:block">
                       <p className="text-sm font-medium">{user?.displayName ?? 'Welcome'}</p>
-                      <p className="text-xs text-muted-foreground">Credits: 1,250</p>
+                      <p className="text-xs text-muted-foreground">
+                        {credits !== null ? `Credits: ${credits.toLocaleString()}` : 'Loading...'}
+                      </p>
                     </div>
                     <ChevronDown className="ml-1 hidden size-4 text-muted-foreground lg:block" />
                   </Button>
