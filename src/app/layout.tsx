@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import Script from 'next/script';
+import { AuthProvider } from '@/hooks/use-auth';
 
 export const metadata: Metadata = {
   title: 'CodeHive',
@@ -53,7 +54,9 @@ export default function RootLayout({
         <Script type="module" src="https://unpkg.com/@splinetool/viewer@1.10.64/build/spline-viewer.js" />
       </head>
       <body className="font-body antialiased dark bg-background">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         <Toaster />
       </body>
     </html>

@@ -21,6 +21,7 @@ import {
   LayoutTemplate,
   Library,
   LifeBuoy,
+  LogOut,
   Search,
   Settings,
 } from 'lucide-react';
@@ -39,6 +40,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { CodeHiveIcon } from '../icons';
+import { useAuth } from '@/hooks/use-auth';
 
 const navItems = [
   { href: '/dashboard', icon: Home, label: 'Dashboard' },
@@ -51,6 +53,7 @@ const navItems = [
 
 export default function AppShell({ children }: PropsWithChildren) {
   const pathname = usePathname();
+  const { user, logOut } = useAuth();
 
   return (
     <SidebarProvider>
@@ -118,11 +121,11 @@ export default function AppShell({ children }: PropsWithChildren) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative flex items-center gap-2 rounded-full p-1 h-auto">
                     <Avatar className="h-9 w-9 border-2 border-border">
-                      <AvatarImage src="https://picsum.photos/seed/user/40/40" alt="User" data-ai-hint="person portrait" />
-                      <AvatarFallback>U</AvatarFallback>
+                      <AvatarImage src={user?.photoURL ?? `https://picsum.photos/seed/${user?.uid}/40/40`} alt={user?.displayName ?? "User"} data-ai-hint="person portrait" />
+                      <AvatarFallback>{user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
                     </Avatar>
                     <div className="hidden text-left lg:block">
-                      <p className="text-sm font-medium">Alex Ray</p>
+                      <p className="text-sm font-medium">{user?.displayName ?? 'Welcome'}</p>
                       <p className="text-xs text-muted-foreground">Credits: 1,250</p>
                     </div>
                     <ChevronDown className="ml-1 hidden size-4 text-muted-foreground lg:block" />
@@ -135,7 +138,10 @@ export default function AppShell({ children }: PropsWithChildren) {
                   <DropdownMenuItem>Billing</DropdownMenuItem>
                   <DropdownMenuItem>Settings</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>Logout</DropdownMenuItem>
+                  <DropdownMenuItem onClick={logOut}>
+                    <LogOut className="mr-2" />
+                    Logout
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

@@ -46,7 +46,7 @@ export default function LandingPage() {
 
   React.useEffect(() => {
     setSplineViewerHtml(
-      `<spline-viewer loading-anim-type="spinner-small-dark" url="https://prod.spline.design/gm0ksJtPHZQblNTV/scene.splinecode"></spline-viewer>`
+      `<spline-viewer loading-anim-type="spinner-small-dark" url="https://prod.spline.design/A52j2Q32i5i-s29k/scene.splinecode"></spline-viewer>`
     );
   }, []);
   
