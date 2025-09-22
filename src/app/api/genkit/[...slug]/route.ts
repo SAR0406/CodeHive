@@ -1,4 +1,5 @@
-import {genkitNextHandler} from '@genkit-ai/next/server';
+'use server';
+import {genkitNextHandler} from '@genkit-ai/next';
 import '@/ai/flows/suggest-code-fixes';
 import '@/ai/flows/explain-code-snippet';
 import '@/ai/flows/generate-tests-from-code';
