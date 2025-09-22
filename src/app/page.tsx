@@ -46,7 +46,7 @@ export default function LandingPage() {
 
   React.useEffect(() => {
     setSplineViewerHtml(
-      `<spline-viewer loading-anim-type="spinner-small-dark" url="https://prod.spline.design/A52j2Q32i5i-s29k/scene.splinecode"></spline-viewer>`
+      `<spline-viewer loading-anim-type="spinner-small-dark" url="https://prod.spline.design/gm0ksJtPHZQblNTV/scene.splinecode"></spline-viewer>`
     );
   }, []);
   
@@ -99,7 +99,7 @@ export default function LandingPage() {
                     <Image className="inline-block h-5 w-5 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p2/40/40" alt="p2" width={20} height={20}/>
                     <Image className="inline-block h-5 w-5 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p3/40/40" alt="p3" width={20} height={20}/>
                 </div>
-                <span>Trusted by 35.000+ people</span>
+                <span>Trusted by 35,000+ people</span>
             </div>
 
             <h1 className="font-headline font-bold text-5xl md:text-6xl lg:text-7xl text-white tracking-tighter leading-tight">
