@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Bot, Code, Figma, Loader2, Sparkles, Rocket } from 'lucide-react';
+import Editor from '@monaco-editor/react';
 
 export default function AIBuilderPage() {
   const [prompt, setPrompt] = useState('');
@@ -96,7 +97,7 @@ export default function AIBuilderPage() {
             <CardDescription>The code for your application will appear here. You can then deploy it.</CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex flex-col gap-4">
-            <div className="border rounded-lg bg-muted/20 flex-grow p-4 overflow-auto">
+            <div className="border rounded-lg bg-background/80 flex-grow overflow-hidden">
               {isLoading && (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                   <Loader2 className="mr-2 h-8 w-8 animate-spin" />
@@ -104,16 +105,25 @@ export default function AIBuilderPage() {
                 </div>
               )}
               {!isLoading && !generatedCode && (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center">
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center p-4">
                   <Code className="mr-2 h-10 w-10 mb-2" />
                   <span className="font-semibold">Your generated code will appear here.</span>
                   <p className="text-sm">Describe your app and click "Generate App" to start.</p>
                 </div>
               )}
               {generatedCode && (
-                <pre className="text-sm">
-                  <code>{generatedCode}</code>
-                </pre>
+                 <Editor
+                    height="100%"
+                    language="typescript"
+                    theme="vs-dark"
+                    value={generatedCode}
+                    options={{
+                        readOnly: true,
+                        minimap: { enabled: false },
+                        scrollBeyondLastLine: false,
+                        fontSize: 14,
+                    }}
+                />
               )}
             </div>
             <Button variant="secondary" disabled={!generatedCode}>
