@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { DashboardCharts } from '@/components/dashboard-charts';
 import React from 'react';
 import Spline from '@splinetool/react-spline';
+import { useAuth } from '@/hooks/use-auth';
 
 
 const features = [
@@ -44,6 +45,12 @@ const integrations = [
 ]
 
 export default function LandingPage() {
+  const { user, loading } = useAuth();
+  
+  const getStartedLink = () => {
+    if (loading) return "#"; // Or a loading spinner state
+    return user ? "/dashboard" : "/subscribe";
+  };
   
   return (
     <div className="dark bg-background text-foreground min-h-screen flex flex-col">
@@ -60,7 +67,7 @@ export default function LandingPage() {
             <Link href="#" className="text-muted-foreground hover:text-white transition-colors">
               Blog
             </Link>
-            <Link href="#" className="text-muted-foreground hover:text-white transition-colors">
+            <Link href="/subscribe" className="text-muted-foreground hover:text-white transition-colors">
               Pricing
             </Link>
             <Link href="#" className="text-muted-foreground hover:text-white transition-colors">
@@ -75,7 +82,7 @@ export default function LandingPage() {
                 </a>
             </Button>
             <Button asChild className="bg-primary text-primary-foreground hover:bg-neutral-200">
-              <Link href="/dashboard">
+              <Link href={getStartedLink()}>
                 Discover the platform
               </Link>
             </Button>
@@ -107,7 +114,7 @@ export default function LandingPage() {
             </p>
             <div className="flex items-center gap-4">
               <Button size="lg" asChild className="bg-primary text-primary-foreground hover:bg-neutral-200">
-                <Link href="/dashboard">
+                <Link href={getStartedLink()}>
                   Get started for free
                 </Link>
               </Button>
@@ -210,8 +217,8 @@ export default function LandingPage() {
                     What will you discover?
                 </h2>
                 <Button size="lg" asChild className="bg-primary text-primary-foreground hover:bg-neutral-200 mt-4">
-                    <Link href="/dashboard">
-                    Get started for free
+                    <Link href={getStartedLink()}>
+                      Get started for free
                     </Link>
                 </Button>
             </div>

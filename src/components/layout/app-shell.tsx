@@ -17,6 +17,7 @@ import {
   Bot,
   Building2,
   ChevronDown,
+  CreditCard,
   GraduationCap,
   Home,
   LayoutTemplate,
@@ -25,6 +26,7 @@ import {
   LogOut,
   Search,
   Settings,
+  User,
 } from 'lucide-react';
 import type { PropsWithChildren } from 'react';
 import { usePathname } from 'next/navigation';
@@ -86,8 +88,8 @@ export default function AppShell({ children }: PropsWithChildren) {
         <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip={{ children: 'Settings', side: 'right' }}>
-                <Link href="#">
+              <SidebarMenuButton asChild tooltip={{ children: 'Settings', side: 'right' }} isActive={pathname.startsWith('/settings')}>
+                <Link href="/settings">
                   <Settings />
                   <span>Settings</span>
                 </Link>
@@ -137,9 +139,15 @@ export default function AppShell({ children }: PropsWithChildren) {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>Profile</DropdownMenuItem>
-                  <DropdownMenuItem>Billing</DropdownMenuItem>
-                  <DropdownMenuItem>Settings</DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile"><User className="mr-2" />Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/billing"><CreditCard className="mr-2" />Billing</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings"><Settings className="mr-2" />Settings</Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logOut}>
                     <LogOut className="mr-2" />

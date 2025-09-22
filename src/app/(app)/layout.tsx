@@ -13,7 +13,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace('/login');
+      router.replace('/subscribe');
     }
   }, [loading, user, router]);
 
