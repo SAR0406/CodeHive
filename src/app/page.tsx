@@ -44,7 +44,7 @@ export default function LandingPage() {
   const [splineViewerHtml, setSplineViewerHtml] = useState('');
 
   useEffect(() => {
-    setSplineViewerHtml(`<spline-viewer loading-anim-type="spinner-small-dark" url="https://prod.spline.design/410-summary-e05423851586522e8976b5b43b9e4a86/scene.splinecode"></spline-viewer>`);
+    setSplineViewerHtml(`<spline-viewer loading-anim-type="spinner-small-dark" url="https://prod.spline.design/gm0ksJtPHZQblNTV/scene.splinecode"></spline-viewer>`);
   }, []);
   
   return (
@@ -86,34 +86,40 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1 flex flex-col z-10 px-4">
-        <section className="w-full py-20 md:py-32 relative">
-           {splineViewerHtml && <div className="absolute top-0 right-0 w-1/2 h-full z-0" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />}
-          <div className="container mx-auto text-center flex flex-col items-center gap-8 relative z-10">
-            
-            <div className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground bg-card/80 border border-border px-3 py-1 rounded-full">
-                <div className="flex -space-x-2 overflow-hidden">
-                    <Image className="inline-block h-5 w-5 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p1/40/40" alt="p1" width={20} height={20}/>
-                    <Image className="inline-block h-5 w-5 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p2/40/40" alt="p2" width={20} height={20}/>
-                    <Image className="inline-block h-5 w-5 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p3/40/40" alt="p3" width={20} height={20}/>
-                </div>
-                <span>Trusted by 35.000+ people</span>
-            </div>
+        <section className="w-full py-20 md:py-32">
+          <div className="container mx-auto grid md:grid-cols-2 gap-8 items-center">
+            <div className="flex flex-col items-start gap-8">
+              <div className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground bg-card/80 border border-border px-3 py-1 rounded-full">
+                  <div className="flex -space-x-2 overflow-hidden">
+                      <Image className="inline-block h-5 w-5 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p1/40/40" alt="p1" width={20} height={20}/>
+                      <Image className="inline-block h-5 w-5 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p2/40/40" alt="p2" width={20} height={20}/>
+                      <Image className="inline-block h-5 w-5 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p3/40/40" alt="p3" width={20} height={20}/>
+                  </div>
+                  <span>Trusted by 35,000+ people</span>
+              </div>
 
-            <h1 className="font-headline font-bold text-5xl md:text-6xl lg:text-7xl text-white tracking-tighter leading-tight">
-              Build better sites, faster.
-            </h1>
-            <p className="max-w-2xl text-lg text-muted-foreground">
-              An open source content management system that uses AI to automate various aspects of content creation, optimization, and distribution.
-            </p>
-            <div className="flex items-center gap-4">
-              <Button size="lg" asChild className="bg-primary text-primary-foreground hover:bg-neutral-200">
-                <Link href="/dashboard">
-                  Get started for free
-                </Link>
-              </Button>
+              <h1 className="font-headline font-bold text-5xl md:text-6xl lg:text-7xl text-white tracking-tighter leading-tight">
+                Build better sites, faster.
+              </h1>
+              <p className="max-w-xl text-lg text-muted-foreground">
+                An open source content management system that uses AI to automate various aspects of content creation, optimization, and distribution.
+              </p>
+              <div className="flex items-center gap-4">
+                <Button size="lg" asChild className="bg-primary text-primary-foreground hover:bg-neutral-200">
+                  <Link href="/dashboard">
+                    Get started for free
+                  </Link>
+                </Button>
+              </div>
             </div>
-            
-            <Card className="mt-16 w-full max-w-4xl p-0.5 glass-container overflow-hidden">
+             <div className="relative w-full h-[400px] md:h-full min-h-[300px]">
+              {splineViewerHtml && <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />}
+            </div>
+          </div>
+        </section>
+
+        <section className="container mx-auto py-12">
+            <Card className="w-full max-w-4xl mx-auto p-0.5 glass-container overflow-hidden">
                  <div className="flex justify-between items-center p-2 border-b border-border/50">
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-red-500"></div>
@@ -146,14 +152,13 @@ export default function LandingPage() {
                  </div>
             </Card>
 
-            <div className="mt-16 flex items-center justify-between w-full max-w-5xl text-muted-foreground">
+            <div className="mt-16 flex items-center justify-between w-full max-w-5xl text-muted-foreground mx-auto">
               <AmazonLogo className="w-24 h-auto" />
               <DellLogo className="w-24 h-auto" />
               <SapLogo className="w-20 h-auto" />
               <MicrosoftLogo className="w-28 h-auto" />
               <OracleLogo className="w-24 h-auto" />
             </div>
-          </div>
         </section>
 
         <section className="w-full py-20 md:py-32">
