@@ -17,6 +17,7 @@ import {
   Bot,
   Building2,
   ChevronDown,
+  Feather,
   GraduationCap,
   Home,
   LayoutTemplate,
@@ -50,6 +51,7 @@ const navItems = [
   { href: '/templates', icon: Library, label: 'Templates' },
   { href: '/learn', icon: GraduationCap, label: 'Learn & Mentor' },
   { href: '/bot', icon: Bot, label: 'AI Bot' },
+  { href: '/story-writer', icon: Feather, label: 'Story Writer' },
 ];
 
 export default function AppShell({ children }: PropsWithChildren) {
