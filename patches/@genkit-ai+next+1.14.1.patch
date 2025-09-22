@@ -1,0 +1,16 @@
+diff --git a/node_modules/@genkit-ai/next/package.json b/node_modules/@genkit-ai/next/package.json
+index 3e51241..6539958 100644
+--- a/node_modules/@genkit-ai/next/package.json
++++ b/node_modules/@genkit-ai/next/package.json
+@@ -2,6 +2,11 @@
+   "name": "@genkit-ai/next",
+   "version": "1.14.1",
+   "type": "module",
++  "exports": {
++    ".": "./lib/index.mjs",
++    "./server": "./lib/index.mjs"
++  },
+   "genkit": {
+     "name": "Next.js",
+     "icon": "https://nextjs.org/static/favicon/favicon.ico",
+
