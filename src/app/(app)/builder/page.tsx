@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Bot, Code, Figma, Loader2, Sparkles, Rocket } from 'lucide-react';
+import { Bot, Code, Figma, Loader2, Sparkles, Rocket, Eye } from 'lucide-react';
 import Editor from '@monaco-editor/react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import LivePreview from '@/components/live-preview';
 
 export default function AIBuilderPage() {
   const [prompt, setPrompt] = useState('');
@@ -92,44 +94,67 @@ export default function AIBuilderPage() {
         </Card>
 
         <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle>Generated Code</CardTitle>
-            <CardDescription>The code for your application will appear here. You can then deploy it.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex-grow flex flex-col gap-4">
-            <div className="border rounded-lg bg-background/80 flex-grow overflow-hidden">
-              {isLoading && (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-                  <span>Generating code...</span>
+          <CardContent className="flex-grow flex flex-col gap-4 pt-6">
+            <Tabs defaultValue="code" className="flex-grow flex flex-col">
+              <div className='flex justify-between items-center'>
+                <TabsList>
+                  <TabsTrigger value="code"><Code className="mr-2" /> Code</TabsTrigger>
+                  <TabsTrigger value="preview"><Eye className="mr-2" /> Live Preview</TabsTrigger>
+                </TabsList>
+                <Button variant="secondary" disabled={!generatedCode}>
+                    <Rocket className="mr-2" />
+                    Deploy to CodeHive
+                </Button>
+              </div>
+              <TabsContent value="code" className="flex-grow mt-4">
+                <div className="border rounded-lg bg-background/80 flex-grow h-full overflow-hidden">
+                    {isLoading && (
+                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                        <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+                        <span>Generating code...</span>
+                        </div>
+                    )}
+                    {!isLoading && !generatedCode && (
+                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center p-4">
+                        <Code className="mr-2 h-10 w-10 mb-2" />
+                        <span className="font-semibold">Your generated code will appear here.</span>
+                        <p className="text-sm">Describe your app and click "Generate App" to start.</p>
+                        </div>
+                    )}
+                    {generatedCode && (
+                        <Editor
+                            height="100%"
+                            language="typescript"
+                            theme="vs-dark"
+                            value={generatedCode}
+                            options={{
+                                readOnly: true,
+                                minimap: { enabled: false },
+                                scrollBeyondLastLine: false,
+                                fontSize: 14,
+                            }}
+                        />
+                    )}
                 </div>
-              )}
-              {!isLoading && !generatedCode && (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center p-4">
-                  <Code className="mr-2 h-10 w-10 mb-2" />
-                  <span className="font-semibold">Your generated code will appear here.</span>
-                  <p className="text-sm">Describe your app and click "Generate App" to start.</p>
-                </div>
-              )}
-              {generatedCode && (
-                 <Editor
-                    height="100%"
-                    language="typescript"
-                    theme="vs-dark"
-                    value={generatedCode}
-                    options={{
-                        readOnly: true,
-                        minimap: { enabled: false },
-                        scrollBeyondLastLine: false,
-                        fontSize: 14,
-                    }}
-                />
-              )}
-            </div>
-            <Button variant="secondary" disabled={!generatedCode}>
-              <Rocket className="mr-2" />
-              Deploy to CodeHive
-            </Button>
+              </TabsContent>
+               <TabsContent value="preview" className="flex-grow mt-4">
+                 <div className="border rounded-lg bg-white flex-grow h-full overflow-hidden">
+                    {isLoading && (
+                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                            <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+                            <span>Generating preview...</span>
+                        </div>
+                    )}
+                    {!isLoading && !generatedCode && (
+                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center p-4 bg-background/80">
+                        <Eye className="mr-2 h-10 w-10 mb-2" />
+                        <span className="font-semibold">The live preview will appear here.</span>
+                        </div>
+                    )}
+                    {generatedCode && <LivePreview code={generatedCode} />}
+                 </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
