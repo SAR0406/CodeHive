@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -82,39 +83,35 @@ const tasks = [
 type Task = (typeof tasks)[0];
 
 export default function MarketplacePage() {
-  const { user, credits } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleClaimClick = (task: Task) => {
+  const handleCompleteClick = (task: Task) => {
     if (!user) {
-      toast({ title: 'Authentication Error', description: 'You must be logged in to claim a task.', variant: 'destructive' });
-      return;
-    }
-    if (credits === null || credits < task.credits) {
-      toast({ title: 'Insufficient Credits', description: `You need ${task.credits} credits to claim this task.`, variant: 'destructive' });
+      toast({ title: 'Authentication Error', description: 'You must be logged in to complete a task.', variant: 'destructive' });
       return;
     }
     setSelectedTask(task);
   };
 
-  const handleConfirmClaim = async () => {
+  const handleConfirmCompletion = async () => {
     if (!selectedTask || !user) return;
 
     setIsLoading(true);
     try {
       const creditRef = doc(db, 'credits', user.uid);
       await updateDoc(creditRef, {
-        balance: increment(-selectedTask.credits),
+        balance: increment(selectedTask.credits),
       });
       toast({
-        title: 'Task Claimed!',
-        description: `You have successfully claimed "${selectedTask.title}". ${selectedTask.credits} credits have been deducted.`,
+        title: 'Task Completed!',
+        description: `You have successfully completed "${selectedTask.title}". ${selectedTask.credits} credits have been added to your account.`,
       });
     } catch (error) {
-      console.error('Error claiming task:', error);
-      toast({ title: 'Error', description: 'Could not claim the task. Please try again.', variant: 'destructive' });
+      console.error('Error completing task:', error);
+      toast({ title: 'Error', description: 'Could not complete the task. Please try again.', variant: 'destructive' });
     } finally {
       setIsLoading(false);
       setSelectedTask(null);
@@ -154,9 +151,9 @@ export default function MarketplacePage() {
                   <Star className="w-5 h-5 fill-current" />
                   <span>{task.credits}</span>
                 </div>
-                <Button onClick={() => handleClaimClick(task)}>
+                <Button onClick={() => handleCompleteClick(task)}>
                   <Handshake className="mr-2 h-4 w-4" />
-                  Claim Task
+                  Complete Task
                 </Button>
               </CardFooter>
             </Card>
@@ -167,23 +164,22 @@ export default function MarketplacePage() {
       <AlertDialog open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Your Action</AlertDialogTitle>
+            <AlertDialogTitle>Confirm Task Completion</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to claim the task "{selectedTask?.title}"? This will deduct{' '}
-              <span className="font-bold text-amber-400">{selectedTask?.credits} credits</span> from your account. This
-              action is irreversible.
+              Are you sure you want to mark the task "{selectedTask?.title}" as complete? This will add{' '}
+              <span className="font-bold text-amber-400">{selectedTask?.credits} credits</span> to your account.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmClaim} disabled={isLoading}>
+            <AlertDialogAction onClick={handleConfirmCompletion} disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Confirming...
                 </>
               ) : (
-                'Confirm & Spend Credits'
+                'Confirm & Earn Credits'
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -17,7 +17,6 @@ import {
   Bot,
   Building2,
   ChevronDown,
-  Feather,
   GraduationCap,
   Home,
   LayoutTemplate,
@@ -47,11 +46,10 @@ import { useAuth } from '@/hooks/use-auth';
 const navItems = [
   { href: '/dashboard', icon: Home, label: 'Dashboard' },
   { href: '/builder', icon: Building2, label: 'AI Builder' },
+  { href: '/bot', icon: Bot, label: 'AI Bot' },
   { href: '/marketplace', icon: LayoutTemplate, label: 'Marketplace' },
   { href: '/templates', icon: Library, label: 'Templates' },
   { href: '/learn', icon: GraduationCap, label: 'Learn & Mentor' },
-  { href: '/bot', icon: Bot, label: 'AI Bot' },
-  { href: '/story-writer', icon: Feather, label: 'Story Writer' },
 ];
 
 export default function AppShell({ children }: PropsWithChildren) {

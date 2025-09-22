@@ -1,3 +1,4 @@
+
 'use client';
 import { Button } from '@/components/ui/button';
 import { AmazonLogo, CodeHiveIcon, DellLogo, MicrosoftLogo, OracleLogo, SapLogo, ShopifyLogo, SlackLogo, WebflowLogo, WixLogo, WordpressLogo, CreateContentIcon, OptimizeContentIcon, DistributeContentIcon, ZapierLogo } from '@/components/icons';
@@ -7,7 +8,6 @@ import { ArrowRight, BookOpen, BarChart2, Zap, ShieldCheck, Accessibility, Scali
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { DashboardCharts } from '@/components/dashboard-charts';
 import React from 'react';
-import { CreateContentDialog } from '@/components/create-content-dialog';
 import Spline from '@splinetool/react-spline';
 
 
@@ -130,12 +130,10 @@ export default function LandingPage() {
                         </div>
                     </div>
                     <div className='flex flex-col gap-4 justify-center'>
-                        <CreateContentDialog>
-                            <div className='flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10'>
-                                <CreateContentIcon className='w-5 h-5 text-white' />
-                                <span className='text-sm font-medium'>Create Content</span>
-                            </div>
-                        </CreateContentDialog>
+                        <div className='flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10'>
+                            <CreateContentIcon className='w-5 h-5 text-white' />
+                            <span className='text-sm font-medium'>Create Content</span>
+                        </div>
                         <div className='flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10'>
                             <OptimizeContentIcon className='w-5 h-5 text-white' />
                             <span className='text-sm font-medium'>Content Optimization</span>

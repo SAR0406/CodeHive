@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -12,14 +13,6 @@ import { z } from 'zod';
 import { deductCredits } from '@/lib/firebase/credits';
 
 const AI_ACTION_COST = 10;
-
-// Helper to generate a unique ID
-function generateId() {
-  return Math.random().toString(36).substring(2, 9);
-}
-
-// In-memory store for generated stories (replace with a database in production)
-const storyStore: Record<string, GenerateStoryOutput> = {};
 
 // Schemas for AI Actions
 const ExplainCodeSnippetInputSchema = z.object({
@@ -69,24 +62,6 @@ const GenerateAppOutputSchema = z.object({
   code: z.string(),
 });
 export type GenerateAppOutput = z.infer<typeof GenerateAppOutputSchema>;
-
-const GenerateStoryInputSchema = z.object({
-  prompt: z.string(),
-  userId: z.string(),
-});
-export type GenerateStoryInput = z.infer<typeof GenerateStoryInputSchema>;
-
-const StoryPageSchema = z.object({
-  pageNumber: z.number(),
-  content: z.string(),
-});
-
-const GenerateStoryOutputSchema = z.object({
-  title: z.string(),
-  pages: z.array(StoryPageSchema),
-});
-export type GenerateStoryOutput = z.infer<typeof GenerateStoryOutputSchema>;
-
 
 // AI Actions
 
@@ -160,28 +135,4 @@ export async function generateApp(input: GenerateAppInput): Promise<GenerateAppO
     },
   });
   return output!;
-}
-
-
-export async function generateStory(input: GenerateStoryInput): Promise<{ storyId: string }> {
-  await deductCredits(input.userId, AI_ACTION_COST);
-
-  const { output } = await ai.generate({
-    prompt: `You are an expert storyteller. Generate a short, multi-page story based on the user's prompt. The story should have a clear title and be broken down into several pages.
-
-Prompt: ${input.prompt}`,
-    output: {
-      schema: GenerateStoryOutputSchema,
-    },
-  });
-
-  const storyId = generateId();
-  if (output) {
-    storyStore[storyId] = output;
-  }
-  return { storyId };
-}
-
-export async function getStory(storyId: string): Promise<GenerateStoryOutput | null> {
-  return storyStore[storyId] || null;
 }
