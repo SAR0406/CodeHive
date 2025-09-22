@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { DashboardCharts } from '@/components/dashboard-charts';
 import React from 'react';
 import { CreateContentDialog } from '@/components/create-content-dialog';
+import Spline from '@splinetool/react-spline';
+
 
 const features = [
   {
@@ -42,13 +44,6 @@ const integrations = [
 ]
 
 export default function LandingPage() {
-  const [splineViewerHtml, setSplineViewerHtml] = React.useState('');
-
-  React.useEffect(() => {
-    setSplineViewerHtml(
-      `<spline-viewer loading-anim-type="spinner-small-dark" url="https://prod.spline.design/gm0ksJtPHZQblNTV/scene.splinecode"></spline-viewer>`
-    );
-  }, []);
   
   return (
     <div className="dark bg-background text-foreground min-h-screen flex flex-col">
@@ -90,7 +85,9 @@ export default function LandingPage() {
 
       <main className="flex-1 flex flex-col z-10 px-4">
         <section className="w-full py-20 md:py-32 relative">
-           <div className="absolute top-0 left-0 w-full h-full z-0" dangerouslySetInnerHTML={{ __html: splineViewerHtml }} />
+           <div className="absolute top-0 left-0 w-full h-full z-0">
+                <Spline scene="https://prod.spline.design/gm0ksJtPHZQblNTV/scene.splinecode" />
+           </div>
           <div className="container mx-auto text-center flex flex-col items-center gap-8 relative z-10">
             
             <div className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground bg-card/80 border border-border px-3 py-1 rounded-full">
