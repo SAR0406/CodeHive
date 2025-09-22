@@ -48,8 +48,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           setCredits(snapshot.data().balance);
         } else {
           // If the user is new, create their credit document
-          setDoc(creditRef, { balance: 1250 }).then(() => {
-            setCredits(1250);
+          setDoc(creditRef, { balance: 100 }).then(() => {
+            setCredits(100);
           });
         }
       });
