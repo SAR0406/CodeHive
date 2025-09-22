@@ -10,45 +10,58 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Sparkles } from "lucide-react"
 import { explainCodeSnippet, suggestCodeFixes, generateTestsFromCode } from "@/ai/actions"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function AIBotClient() {
   const { toast } = useToast()
+  const { user } = useAuth();
 
   const [explainState, setExplainState] = useState({ code: "", language: "javascript", explanation: "", isLoading: false })
   const [fixState, setFixState] = useState({ code: "", errors: "", fixes: "", isLoading: false })
   const [testState, setTestState] = useState({ code: "", language: "javascript", tests: "", isLoading: false })
 
+  const handleActionError = (error: any, title: string) => {
+    let description = "Please try again.";
+    if (error.message.includes("Insufficient credits")) {
+        description = "You don't have enough credits to perform this action.";
+    }
+    toast({ title, description, variant: "destructive" });
+  }
+
   const handleExplain = async () => {
+    if (!user) return;
     setExplainState(prev => ({ ...prev, isLoading: true, explanation: "" }))
     try {
-      const result = await explainCodeSnippet({ codeSnippet: explainState.code, programmingLanguage: explainState.language })
+      const result = await explainCodeSnippet({ codeSnippet: explainState.code, programmingLanguage: explainState.language, userId: user.uid })
       setExplainState(prev => ({ ...prev, explanation: result.explanation }))
-    } catch (e) {
-      toast({ title: "Error explaining code", description: "Please try again.", variant: "destructive" })
+    } catch (e: any) {
+      handleActionError(e, "Error explaining code");
     } finally {
       setExplainState(prev => ({ ...prev, isLoading: false }))
     }
   }
 
   const handleFix = async () => {
+    if (!user) return;
     setFixState(prev => ({ ...prev, isLoading: true, fixes: "" }))
     try {
-      const result = await suggestCodeFixes({ code: fixState.code, errors: fixState.errors })
+      const result = await suggestCodeFixes({ code: fixState.code, errors: fixState.errors, userId: user.uid })
       setFixState(prev => ({ ...prev, fixes: result.fixes }))
-    } catch (e) {
-      toast({ title: "Error suggesting fixes", description: "Please try again.", variant: "destructive" })
+    } catch (e: any) {
+      handleActionError(e, "Error suggesting fixes");
     } finally {
       setFixState(prev => ({ ...prev, isLoading: false }))
     }
   }
   
   const handleTest = async () => {
+    if (!user) return;
     setTestState(prev => ({ ...prev, isLoading: true, tests: "" }))
     try {
-      const result = await generateTestsFromCode({ code: testState.code, language: testState.language })
+      const result = await generateTestsFromCode({ code: testState.code, language: testState.language, userId: user.uid })
       setTestState(prev => ({ ...prev, tests: result.tests }))
-    } catch (e) {
-      toast({ title: "Error generating tests", description: "Please try again.", variant: "destructive" })
+    } catch (e: any) {
+      handleActionError(e, "Error generating tests");
     } finally {
       setTestState(prev => ({ ...prev, isLoading: false }))
     }
@@ -82,7 +95,7 @@ export default function AIBotClient() {
         <Card>
           <CardHeader>
             <CardTitle>Explain Code Snippet</CardTitle>
-            <CardDescription>Get a plain English explanation of a piece of code.</CardDescription>
+            <CardDescription>Get a plain English explanation of a piece of code. Costs 10 credits.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -96,7 +109,7 @@ export default function AIBotClient() {
                     {renderResult(explainState.isLoading, explainState.explanation, "The explanation will appear here.")}
                 </div>
             </div>
-            <Button onClick={handleExplain} disabled={explainState.isLoading}><Sparkles className="mr-2 h-4 w-4" /> Explain</Button>
+            <Button onClick={handleExplain} disabled={explainState.isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Explain</Button>
           </CardContent>
         </Card>
       </TabsContent>
@@ -104,7 +117,7 @@ export default function AIBotClient() {
         <Card>
           <CardHeader>
             <CardTitle>Suggest Code Fixes</CardTitle>
-            <CardDescription>Provide code and error messages to get suggested fixes.</CardDescription>
+            <CardDescription>Provide code and error messages to get suggested fixes. Costs 10 credits.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -118,7 +131,7 @@ export default function AIBotClient() {
                 </div>
              </div>
              {renderResult(fixState.isLoading, fixState.fixes, "Suggested fixes will appear here.")}
-            <Button onClick={handleFix} disabled={fixState.isLoading}><Sparkles className="mr-2 h-4 w-4" /> Suggest Fixes</Button>
+            <Button onClick={handleFix} disabled={fixState.isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Suggest Fixes</Button>
           </CardContent>
         </Card>
       </TabsContent>
@@ -126,7 +139,7 @@ export default function AIBotClient() {
         <Card>
           <CardHeader>
             <CardTitle>Generate Unit Tests</CardTitle>
-            <CardDescription>Automatically generate unit tests for your code.</CardDescription>
+            <CardDescription>Automatically generate unit tests for your code. Costs 10 credits.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -140,7 +153,7 @@ export default function AIBotClient() {
                     {renderResult(testState.isLoading, testState.tests, "Generated tests will appear here.")}
                 </div>
             </div>
-            <Button onClick={handleTest} disabled={testState.isLoading}><Sparkles className="mr-2 h-4 w-4" /> Generate Tests</Button>
+            <Button onClick={handleTest} disabled={testState.isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Generate Tests</Button>
           </CardContent>
         </Card>
       </TabsContent>

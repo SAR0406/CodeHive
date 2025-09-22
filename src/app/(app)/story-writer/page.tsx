@@ -8,12 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Feather, Loader2, Sparkles } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function StoryWriterPage() {
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const { user } = useAuth();
 
   const handleGenerate = async () => {
     if (!prompt) {
@@ -24,20 +26,31 @@ export default function StoryWriterPage() {
       });
       return;
     }
+    if (!user) {
+        toast({
+            title: 'Not authenticated',
+            description: 'Please log in to generate a story.',
+            variant: 'destructive',
+        });
+        return;
+    }
 
     setIsLoading(true);
     try {
-      const { storyId } = await generateStory({ prompt });
+      const { storyId } = await generateStory({ prompt, userId: user.uid });
       toast({
         title: 'Story Generated!',
         description: 'Your story has been successfully created.',
       });
       router.push(`/story/${storyId}`);
-    } catch (error) {
-      console.error('Error generating story:', error);
+    } catch (error: any) {
+      let description = 'Something went wrong. Please try again.';
+      if (error.message.includes('Insufficient credits')) {
+        description = "You don't have enough credits to generate a story.";
+      }
       toast({
         title: 'Error Generating Story',
-        description: 'Something went wrong. Please try again.',
+        description,
         variant: 'destructive',
       });
     } finally {
@@ -53,7 +66,7 @@ export default function StoryWriterPage() {
           <span>AI Story Writer</span>
         </h1>
         <p className="text-muted-foreground mt-2">
-          Bring your ideas to life. Enter a prompt and let our AI write a story for you.
+          Bring your ideas to life. Enter a prompt and let our AI write a story for you. Costs 10 credits.
         </p>
       </div>
 
@@ -72,7 +85,7 @@ export default function StoryWriterPage() {
             className="flex-grow text-base"
             rows={10}
           />
-          <Button onClick={handleGenerate} disabled={isLoading} size="lg">
+          <Button onClick={handleGenerate} disabled={isLoading || !user} size="lg">
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />

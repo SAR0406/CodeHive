@@ -17,6 +17,7 @@ import { Textarea } from './ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { generateStory } from '@/ai/actions';
 import { Loader2, Sparkles } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
 export function CreateContentDialog({ children }: PropsWithChildren) {
   const [prompt, setPrompt] = useState('');
@@ -24,6 +25,7 @@ export function CreateContentDialog({ children }: PropsWithChildren) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const { user } = useAuth();
 
   const handleGenerate = async () => {
     if (!prompt) {
@@ -34,21 +36,32 @@ export function CreateContentDialog({ children }: PropsWithChildren) {
       });
       return;
     }
+    if (!user) {
+      toast({
+        title: 'Not authenticated',
+        description: 'Please log in to generate a story.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setIsLoading(true);
     try {
-      const { storyId } = await generateStory({ prompt });
+      const { storyId } = await generateStory({ prompt, userId: user.uid });
       toast({
         title: 'Story Generated!',
         description: 'Your story has been successfully created.',
       });
       setOpen(false);
       router.push(`/story/${storyId}`);
-    } catch (error) {
-      console.error('Error generating story:', error);
+    } catch (error: any) {
+      let description = 'Something went wrong. Please try again.';
+      if (error.message.includes('Insufficient credits')) {
+        description = "You don't have enough credits to generate a story.";
+      }
       toast({
         title: 'Error Generating Story',
-        description: 'Something went wrong. Please try again.',
+        description,
         variant: 'destructive',
       });
     } finally {
@@ -63,7 +76,7 @@ export function CreateContentDialog({ children }: PropsWithChildren) {
         <DialogHeader>
           <DialogTitle>Create Content</DialogTitle>
           <DialogDescription>
-            Enter a prompt and our AI will generate a unique story for you.
+            Enter a prompt and our AI will generate a unique story for you. Costs 10 credits.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -81,7 +94,7 @@ export function CreateContentDialog({ children }: PropsWithChildren) {
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleGenerate} disabled={isLoading}>
+          <Button onClick={handleGenerate} disabled={isLoading || !user}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

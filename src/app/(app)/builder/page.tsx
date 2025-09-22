@@ -10,12 +10,14 @@ import { Bot, Code, Figma, Loader2, Sparkles, Rocket, Eye, Terminal, ChevronRigh
 import Editor from '@monaco-editor/react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import LivePreview from '@/components/live-preview';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function AIBuilderPage() {
   const [prompt, setPrompt] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleGenerate = async () => {
     if (!prompt) {
@@ -26,18 +28,29 @@ export default function AIBuilderPage() {
       });
       return;
     }
+    if (!user) {
+        toast({
+            title: 'Not authenticated',
+            description: 'Please log in to generate an app.',
+            variant: 'destructive',
+        });
+        return;
+    }
 
     setIsLoading(true);
     setGeneratedCode('');
 
     try {
-      const result = await generateApp({ prompt });
+      const result = await generateApp({ prompt, userId: user.uid });
       setGeneratedCode(result.code);
-    } catch (error) {
-      console.error('Error generating app:', error);
+    } catch (error: any) {
+      let description = 'Something went wrong. Please try again.';
+      if (error.message.includes('Insufficient credits')) {
+        description = "You don't have enough credits to generate an app.";
+      }
       toast({
         title: 'Error Generating App',
-        description: 'Something went wrong. Please try again.',
+        description,
         variant: 'destructive',
       });
     } finally {
@@ -53,7 +66,7 @@ export default function AIBuilderPage() {
             <Bot className="size-8 text-accent" />
             <span>AI App Builder</span>
           </h1>
-          <p className="text-muted-foreground mt-2">Generate a full-stack application from a single prompt.</p>
+          <p className="text-muted-foreground mt-2">Generate a full-stack application from a single prompt. Costs 10 credits.</p>
         </div>
          <Button variant="outline" disabled>
           <Figma className="mr-2" />
@@ -77,7 +90,7 @@ export default function AIBuilderPage() {
               className="flex-grow text-base"
               rows={15}
             />
-            <Button onClick={handleGenerate} disabled={isLoading} size="lg">
+            <Button onClick={handleGenerate} disabled={isLoading || !user} size="lg">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
