@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Sparkles } from "lucide-react"
-import { explainCodeSnippet, suggestCodeFixes, generateTestsFromCode } from "@/ai/actions"
 import { useAuth } from "@/hooks/use-auth"
 
 export default function AIBotClient() {
@@ -29,44 +28,9 @@ export default function AIBotClient() {
     toast({ title, description, variant: "destructive" });
   }
 
-  const handleExplain = async () => {
-    if (!user) return;
-    setExplainState(prev => ({ ...prev, isLoading: true, explanation: "" }))
-    try {
-      const result = await explainCodeSnippet({ codeSnippet: explainState.code, programmingLanguage: explainState.language, userId: user.uid })
-      setExplainState(prev => ({ ...prev, explanation: result.explanation }))
-    } catch (e: any) {
-      handleActionError(e, "Error explaining code");
-    } finally {
-      setExplainState(prev => ({ ...prev, isLoading: false }))
-    }
-  }
-
-  const handleFix = async () => {
-    if (!user) return;
-    setFixState(prev => ({ ...prev, isLoading: true, fixes: "" }))
-    try {
-      const result = await suggestCodeFixes({ code: fixState.code, errors: fixState.errors, userId: user.uid })
-      setFixState(prev => ({ ...prev, fixes: result.fixes }))
-    } catch (e: any) {
-      handleActionError(e, "Error suggesting fixes");
-    } finally {
-      setFixState(prev => ({ ...prev, isLoading: false }))
-    }
-  }
-  
-  const handleTest = async () => {
-    if (!user) return;
-    setTestState(prev => ({ ...prev, isLoading: true, tests: "" }))
-    try {
-      const result = await generateTestsFromCode({ code: testState.code, language: testState.language, userId: user.uid })
-      setTestState(prev => ({ ...prev, tests: result.tests }))
-    } catch (e: any) {
-      handleActionError(e, "Error generating tests");
-    } finally {
-      setTestState(prev => ({ ...prev, isLoading: false }))
-    }
-  }
+  const handleAction = async (action: 'explain' | 'fix' | 'test') => {
+    toast({ title: "AI Feature Disabled", description: "This feature is currently unavailable.", variant: "destructive" });
+  };
 
   const renderResult = (isLoading: boolean, result: string, placeholder: string) => (
     <Card className="mt-4 flex-grow bg-muted/20">
@@ -116,7 +80,7 @@ export default function AIBotClient() {
                 </div>
             </div>
             <div className="self-start">
-                <Button onClick={handleExplain} disabled={explainState.isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Explain</Button>
+                <Button onClick={() => handleAction('explain')} disabled={explainState.isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Explain</Button>
             </div>
           </CardContent>
         </Card>
@@ -141,7 +105,7 @@ export default function AIBotClient() {
              </div>
              {renderResult(fixState.isLoading, fixState.fixes, "Suggested fixes will appear here.")}
             <div className="self-start">
-                <Button onClick={handleFix} disabled={fixState.isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Suggest Fixes</Button>
+                <Button onClick={() => handleAction('fix')} disabled={fixState.isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Suggest Fixes</Button>
             </div>
           </CardContent>
         </Card>
@@ -170,7 +134,7 @@ export default function AIBotClient() {
                 </div>
             </div>
             <div className="self-start">
-                <Button onClick={handleTest} disabled={testState.isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Generate Tests</Button>
+                <Button onClick={() => handleAction('test')} disabled={testState.isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Generate Tests</Button>
             </div>
           </CardContent>
         </Card>

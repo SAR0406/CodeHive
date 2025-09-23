@@ -2,7 +2,6 @@
 'use client';
 
 import { useState } from 'react';
-import { generateApp } from '@/ai/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -42,8 +41,15 @@ export default function AIBuilderPage() {
     setGeneratedCode('');
 
     try {
-      const result = await generateApp({ prompt, userId: user.uid });
-      setGeneratedCode(result.code);
+      // AI functionality is temporarily disabled.
+       toast({
+        title: 'AI Feature Disabled',
+        description: "This feature is currently unavailable.",
+        variant: 'destructive',
+      });
+      // In a real scenario, you would call your AI service here.
+      // const result = await generateApp({ prompt, userId: user.uid });
+      // setGeneratedCode(result.code);
     } catch (error: any) {
       let description = 'Something went wrong. Please try again.';
       if (error.message.includes('Insufficient credits')) {
