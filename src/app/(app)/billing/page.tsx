@@ -7,10 +7,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Check, CreditCard, Loader2, Star } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { doc, updateDoc, increment } from 'firebase/firestore';
-import { db } from '@/lib/firebase/client-app';
 import { useState, useEffect } from 'react';
-import { CreditPack, getCreditPacks } from '@/lib/firebase/firestore-data/get-credit-packs';
+import { CreditPack, getCreditPacks } from '@/lib/supabase/data/get-credit-packs';
+import { addCredits } from '@/lib/supabase/credits';
 
 
 export default function BillingPage() {
@@ -41,16 +40,13 @@ export default function BillingPage() {
     }
     setLoadingPack(pack.name);
     try {
-        const creditRef = doc(db, 'credits', user.uid);
-        await updateDoc(creditRef, {
-            balance: increment(pack.credits)
-        });
+        await addCredits(user.id, pack.credits);
         toast({
             title: 'Purchase Successful!',
             description: `${pack.credits.toLocaleString()} credits have been added to your account.`
         });
-    } catch (error) {
-        toast({ title: 'Purchase Failed', description: 'Could not complete the purchase. Please try again.', variant: 'destructive' });
+    } catch (error: any) {
+        toast({ title: 'Purchase Failed', description: error.message || 'Could not complete the purchase. Please try again.', variant: 'destructive' });
     } finally {
         setLoadingPack(null);
     }
@@ -88,7 +84,7 @@ export default function BillingPage() {
                         <CardTitle className="text-lg font-semibold">In Escrow</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-4xl font-bold">{credits?.escrowBalance.toLocaleString() ?? '...'}</p>
+                        <p className="text-4xl font-bold">{credits?.escrow_balance.toLocaleString() ?? '...'}</p>
                          <p className="text-sm text-muted-foreground">Credits reserved for your open tasks</p>
                     </CardContent>
                 </Card>

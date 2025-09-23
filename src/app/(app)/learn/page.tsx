@@ -5,8 +5,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { db } from '@/lib/firebase/client-app';
-import { doc, updateDoc, increment } from 'firebase/firestore';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -30,10 +28,11 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { GraduationCap, Star, BookOpen, UserCheck, Loader2 } from 'lucide-react';
-import type { Mentor } from '@/lib/firebase/firestore-data/get-mentors';
-import { getMentors } from '@/lib/firebase/firestore-data/get-mentors';
-import type { LearningModule } from '@/lib/firebase/firestore-data/get-modules';
-import { getModules } from '@/lib/firebase/firestore-data/get-modules';
+import type { Mentor } from '@/lib/supabase/data/get-mentors';
+import { getMentors } from '@/lib/supabase/data/get-mentors';
+import type { LearningModule } from '@/lib/supabase/data/get-modules';
+import { getModules } from '@/lib/supabase/data/get-modules';
+import { deductCredits } from '@/lib/supabase/credits';
 
 
 type ActionType = 'module' | 'session';
@@ -76,7 +75,7 @@ export default function LearnPage() {
       toast({ title: 'Authentication Error', description: 'You must be logged in to make a purchase.', variant: 'destructive' });
       return;
     }
-    if (credits === null || credits < item.cost) {
+    if (credits === null || credits.balance < item.cost) {
       toast({ title: 'Insufficient Credits', description: `You need ${item.cost} credits for this.`, variant: 'destructive' });
       return;
     }
@@ -88,17 +87,14 @@ export default function LearnPage() {
 
     setIsLoading(true);
     try {
-      const creditRef = doc(db, 'credits', user.uid);
-      await updateDoc(creditRef, {
-        balance: increment(-selectedItem.item.cost),
-      });
+      await deductCredits(user.id, selectedItem.item.cost)
       toast({
         title: 'Purchase Successful!',
         description: `${selectedItem.item.cost} credits have been deducted from your account.`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error during purchase:', error);
-      toast({ title: 'Error', description: 'Could not complete the purchase. Please try again.', variant: 'destructive' });
+      toast({ title: 'Error', description: error.message || 'Could not complete the purchase. Please try again.', variant: 'destructive' });
     } finally {
       setIsLoading(false);
       setSelectedItem(null);
@@ -125,7 +121,7 @@ export default function LearnPage() {
               ))
             ) : (
               mentors.map((mentor) => {
-                const placeholder = PlaceHolderImages.find((p) => p.id === mentor.id);
+                const placeholder = PlaceHolderImages.find((p) => p.id === mentor.id.toString());
                 return (
                   <Card key={mentor.id} className="text-center transition-all duration-300 hover:shadow-xl hover:shadow-accent/10 hover:-translate-y-1 flex flex-col">
                     <CardContent className="pt-6 flex flex-col items-center gap-4 flex-grow">
@@ -143,7 +139,7 @@ export default function LearnPage() {
                         </div>
                       </div>
                       <div className="flex flex-wrap justify-center gap-2">
-                        {mentor.specialties.map((spec) => (
+                        {mentor.specialties.map((spec: string) => (
                           <Badge key={spec} variant="secondary">{spec}</Badge>
                         ))}
                       </div>

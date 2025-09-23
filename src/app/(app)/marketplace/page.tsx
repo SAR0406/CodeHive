@@ -29,9 +29,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { LayoutTemplate, Star, Handshake, Loader2, PlusCircle, CheckCircle } from 'lucide-react';
-import type { Task } from '@/lib/firebase/firestore-data/get-tasks';
-import { getTasks } from '@/lib/firebase/firestore-data/get-tasks';
-import { acceptTask, approveTask, completeTask, createTask } from '@/lib/firebase/tasks';
+import type { Task } from '@/lib/supabase/data/get-tasks';
+import { getTasks } from '@/lib/supabase/data/get-tasks';
+import { acceptTask, approveTask, completeTask, createTask } from '@/lib/supabase/tasks';
 
 type ActionType = 'accept' | 'complete' | 'approve';
 
@@ -78,14 +78,14 @@ export default function MarketplacePage() {
     try {
       let resultMessage = '';
       if (action === 'accept') {
-        await acceptTask(task.id, user.uid);
+        await acceptTask(task.id, user.id);
         resultMessage = 'Task has been assigned to you.';
       } else if (action === 'complete') {
-        await completeTask(task.id, user.uid);
+        await completeTask(task.id, user.id);
         resultMessage = 'Task marked as complete. Waiting for creator approval.';
       } else if (action === 'approve') {
-        await approveTask(task.id, user.uid);
-        resultMessage = `Task approved! ${task.creditsReward} credits have been transferred.`;
+        await approveTask(task.id, user.id);
+        resultMessage = `Task approved! ${task.credits_reward} credits have been transferred.`;
       }
       
       toast({ title: 'Success!', description: resultMessage });
@@ -115,7 +115,7 @@ export default function MarketplacePage() {
 
     setIsCreateLoading(true);
     try {
-        await createTask({ title, description, creditsReward, userId: user.uid });
+        await createTask({ title, description, creditsReward, userId: user.id });
         toast({ title: 'Task Created!', description: 'Your task has been posted to the marketplace.' });
         setIsCreateDialogOpen(false);
         await fetchTasks();
@@ -131,14 +131,14 @@ export default function MarketplacePage() {
 
     switch (task.status) {
       case 'OPEN':
-        return { label: 'Accept Task', action: 'accept', icon: Handshake, disabled: task.createdBy === user.uid, variant: 'default' };
+        return { label: 'Accept Task', action: 'accept', icon: Handshake, disabled: task.created_by === user.id, variant: 'default' };
       case 'ASSIGNED':
-        if (task.assignedTo === user.uid) {
+        if (task.assigned_to === user.id) {
           return { label: 'Mark as Complete', action: 'complete', icon: CheckCircle, disabled: false, variant: 'default' };
         }
         return { label: 'Assigned', action: 'accept', icon: Handshake, disabled: true, variant: 'secondary' };
       case 'COMPLETED':
-        if (task.createdBy === user.uid) {
+        if (task.created_by === user.id) {
           return { label: 'Approve & Release Credits', action: 'approve', icon: Star, disabled: false, variant: 'default' };
         }
         return { label: 'Pending Approval', action: 'complete', icon: CheckCircle, disabled: true, variant: 'secondary' };
@@ -160,7 +160,7 @@ export default function MarketplacePage() {
       case 'complete':
         return { title: 'Mark as Complete', description: `Are you ready to mark "${task.title}" as complete? This will notify the creator for approval.` };
       case 'approve':
-        return { title: 'Approve & Release Credits', description: `Are you sure you want to approve this work? This will transfer ${task.creditsReward} credits to the assignee.` };
+        return { title: 'Approve & Release Credits', description: `Are you sure you want to approve this work? This will transfer ${task.credits_reward} credits to the assignee.` };
       default:
         return { title: 'Confirm Action', description: 'Are you sure you want to proceed?' };
     }
@@ -210,7 +210,7 @@ export default function MarketplacePage() {
                   <CardFooter className="flex justify-between items-center">
                     <div className="flex items-center gap-2 font-bold text-lg text-amber-400">
                       <Star className="w-5 h-5 fill-current" />
-                      <span>{task.creditsReward}</span>
+                      <span>{task.credits_reward}</span>
                     </div>
                     <Button onClick={() => handleTaskAction(task, action)} disabled={disabled} variant={variant}>
                       <Icon className="mr-2 h-4 w-4" />
@@ -279,4 +279,3 @@ export default function MarketplacePage() {
     </>
   );
 }
-

@@ -10,7 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { deductCredits } from '@/lib/firebase/credits';
+import { deductCredits } from '@/lib/supabase/credits';
 
 const AI_ACTION_COST = 10;
 

@@ -5,9 +5,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { db } from '@/lib/firebase/client-app';
-import { doc, updateDoc, increment } from 'firebase/firestore';
-
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -30,8 +27,9 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Library, GitFork, Loader2 } from 'lucide-react';
-import type { Template } from '@/lib/firebase/firestore-data/get-templates';
-import { getTemplates } from '@/lib/firebase/firestore-data/get-templates';
+import type { Template } from '@/lib/supabase/data/get-templates';
+import { getTemplates } from '@/lib/supabase/data/get-templates';
+import { deductCredits } from '@/lib/supabase/credits';
 
 
 export default function TemplatesPage() {
@@ -62,7 +60,7 @@ export default function TemplatesPage() {
       toast({ title: 'Authentication Error', description: 'You must be logged in to fork a template.', variant: 'destructive' });
       return;
     }
-    if (credits === null || credits < template.cost) {
+    if (credits === null || credits.balance < template.cost) {
       toast({ title: 'Insufficient Credits', description: `You need ${template.cost} credits to fork this template.`, variant: 'destructive' });
       return;
     }
@@ -74,17 +72,14 @@ export default function TemplatesPage() {
 
     setIsLoading(true);
     try {
-      const creditRef = doc(db, 'credits', user.uid);
-      await updateDoc(creditRef, {
-        balance: increment(-selectedTemplate.cost),
-      });
+      await deductCredits(user.id, selectedTemplate.cost);
       toast({
         title: 'Template Forked!',
         description: `You have successfully forked "${selectedTemplate.title}". ${selectedTemplate.cost} credits have been deducted.`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error forking template:', error);
-      toast({ title: 'Error', description: 'Could not fork the template. Please try again.', variant: 'destructive' });
+      toast({ title: 'Error', description: error.message || 'Could not fork the template. Please try again.', variant: 'destructive' });
     } finally {
       setIsLoading(false);
       setSelectedTemplate(null);
@@ -108,7 +103,7 @@ export default function TemplatesPage() {
             ))
           ) : (
             templates.map((template) => {
-              const placeholder = PlaceHolderImages.find((p) => p.id === template.id);
+              const placeholder = PlaceHolderImages.find((p) => p.id === template.id.toString());
               return (
                 <Card key={template.id} className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:shadow-accent/10 hover:-translate-y-1">
                   {placeholder && (
