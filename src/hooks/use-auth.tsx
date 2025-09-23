@@ -9,12 +9,17 @@ import {
 } from 'react';
 import { getAuth, onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { app, db } from '@/lib/firebase/client-app';
-import { doc, onSnapshot, writeBatch } from 'firebase/firestore';
+import { doc, onSnapshot, writeBatch, serverTimestamp } from 'firebase/firestore';
+
+interface CreditData {
+    balance: number;
+    escrowBalance: number;
+}
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  credits: number | null;
+  credits: CreditData | null;
   logOut: () => Promise<void>;
 }
 
@@ -28,7 +33,7 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [credits, setCredits] = useState<number | null>(null);
+  const [credits, setCredits] = useState<CreditData | null>(null);
   const auth = getAuth(app);
 
   useEffect(() => {
@@ -41,7 +46,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         // Use onSnapshot to listen for real-time updates to credits
         const unsubCredits = onSnapshot(creditRef, (snapshot) => {
           if (snapshot.exists()) {
-            setCredits(snapshot.data().balance);
+            setCredits(snapshot.data() as CreditData);
           } else {
             // User exists but credit doc doesn't. This can happen on first login.
             // We will create it along with the user doc if needed.
@@ -58,14 +63,14 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
                             email: user.email,
                             displayName: user.displayName,
                             photoURL: user.photoURL,
-                            createdAt: new Date(),
+                            createdAt: serverTimestamp(),
                         });
 
                         // Set initial credits
-                        batch.set(creditRef, { balance: 100 });
+                        batch.set(creditRef, { balance: 100, escrowBalance: 0 });
 
                         await batch.commit();
-                        setCredits(100);
+                        setCredits({ balance: 100, escrowBalance: 0 });
                     } catch (error) {
                         console.error("Error creating new user documents:", error);
                     }

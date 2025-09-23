@@ -73,22 +73,28 @@ export default function BillingPage() {
             <CardDescription>You are currently on the Free Plan.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Card className="bg-muted/30">
-              <CardContent className="pt-6 flex justify-between items-center">
-                <div>
-                  <h3 className="font-bold text-lg">Your Credits</h3>
-                  <p className="text-4xl font-bold text-amber-400">{credits?.toLocaleString() ?? '...'}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-muted-foreground">Need more?</p>
-                   <Button variant="outline" size="sm" asChild>
-                     <Link href="/subscribe">Upgrade Plan</Link>
-                   </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-2 gap-4">
+                <Card className="bg-muted/30">
+                    <CardHeader>
+                        <CardTitle className="text-lg font-semibold">Available</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-4xl font-bold text-amber-400">{credits?.balance.toLocaleString() ?? '...'}</p>
+                        <p className="text-sm text-muted-foreground">Credits in your wallet</p>
+                    </CardContent>
+                </Card>
+                 <Card className="bg-muted/30">
+                    <CardHeader>
+                        <CardTitle className="text-lg font-semibold">In Escrow</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-4xl font-bold">{credits?.escrowBalance.toLocaleString() ?? '...'}</p>
+                         <p className="text-sm text-muted-foreground">Credits reserved for your open tasks</p>
+                    </CardContent>
+                </Card>
+            </div>
             <div>
-              <h3 className="text-lg font-semibold mb-2">Buy More Credits</h3>
+              <h3 className="text-lg font-semibold mb-2 mt-6">Buy More Credits</h3>
                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {isLoadingPacks ? (
                     Array.from({ length: 3 }).map((_, i) => (

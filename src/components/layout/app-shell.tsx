@@ -27,6 +27,7 @@ import {
   Search,
   Settings,
   User,
+  Star
 } from 'lucide-react';
 import type { PropsWithChildren } from 'react';
 import { usePathname } from 'next/navigation';
@@ -129,15 +130,21 @@ export default function AppShell({ children }: PropsWithChildren) {
                     </Avatar>
                     <div className="hidden text-left lg:block">
                       <p className="text-sm font-medium">{user?.displayName ?? 'Welcome'}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {credits !== null ? `Credits: ${credits.toLocaleString()}` : 'Loading...'}
-                      </p>
+                      <div className="text-xs text-amber-400 flex items-center gap-1">
+                        <Star className="size-3 fill-current"/>
+                        <span>{credits !== null ? `${credits.balance.toLocaleString()}` : '...'}</span>
+                      </div>
                     </div>
                     <ChevronDown className="ml-1 hidden size-4 text-muted-foreground lg:block" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                   <DropdownMenuLabel className="font-normal text-xs text-amber-400 flex items-center gap-1">
+                        <Star className="size-3 fill-current"/>
+                        <span>Credits: {credits !== null ? `${credits.balance.toLocaleString()}` : '...'}</span>
+                         <span className="text-muted-foreground text-xs">(In Escrow: {credits !== null ? credits.escrowBalance : '...'})</span>
+                    </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link href="/profile"><User className="mr-2" />Profile</Link>
