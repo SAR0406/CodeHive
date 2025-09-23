@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase/client-app';
@@ -30,41 +30,32 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Library, GitFork, Loader2 } from 'lucide-react';
+import type { Template } from '@/lib/firebase/firestore-data/get-templates';
+import { getTemplates } from '@/lib/firebase/firestore-data/get-templates';
 
-const templates = [
-  {
-    id: 'template-1',
-    title: 'Modern E-commerce Storefront',
-    description: 'A sleek and performant e-commerce template with a focus on user experience. Includes product pages, cart, and checkout.',
-    cost: 250,
-  },
-  {
-    id: 'template-2',
-    title: 'Professional Blog',
-    description: 'A clean, content-focused blog template with markdown support, categories, and a responsive design.',
-    cost: 100,
-  },
-  {
-    id: 'template-3',
-    title: 'Creative Portfolio',
-    description: 'A visually-driven portfolio template perfect for designers, photographers, and artists to showcase their work.',
-    cost: 150,
-  },
-  {
-    id: 'template-4',
-    title: 'SaaS Landing Page',
-    description: 'A high-converting landing page template for your next software-as-a-service product. Includes feature sections and pricing table.',
-    cost: 200,
-  },
-];
-
-type Template = (typeof templates)[0];
 
 export default function TemplatesPage() {
   const { user, credits } = useAuth();
   const { toast } = useToast();
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
+
+  useEffect(() => {
+    async function fetchTemplates() {
+      try {
+        const fetchedTemplates = await getTemplates();
+        setTemplates(fetchedTemplates);
+      } catch (error) {
+        toast({ title: 'Error', description: 'Could not load templates.', variant: 'destructive' });
+      } finally {
+        setIsLoadingTemplates(false);
+      }
+    }
+    fetchTemplates();
+  }, [toast]);
+
 
   const handleForkClick = (template: Template) => {
     if (!user) {
@@ -111,35 +102,41 @@ export default function TemplatesPage() {
           <p className="text-muted-foreground mt-2">Fork a template to get a head start on your next project.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {templates.map((template) => {
-            const placeholder = PlaceHolderImages.find((p) => p.id === template.id);
-            return (
-              <Card key={template.id} className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:shadow-accent/10 hover:-translate-y-1">
-                {placeholder && (
-                  <div className="aspect-video bg-muted overflow-hidden">
-                    <Image
-                      src={placeholder.imageUrl}
-                      alt={template.title}
-                      width={600}
-                      height={400}
-                      data-ai-hint={placeholder.imageHint}
-                      className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </div>
-                )}
-                <CardHeader>
-                  <CardTitle className="text-xl">{template.title}</CardTitle>
-                  <CardDescription>{template.description}</CardDescription>
-                </CardHeader>
-                <CardFooter>
-                  <Button className="w-full" onClick={() => handleForkClick(template)}>
-                    <GitFork className="mr-2 h-4 w-4" />
-                    Fork Template ({template.cost} Credits)
-                  </Button>
-                </CardFooter>
-              </Card>
-            );
-          })}
+          {isLoadingTemplates ? (
+            Array.from({ length: 4 }).map((_, i) => (
+                <Card key={i}><CardContent className="p-6 h-96 flex items-center justify-center"><Loader2 className="animate-spin text-muted-foreground" /></CardContent></Card>
+            ))
+          ) : (
+            templates.map((template) => {
+              const placeholder = PlaceHolderImages.find((p) => p.id === template.id);
+              return (
+                <Card key={template.id} className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:shadow-accent/10 hover:-translate-y-1">
+                  {placeholder && (
+                    <div className="aspect-video bg-muted overflow-hidden">
+                      <Image
+                        src={placeholder.imageUrl}
+                        alt={template.title}
+                        width={600}
+                        height={400}
+                        data-ai-hint={placeholder.imageHint}
+                        className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                  )}
+                  <CardHeader>
+                    <CardTitle className="text-xl">{template.title}</CardTitle>
+                    <CardDescription>{template.description}</CardDescription>
+                  </CardHeader>
+                  <CardFooter>
+                    <Button className="w-full" onClick={() => handleForkClick(template)}>
+                      <GitFork className="mr-2 h-4 w-4" />
+                      Fork Template ({template.cost} Credits)
+                    </Button>
+                  </CardFooter>
+                </Card>
+              );
+            })
+          )}
         </div>
       </div>
 

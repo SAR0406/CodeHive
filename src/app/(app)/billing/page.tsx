@@ -9,20 +9,32 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client-app';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { CreditPack, getCreditPacks } from '@/lib/firebase/firestore-data/get-credit-packs';
 
-const creditPacks = [
-  { name: 'Starter Pack', credits: 500, price: 5, description: 'Perfect for getting started.' },
-  { name: 'Developer Pack', credits: 1200, price: 10, description: 'For more frequent usage.' },
-  { name: 'Pro Pack', credits: 3000, price: 20, description: 'Best value for power users.' },
-];
 
 export default function BillingPage() {
   const { user, credits } = useAuth();
   const { toast } = useToast();
   const [loadingPack, setLoadingPack] = useState<string | null>(null);
+  const [creditPacks, setCreditPacks] = useState<CreditPack[]>([]);
+  const [isLoadingPacks, setIsLoadingPacks] = useState(true);
 
-  const handleBuyCredits = async (pack: typeof creditPacks[0]) => {
+  useEffect(() => {
+    async function fetchPacks() {
+      try {
+        const packs = await getCreditPacks();
+        setCreditPacks(packs);
+      } catch (error) {
+        toast({ title: 'Error', description: 'Could not load credit packs.', variant: 'destructive' });
+      } finally {
+        setIsLoadingPacks(false);
+      }
+    }
+    fetchPacks();
+  }, [toast]);
+
+  const handleBuyCredits = async (pack: CreditPack) => {
     if (!user) {
         toast({ title: 'Not Authenticated', description: 'Please log in to purchase credits.', variant: 'destructive' });
         return;
@@ -78,25 +90,33 @@ export default function BillingPage() {
             <div>
               <h3 className="text-lg font-semibold mb-2">Buy More Credits</h3>
                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {creditPacks.map((pack) => (
-                  <Card key={pack.name} className='text-center'>
-                    <CardHeader>
-                        <CardTitle className='text-xl'>{pack.name}</CardTitle>
-                        <div className="flex items-center justify-center gap-2 text-amber-400">
-                            <Star className="w-5 h-5 fill-current" />
-                            <span className="text-2xl font-bold">{pack.credits.toLocaleString()}</span>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                       <p className="text-muted-foreground text-sm">{pack.description}</p>
-                    </CardContent>
-                    <CardFooter>
-                         <Button className="w-full" variant="secondary" onClick={() => handleBuyCredits(pack)} disabled={!!loadingPack}>
-                            {loadingPack === pack.name ? <Loader2 className="animate-spin" /> : `Buy for $${pack.price}`}
-                        </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
+                {isLoadingPacks ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                        <Card key={i} className="text-center p-6 flex flex-col items-center justify-center">
+                            <Loader2 className="animate-spin text-muted-foreground" />
+                        </Card>
+                    ))
+                ) : (
+                    creditPacks.map((pack) => (
+                      <Card key={pack.name} className='text-center'>
+                        <CardHeader>
+                            <CardTitle className='text-xl'>{pack.name}</CardTitle>
+                            <div className="flex items-center justify-center gap-2 text-amber-400">
+                                <Star className="w-5 h-5 fill-current" />
+                                <span className="text-2xl font-bold">{pack.credits.toLocaleString()}</span>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                           <p className="text-muted-foreground text-sm">{pack.description}</p>
+                        </CardContent>
+                        <CardFooter>
+                             <Button className="w-full" variant="secondary" onClick={() => handleBuyCredits(pack)} disabled={!!loadingPack}>
+                                {loadingPack === pack.name ? <Loader2 className="animate-spin" /> : `Buy for $${pack.price}`}
+                            </Button>
+                        </CardFooter>
+                      </Card>
+                    ))
+                )}
               </div>
             </div>
           </CardContent>
