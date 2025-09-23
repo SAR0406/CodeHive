@@ -4,17 +4,45 @@
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, CreditCard, Star } from 'lucide-react';
+import { Check, CreditCard, Loader2, Star } from 'lucide-react';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
+import { doc, updateDoc, increment } from 'firebase/firestore';
+import { db } from '@/lib/firebase/client-app';
+import { useState } from 'react';
 
 const creditPacks = [
-  { name: 'Starter Pack', credits: 500, price: 5 },
-  { name: 'Developer Pack', credits: 1200, price: 10 },
-  { name: 'Pro Pack', credits: 3000, price: 20 },
+  { name: 'Starter Pack', credits: 500, price: 5, description: 'Perfect for getting started.' },
+  { name: 'Developer Pack', credits: 1200, price: 10, description: 'For more frequent usage.' },
+  { name: 'Pro Pack', credits: 3000, price: 20, description: 'Best value for power users.' },
 ];
 
 export default function BillingPage() {
-  const { credits } = useAuth();
+  const { user, credits } = useAuth();
+  const { toast } = useToast();
+  const [loadingPack, setLoadingPack] = useState<string | null>(null);
+
+  const handleBuyCredits = async (pack: typeof creditPacks[0]) => {
+    if (!user) {
+        toast({ title: 'Not Authenticated', description: 'Please log in to purchase credits.', variant: 'destructive' });
+        return;
+    }
+    setLoadingPack(pack.name);
+    try {
+        const creditRef = doc(db, 'credits', user.uid);
+        await updateDoc(creditRef, {
+            balance: increment(pack.credits)
+        });
+        toast({
+            title: 'Purchase Successful!',
+            description: `${pack.credits.toLocaleString()} credits have been added to your account.`
+        });
+    } catch (error) {
+        toast({ title: 'Purchase Failed', description: 'Could not complete the purchase. Please try again.', variant: 'destructive' });
+    } finally {
+        setLoadingPack(null);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -60,11 +88,11 @@ export default function BillingPage() {
                         </div>
                     </CardHeader>
                     <CardContent>
-                       <p className="text-muted-foreground">{pack.description}</p>
+                       <p className="text-muted-foreground text-sm">{pack.description}</p>
                     </CardContent>
                     <CardFooter>
-                         <Button className="w-full" variant="secondary">
-                            Buy for ${pack.price}
+                         <Button className="w-full" variant="secondary" onClick={() => handleBuyCredits(pack)} disabled={!!loadingPack}>
+                            {loadingPack === pack.name ? <Loader2 className="animate-spin" /> : `Buy for $${pack.price}`}
                         </Button>
                     </CardFooter>
                   </Card>

@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -91,35 +92,43 @@ export default function AIBotClient() {
         <TabsTrigger value="fix">Suggest Fixes</TabsTrigger>
         <TabsTrigger value="test">Generate Tests</TabsTrigger>
       </TabsList>
+
       <TabsContent value="explain">
         <Card>
           <CardHeader>
             <CardTitle>Explain Code Snippet</CardTitle>
             <CardDescription>Get a plain English explanation of a piece of code. Costs 10 credits.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex flex-col gap-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="explain-code">Code Snippet</Label>
-                    <Textarea id="explain-code" placeholder="Paste your code here" value={explainState.code} onChange={e => setExplainState(s => ({ ...s, code: e.target.value }))} rows={10} />
+                <div className="flex flex-col gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="explain-code">Code Snippet</Label>
+                        <Textarea id="explain-code" placeholder="Paste your code here" value={explainState.code} onChange={e => setExplainState(s => ({ ...s, code: e.target.value }))} rows={10} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="explain-language">Programming Language</Label>
+                        <Input id="explain-language" placeholder="e.g., javascript" value={explainState.language} onChange={e => setExplainState(s => ({ ...s, language: e.target.value }))} />
+                    </div>
                 </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="explain-language">Programming Language</Label>
-                    <Input id="explain-language" placeholder="e.g., javascript" value={explainState.language} onChange={e => setExplainState(s => ({ ...s, language: e.target.value }))} />
+                 <div className="flex flex-col">
                     {renderResult(explainState.isLoading, explainState.explanation, "The explanation will appear here.")}
                 </div>
             </div>
-            <Button onClick={handleExplain} disabled={explainState.isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Explain</Button>
+            <div className="self-start">
+                <Button onClick={handleExplain} disabled={explainState.isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Explain</Button>
+            </div>
           </CardContent>
         </Card>
       </TabsContent>
+
       <TabsContent value="fix">
         <Card>
           <CardHeader>
             <CardTitle>Suggest Code Fixes</CardTitle>
             <CardDescription>Provide code and error messages to get suggested fixes. Costs 10 credits.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex flex-col gap-4">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="fix-code">Code</Label>
@@ -131,29 +140,38 @@ export default function AIBotClient() {
                 </div>
              </div>
              {renderResult(fixState.isLoading, fixState.fixes, "Suggested fixes will appear here.")}
-            <Button onClick={handleFix} disabled={fixState.isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Suggest Fixes</Button>
+            <div className="self-start">
+                <Button onClick={handleFix} disabled={fixState.isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Suggest Fixes</Button>
+            </div>
           </CardContent>
         </Card>
       </TabsContent>
+
       <TabsContent value="test">
         <Card>
           <CardHeader>
             <CardTitle>Generate Unit Tests</CardTitle>
             <CardDescription>Automatically generate unit tests for your code. Costs 10 credits.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex flex-col gap-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="test-code">Code</Label>
-                    <Textarea id="test-code" placeholder="Paste your function or class" value={testState.code} onChange={e => setTestState(s => ({ ...s, code: e.target.value }))} rows={10} />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="test-language">Programming Language</Label>
-                    <Input id="test-language" placeholder="e.g., javascript" value={testState.language} onChange={e => setTestState(s => ({ ...s, language: e.target.value }))} />
+                 <div className="flex flex-col gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="test-code">Code</Label>
+                        <Textarea id="test-code" placeholder="Paste your function or class" value={testState.code} onChange={e => setTestState(s => ({ ...s, code: e.target.value }))} rows={10} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="test-language">Programming Language</Label>
+                        <Input id="test-language" placeholder="e.g., javascript" value={testState.language} onChange={e => setTestState(s => ({ ...s, language: e.target.value }))} />
+                    </div>
+                 </div>
+                 <div className="flex flex-col">
                     {renderResult(testState.isLoading, testState.tests, "Generated tests will appear here.")}
                 </div>
             </div>
-            <Button onClick={handleTest} disabled={testState.isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Generate Tests</Button>
+            <div className="self-start">
+                <Button onClick={handleTest} disabled={testState.isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Generate Tests</Button>
+            </div>
           </CardContent>
         </Card>
       </TabsContent>

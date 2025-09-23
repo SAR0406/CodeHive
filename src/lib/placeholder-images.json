@@ -3,49 +3,49 @@
     {
       "id": "template-1",
       "description": "A modern e-commerce storefront template.",
-      "imageUrl": "https://images.unsplash.com/photo-1566410824233-a8011929225c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8ZGFyayUyMGFic3RyYWN0fGVufDB8fHx8MTc1ODU5OTk4OHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "dark abstract"
+      "imageUrl": "https://images.unsplash.com/photo-1688561809321-e51e8a4d6651?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxlY29tbWVyY2UlMjBzdG9yZXxlbnwwfHx8fDE3NTg1OTMyMDh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ecommerce store"
     },
     {
       "id": "template-2",
       "description": "A clean and professional blog template.",
-      "imageUrl": "https://images.unsplash.com/photo-1546177461-4543b35426b7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxtaW5pbWFsaXN0JTIwYmxvZ3xlbnwwfHx8fDE3NTg2MDE5ODh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1516763296043-f676c1105999?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxtaW5pbWFsaXN0JTIwYmxvZ3xlbnwwfHx8fDE3NTg2MDE5ODh8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "minimalist blog"
     },
     {
       "id": "template-3",
       "description": "A portfolio template for creative professionals.",
-      "imageUrl": "https://images.unsplash.com/photo-1598188199058-c11397373e3a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxkYXJrJTIwcG9ydGZvbGlvfGVufDB8fHx8MTc1ODYwMTk4OHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "dark portfolio"
+      "imageUrl": "https://images.unsplash.com/photo-1749322642648-217cac8af126?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxjcmVhdGl2ZSUyMHBvcnRmb2xpb3xlbnwwfHx8fDE3NTg1ODgxMjV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "creative portfolio"
     },
     {
       "id": "template-4",
       "description": "A landing page template for a SaaS product.",
-      "imageUrl": "https://images.unsplash.com/photo-1639768506860-2985d640c307?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxhYnN0cmFjdCUyMHNhYXN8ZW58MHx8fHwxNzU4NjAxOTg4fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "abstract saas"
+      "imageUrl": "https://images.unsplash.com/photo-1563784040903-a1350216b263?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzYWFzJTIwbGFuZGluZ3xlbnwwfHx8fDE3NTg2MDUzMTh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "saas landing"
     },
     {
       "id": "mentor-1",
       "description": "Avatar for Jane Doe.",
-      "imageUrl": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx3b21hbiUyMHBvcnRyYWl0fGVufDB8fHx8MTc1ODU1NDA2MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1557053910-d9eadeed1c58?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3b21hbiUyMHBvcnRyYWl0fGVufDB8fHx8MTc1ODU1NDA2MXww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "woman portrait"
     },
     {
       "id": "mentor-2",
       "description": "Avatar for John Smith.",
-      "imageUrl": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYW4lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NTg1ODI4MTZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1522556189639-b150ed9c4330?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxtYW4lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NTg1ODI4MTZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "man portrait"
     },
     {
       "id": "mentor-3",
       "description": "Avatar for Alex Ray.",
-      "imageUrl": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NTg1ODUxMDl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1600180758890-6b94519a8ba6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NTg1ODUxMDl8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "person portrait"
     },
     {
       "id": "mentor-4",
       "description": "Avatar for Sarah Chen.",
-      "imageUrl": "https://images.unsplash.com/photo-1692736475357-7c18bfbb808b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHx3b21hbiUyMHNtaWxpbmd8ZW58MHx8fHwxNzU4NTUwODkzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/flagged/photo-1559855603-ce4c8f480d76?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx3b21hbiUyMHNtaWxpbmd8ZW58MHx8fHwxNzU4NTUwODkzfDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "woman smiling"
     }
   ]

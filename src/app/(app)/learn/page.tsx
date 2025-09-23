@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -88,12 +89,6 @@ export default function LearnPage() {
     }
   };
 
-  const getActionText = () => {
-    if (!selectedItem) return '';
-    const name = selectedItem.type === 'session' ? (selectedItem.item as typeof mentors[0]).name : `the "${(selectedItem.item as typeof modules[0]).title}" module`;
-    return `Are you sure you want to book a session with ${name}?`;
-  };
-  
   return (
     <>
       <div className="flex flex-col gap-12">
@@ -178,7 +173,11 @@ export default function LearnPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Your Purchase</AlertDialogTitle>
             <AlertDialogDescription>
-              {`Are you sure you want to purchase ${selectedItem?.type === 'module' ? `the module "${(selectedItem?.item as any)?.title}"` : `a session with ${(selectedItem?.item as any)?.name}`}? This will deduct `}
+              {selectedItem?.type === 'module'
+                ? `Are you sure you want to purchase the module "${(selectedItem.item as any).title}"?`
+                : `Are you sure you want to book a session with ${(selectedItem?.item as any).name}?`
+              }
+              {` This will deduct `}
               <span className="font-bold text-amber-400">{selectedItem?.item.cost} credits</span> from your account.
             </AlertDialogDescription>
           </AlertDialogHeader>
