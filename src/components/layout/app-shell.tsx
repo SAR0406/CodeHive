@@ -18,6 +18,7 @@ import {
   Building2,
   ChevronDown,
   CreditCard,
+  Database,
   GraduationCap,
   Home,
   LayoutTemplate,
@@ -53,6 +54,7 @@ const navItems = [
   { href: '/marketplace', icon: LayoutTemplate, label: 'Marketplace' },
   { href: '/templates', icon: Library, label: 'Templates' },
   { href: '/learn', icon: GraduationCap, label: 'Learn & Mentor' },
+  { href: '/data-editor', icon: Database, label: 'Data Editor' },
 ];
 
 export default function AppShell({ children }: PropsWithChildren) {
