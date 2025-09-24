@@ -10,6 +10,7 @@ import { DashboardCharts } from '@/components/dashboard-charts';
 import React from 'react';
 import Spline from '@splinetool/react-spline';
 import { useAuth } from '@/hooks/use-auth';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 
 const features = [
@@ -52,6 +53,8 @@ export default function LandingPage() {
     return user ? "/dashboard" : "/subscribe";
   };
   
+  const avatars = PlaceHolderImages.filter(p => p.id.startsWith('avatar-'));
+
   return (
     <div className="dark bg-background text-foreground min-h-screen flex flex-col">
       <header className="sticky top-0 z-50 w-full p-4">
@@ -99,9 +102,17 @@ export default function LandingPage() {
             
             <div className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground bg-card/80 border border-border px-3 py-1 rounded-full">
                 <div className="flex -space-x-2 overflow-hidden">
-                    <Image className="inline-block h-5 w-5 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p1/40/40" alt="p1" width={20} height={20}/>
-                    <Image className="inline-block h-5 w-5 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p2/40/40" alt="p2" width={20} height={20}/>
-                    <Image className="inline-block h-5 w-5 rounded-full ring-2 ring-background" src="https://picsum.photos/seed/p3/40/40" alt="p3" width={20} height={20}/>
+                    {avatars.map((avatar) => (
+                      <Image 
+                        key={avatar.id}
+                        className="inline-block h-5 w-5 rounded-full ring-2 ring-background" 
+                        src={avatar.imageUrl} 
+                        alt={avatar.description}
+                        width={20}
+                        height={20}
+                        data-ai-hint={avatar.imageHint}
+                      />
+                    ))}
                 </div>
                 <span>Trusted by 35,000+ people</span>
             </div>
