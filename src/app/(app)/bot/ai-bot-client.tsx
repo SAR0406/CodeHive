@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Sparkles } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
+import { explainCode, ExplainCodeInput } from "@/ai/flows/explain-code-flow"
+import { deductCredits } from "@/lib/supabase/credits"
 
 export default function AIBotClient() {
   const { toast } = useToast()
@@ -22,13 +24,40 @@ export default function AIBotClient() {
 
   const handleActionError = (error: any, title: string) => {
     let description = "Please try again.";
-    if (error.message.includes("Insufficient credits")) {
+    if (error.message.includes('Insufficient credits')) {
         description = "You don't have enough credits to perform this action.";
+    } else if (error.message) {
+        description = error.message;
     }
     toast({ title, description, variant: "destructive" });
   }
 
+  const handleExplain = async () => {
+      if (!user) return;
+      setExplainState(s => ({ ...s, isLoading: true, explanation: '' }));
+
+      const cost = 10;
+      const input: ExplainCodeInput = {
+          code: explainState.code,
+          language: explainState.language,
+      };
+
+      try {
+          await deductCredits(user.id, cost, 'AI Code Explanation');
+          const result = await explainCode(input);
+          setExplainState(s => ({ ...s, explanation: result.explanation }));
+      } catch (error: any) {
+          handleActionError(error, "Error explaining code");
+      } finally {
+          setExplainState(s => ({ ...s, isLoading: false }));
+      }
+  }
+
   const handleAction = async (action: 'explain' | 'fix' | 'test') => {
+    if (action === 'explain') {
+        await handleExplain();
+        return;
+    }
     toast({ title: "AI Feature Disabled", description: "This feature is currently unavailable.", variant: "destructive" });
   };
 
