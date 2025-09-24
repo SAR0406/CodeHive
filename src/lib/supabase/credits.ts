@@ -8,8 +8,9 @@ import { createClient } from "./server";
  * Throws an error if the user does not have enough credits.
  * @param userId The ID of the user.
  * @param amount The amount of credits to deduct.
+ * @param description A description of the transaction.
  */
-export async function deductCredits(userId: string, amount: number) {
+export async function deductCredits(userId: string, amount: number, description: string) {
   if (amount <= 0) {
     throw new Error('Deduction amount must be positive.');
   }
@@ -19,7 +20,7 @@ export async function deductCredits(userId: string, amount: number) {
   const { error } = await supabase.rpc('spend_credits', {
     uid: userId,
     amt: amount,
-    descr: 'Purchased item or action',
+    descr: description,
   });
 
   if (error) {

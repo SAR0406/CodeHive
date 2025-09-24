@@ -85,11 +85,17 @@ export default function LearnPage() {
     if (!selectedItem || !user) return;
 
     setIsLoading(true);
+
+    const { item, type } = selectedItem;
+    const description = type === 'module'
+      ? `Purchased module: ${(item as LearningModule).title}`
+      : `Booked session with: ${(item as Mentor).name}`;
+
     try {
-      await deductCredits(user.id, selectedItem.item.cost)
+      await deductCredits(user.id, item.cost, description)
       toast({
         title: 'Purchase Successful!',
-        description: `${selectedItem.item.cost} credits have been deducted from your account.`,
+        description: `${item.cost} credits have been deducted from your account.`,
       });
     } catch (error: any) {
       console.error('Error during purchase:', error);
