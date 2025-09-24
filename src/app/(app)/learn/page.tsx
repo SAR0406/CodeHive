@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -75,7 +74,7 @@ export default function LearnPage() {
       toast({ title: 'Authentication Error', description: 'You must be logged in to make a purchase.', variant: 'destructive' });
       return;
     }
-    if (credits === null || credits.balance < item.cost) {
+    if (credits === null || credits.credits < item.cost) {
       toast({ title: 'Insufficient Credits', description: `You need ${item.cost} credits for this.`, variant: 'destructive' });
       return;
     }

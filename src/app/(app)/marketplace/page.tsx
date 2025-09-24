@@ -107,6 +107,9 @@ export default function MarketplacePage() {
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
     const creditsReward = parseInt(formData.get('creditsReward') as string, 10);
+    const tagsStr = formData.get('tags') as string;
+    const tags = tagsStr ? tagsStr.split(',').map(tag => tag.trim()) : [];
+
 
     if (!title || !description || !creditsReward) {
       toast({ title: 'Missing Fields', description: 'Please fill out all fields.', variant: 'destructive' });
@@ -115,7 +118,7 @@ export default function MarketplacePage() {
 
     setIsCreateLoading(true);
     try {
-        await createTask({ title, description, creditsReward, userId: user.id });
+        await createTask({ title, description, creditsReward, userId: user.id, tags });
         toast({ title: 'Task Created!', description: 'Your task has been posted to the marketplace.' });
         setIsCreateDialogOpen(false);
         await fetchTasks();
@@ -261,6 +264,10 @@ export default function MarketplacePage() {
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" name="description" placeholder="Provide a detailed description of the task..." required />
+              </div>
+               <div className="space-y-2">
+                <Label htmlFor="tags">Tags (comma-separated)</Label>
+                <Input id="tags" name="tags" placeholder="e.g., react, ui, design" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="creditsReward">Credit Reward</Label>

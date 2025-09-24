@@ -16,14 +16,18 @@ export async function deductCredits(userId: string, amount: number) {
 
   const supabase = createClient();
 
-  const { error } = await supabase.rpc('deduct_balance', {
-    user_id: userId,
-    deduct_amount: amount,
+  const { error } = await supabase.rpc('spend_credits', {
+    uid: userId,
+    amt: amount,
+    descr: 'Purchased item or action',
   });
 
   if (error) {
     console.error("Credit deduction RPC failed: ", error.message);
     // The RPC function will throw an error if balance is insufficient
+    if (error.message.includes('insufficient_balance')) {
+        throw new Error('Insufficient credits for this action.');
+    }
     throw new Error(error.message);
   }
 }
@@ -39,9 +43,10 @@ export async function addCredits(userId: string, amount: number) {
   }
 
   const supabase = createClient();
-  const { error } = await supabase.rpc('add_balance', {
-      user_id: userId,
-      add_amount: amount,
+  const { error } = await supabase.rpc('earn_credits', {
+      uid: userId,
+      amt: amount,
+      descr: 'Purchased credit pack',
   });
 
   if (error) {

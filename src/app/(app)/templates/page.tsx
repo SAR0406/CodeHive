@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -15,7 +14,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@/componentsui/card';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,7 +59,7 @@ export default function TemplatesPage() {
       toast({ title: 'Authentication Error', description: 'You must be logged in to fork a template.', variant: 'destructive' });
       return;
     }
-    if (credits === null || credits.balance < template.cost) {
+    if (credits === null || credits.credits < template.cost) {
       toast({ title: 'Insufficient Credits', description: `You need ${template.cost} credits to fork this template.`, variant: 'destructive' });
       return;
     }

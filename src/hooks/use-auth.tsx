@@ -12,8 +12,7 @@ import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 
 interface CreditData {
-  balance: number;
-  escrow_balance: number;
+  credits: number;
 }
 
 interface AuthContextType {
@@ -38,7 +37,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
   const fetchAndSetProfile = useCallback(async (userId: string, userEmail?: string, fullName?: string, avatarUrl?: string) => {
     // First, try to fetch the existing profile
-    let { data: profile, error } = await supabase.from('profiles').select('balance, escrow_balance').eq('id', userId).single();
+    let { data: profile, error } = await supabase.from('profiles').select('credits').eq('id', userId).single();
 
     if (error && error.code === 'PGRST116') { // "PGRST116" is the code for "Not a single row found"
         // Profile doesn't exist, create it.
@@ -47,16 +46,14 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
                 id: userId, 
                 email: userEmail, 
                 display_name: fullName, 
-                photo_url: avatarUrl, 
-                balance: 100, // Starting balance
-                escrow_balance: 0 
+                photo_url: avatarUrl
             })
-            .select('balance, escrow_balance')
+            .select('credits')
             .single();
 
         if (insertError) {
             console.error('Error creating profile on sign-in:', insertError);
-            setCredits(null); // Ensure credits are reset if profile creation fails
+            setCredits(null);
         } else if (newProfile) {
             setCredits(newProfile);
         }
@@ -64,7 +61,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         setCredits(profile);
     } else if (error) {
         console.error('Error fetching profile:', error);
-        setCredits(null); // Reset credits on error
+        setCredits(null);
     }
   }, [supabase]);
 
@@ -104,13 +101,12 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   }, [supabase, fetchAndSetProfile]);
   
   useEffect(() => {
-      // This listener reacts to real-time updates on the profiles table
       if (!user) return;
 
-      const profileSubscription = supabase.channel(`public:profiles:id=eq.${user.id}`)
+      const profileSubscription = supabase.channel('public:profiles')
           .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, (payload) => {
-              const { balance, escrow_balance } = payload.new as { balance: number; escrow_balance: number };
-              setCredits({ balance, escrow_balance });
+              const { credits: newCredits } = payload.new as { credits: number };
+              setCredits({ credits: newCredits });
           })
           .subscribe();
 

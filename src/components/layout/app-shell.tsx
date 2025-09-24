@@ -132,7 +132,7 @@ export default function AppShell({ children }: PropsWithChildren) {
                       <p className="text-sm font-medium">{user?.user_metadata.full_name ?? 'Welcome'}</p>
                       <div className="text-xs text-amber-400 flex items-center gap-1">
                         <Star className="size-3 fill-current"/>
-                        <span>{credits !== null ? `${credits.balance.toLocaleString()}` : '...'}</span>
+                        <span>{credits !== null ? `${credits.credits.toLocaleString()}` : '...'}</span>
                       </div>
                     </div>
                     <ChevronDown className="ml-1 hidden size-4 text-muted-foreground lg:block" />
@@ -142,8 +142,7 @@ export default function AppShell({ children }: PropsWithChildren) {
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                    <DropdownMenuLabel className="font-normal text-xs text-amber-400 flex items-center gap-1">
                         <Star className="size-3 fill-current"/>
-                        <span>Credits: {credits !== null ? `${credits.balance.toLocaleString()}` : '...'}</span>
-                         <span className="text-muted-foreground text-xs">(In Escrow: {credits !== null ? credits.escrow_balance : '...'})</span>
+                        <span>Credits: {credits !== null ? `${credits.credits.toLocaleString()}` : '...'}</span>
                     </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>

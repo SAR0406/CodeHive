@@ -72,10 +72,10 @@ export default function BillingPage() {
             <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-muted/30">
                     <CardHeader>
-                        <CardTitle className="text-lg font-semibold">Available</CardTitle>
+                        <CardTitle className="text-lg font-semibold">Available Credits</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-4xl font-bold text-amber-400">{credits?.balance.toLocaleString() ?? '...'}</p>
+                        <p className="text-4xl font-bold text-amber-400">{credits?.credits.toLocaleString() ?? '...'}</p>
                         <p className="text-sm text-muted-foreground">Credits in your wallet</p>
                     </CardContent>
                 </Card>
@@ -84,7 +84,8 @@ export default function BillingPage() {
                         <CardTitle className="text-lg font-semibold">In Escrow</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-4xl font-bold">{credits?.escrow_balance.toLocaleString() ?? '...'}</p>
+                        <p className="text-4xl font-bold">...
+                        </p>
                          <p className="text-sm text-muted-foreground">Credits reserved for your open tasks</p>
                     </CardContent>
                 </Card>

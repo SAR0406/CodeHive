@@ -67,78 +67,37 @@ This is a critical step. The following SQL script will create all the necessary 
 5.  Click the **RUN** button.
 
 ```sql
--- Enable UUID generation
+-- 1. Enable UUID generation
 create extension if not exists "uuid-ossp";
 
---
--- PROFILES TABLE
---
--- This table stores public user data.
---
-create table if not exists profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  email text not null,
+-- 2. PROFILES TABLE (replaces 'users' table)
+-- New users get default 100 credits
+create table if not exists public.profiles (
+  id uuid primary key,          -- set to auth.uid()
+  email text unique,
   display_name text,
   photo_url text,
-  balance integer not null default 100,
-  escrow_balance integer not null default 0
+  credits int not null default 100,
+  reputation int not null default 0,
+  created_at timestamptz default now()
 );
+comment on table public.profiles is 'Stores public user data. `id` is a reference to auth.users(id).';
 
---
--- CREDIT PACKS TABLE
---
--- This table stores the available credit packs for purchase.
---
-create table if not exists credit_packs (
-  id serial primary key,
-  name text not null,
-  credits integer not null,
-  price integer not null, -- in USD cents
-  description text
-);
 
---
--- TEMPLATES TABLE
---
--- This table stores project templates that users can fork.
---
-create table if not exists templates (
-  id serial primary key,
-  title text not null,
+-- 3. TRANSACTIONS TABLE (for audit trail)
+create table if not exists public.transactions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  type text not null check (type in ('earn','spend','reserve','release','refund','purchase')),
+  amount int not null,
   description text,
-  cost integer not null
+  meta jsonb default '{}'::jsonb,
+  created_at timestamptz default now()
 );
+comment on table public.transactions is 'Logs all credit-related activities for auditing.';
 
---
--- MENTORS TABLE
---
--- This table stores mentor information.
---
-create table if not exists mentors (
-  id serial primary key,
-  name text not null,
-  specialties text[] not null,
-  reputation integer not null,
-  cost integer not null -- credits per session
-);
 
---
--- LEARNING MODULES TABLE
---
--- This table stores available learning modules.
---
-create table if not exists learning_modules (
-  id serial primary key,
-  title text not null,
-  description text,
-  cost integer not null
-);
-
---
--- TASKS TABLE
---
--- This table stores marketplace tasks.
---
+-- 4. TASKS TABLE (Marketplace Tasks)
 create table if not exists tasks (
   id uuid primary key default uuid_generate_v4(),
   created_at timestamp with time zone default now() not null,
@@ -151,13 +110,56 @@ create table if not exists tasks (
   created_by uuid references public.profiles(id) not null,
   assigned_to uuid references public.profiles(id)
 );
+comment on table public.tasks is 'Stores tasks for the community marketplace.';
 
 
---
--- SEED DATA
---
--- Insert initial data for the application to be functional.
---
+-- 5. ESCROWS TABLE (for task marketplace)
+create table if not exists public.escrows (
+  id uuid primary key default gen_random_uuid(),
+  task_id uuid not null references public.tasks(id) on delete cascade,
+  payer_id uuid references public.profiles(id),
+  payee_id uuid references public.profiles(id),
+  amount int not null,
+  status text not null check (status in ('reserved','released','refunded')) default 'reserved',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+comment on table public.escrows is 'Manages credits held in escrow for tasks.';
+
+
+-- 6. Static Data Tables
+create table if not exists credit_packs (
+  id serial primary key,
+  name text not null,
+  credits integer not null,
+  price integer not null, -- in USD cents
+  description text
+);
+
+create table if not exists templates (
+  id serial primary key,
+  title text not null,
+  description text,
+  cost integer not null
+);
+
+create table if not exists mentors (
+  id serial primary key,
+  name text not null,
+  specialties text[] not null,
+  reputation integer not null,
+  cost integer not null -- credits per session
+);
+
+create table if not exists learning_modules (
+  id serial primary key,
+  title text not null,
+  description text,
+  cost integer not null
+);
+
+
+-- 7. SEED DATA for static tables
 insert into credit_packs (name, credits, price, description) values
 ('Starter Pack', 500, 5, 'A small boost to get you going.'),
 ('Developer Pack', 2500, 20, 'Perfect for active developers.'),
@@ -172,10 +174,10 @@ insert into templates (title, description, cost) values
 on conflict (id) do nothing;
 
 insert into mentors (name, specialties, reputation, cost) values
-('Jane Doe', '{"React", "Next.js"}', 4.9, 500),
-('John Smith', '{"AI", "Python", "Genkit"}', 4.8, 600),
-('Alex Ray', '{"UI/UX", "Figma"}', 4.9, 450),
-('Sarah Chen', '{"Database", "Supabase"}', 4.7, 550)
+('Jane Doe', '{"React", "Next.js"}', 4, 500),
+('John Smith', '{"AI", "Python", "Genkit"}', 5, 600),
+('Alex Ray', '{"UI/UX", "Figma"}', 5, 450),
+('Sarah Chen', '{"Database", "Supabase"}', 4, 550)
 on conflict (id) do nothing;
 
 insert into learning_modules (title, description, cost) values
@@ -185,136 +187,157 @@ insert into learning_modules (title, description, cost) values
 ('Supabase for Beginners', 'Get started with Supabase from scratch.', 30)
 on conflict (id) do nothing;
 
---
--- ROW LEVEL SECURITY (RLS)
---
--- Enable RLS for all tables.
---
-alter table profiles enable row level security;
-alter table credit_packs enable row level security;
-alter table templates enable row level security;
-alter table mentors enable row level security;
-alter table learning_modules enable row level security;
-alter table tasks enable row level security;
 
---
--- RLS POLICIES
---
--- Allow public read access to non-sensitive data.
-create policy "Allow public read access to credit packs" on public.credit_packs for select using (true);
-create policy "Allow public read access to templates" on public.templates for select using (true);
-create policy "Allow public read access to mentors" on public.mentors for select using (true);
-create policy "Allow public read access to learning modules" on public.learning_modules for select using (true);
-create policy "Allow public read access to tasks" on public.tasks for select using (true);
-create policy "Allow public read access to profiles" on public.profiles for select using (true);
+-- 8. TRIGGERS for automatic timestamp updates
+create or replace function public.trigger_update_timestamp()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
 
--- Allow users to view their own profile data.
-create policy "Allow users to view their own profile" on public.profiles for select using (auth.uid() = id);
+create trigger trg_escrows_update
+before update on public.escrows
+for each row execute function public.trigger_update_timestamp();
 
--- Allow users to update their own profile.
+create trigger trg_tasks_update
+before update on public.tasks
+for each row execute function public.trigger_update_timestamp();
+
+
+-- 9. ROW LEVEL SECURITY (RLS)
+alter table public.profiles enable row level security;
+alter table public.transactions enable row level security;
+alter table public.escrows enable row level security;
+alter table public.tasks enable row level security;
+alter table public.credit_packs enable row level security;
+alter table public.templates enable row level security;
+alter table public.mentors enable row level security;
+alter table public.learning_modules enable row level security;
+
+-- Allow public read access to non-sensitive data
+create policy "Allow public read access" on public.credit_packs for select using (true);
+create policy "Allow public read access" on public.templates for select using (true);
+create policy "Allow public read access" on public.mentors for select using (true);
+create policy "Allow public read access" on public.learning_modules for select using (true);
+create policy "Allow public read access" on public.tasks for select using (true);
+
+-- Profiles policies
+create policy "Allow users to read their own profile" on public.profiles for select using (auth.uid() = id);
+create policy "Allow users to create their own profile" on public.profiles for insert with check (auth.uid() = id);
 create policy "Allow users to update their own profile" on public.profiles for update using (auth.uid() = id) with check (auth.uid() = id);
 
--- Allow authenticated users to create tasks.
+-- Tasks policies
 create policy "Allow authenticated users to create tasks" on public.tasks for insert with check (auth.role() = 'authenticated');
+create policy "Allow users to update assigned or created tasks" on public.tasks for update using (auth.uid() = created_by or auth.uid() = assigned_to);
 
--- Allow users to update tasks they created or are assigned to.
-create policy "Allow users to update assigned or created tasks" on public.tasks for update using (
-  auth.uid() = created_by or auth.uid() = assigned_to
-);
+-- Transactions and Escrows (more restrictive, server-side access only)
+create policy "Allow owners to view their transactions" on public.transactions for select using (auth.uid() = user_id);
+create policy "Allow involved parties to view escrows" on public.escrows for select using (auth.uid() = payer_id or auth.uid() = payee_id);
+create policy "Disallow all client inserts on transactions" on public.transactions for insert with check (false);
+create policy "Disallow all client updates on transactions" on public.transactions for update using (false);
+create policy "Disallow all client inserts on escrows" on public.escrows for insert with check (false);
+create policy "Disallow all client updates on escrows" on public.escrows for update using (false);
 
 
---
--- DATABASE FUNCTIONS (RPC)
---
--- These functions provide secure, server-side logic.
---
+-- 10. DATABASE FUNCTIONS (RPC) for atomic operations
+-- These should be SECURITY DEFINER to run with elevated privileges.
 
--- Function to add credits to a user's balance
-create or replace function add_balance(user_id uuid, add_amount int)
-returns void as $$
+-- SPEND CREDITS
+create or replace function public.spend_credits(uid uuid, amt int, descr text)
+returns table(new_balance int) as $$
 begin
+  -- try to deduct only if enough balance
   update public.profiles
-  set balance = balance + add_amount
-  where id = user_id;
-end;
-$$ language plpgsql security definer;
+    set credits = credits - amt
+    where id = uid and credits >= amt
+    returning credits into new_balance;
 
--- Function to deduct credits from a user's balance
-create or replace function deduct_balance(user_id uuid, deduct_amount int)
-returns void as $$
-declare
-  current_bal int;
-begin
-  select balance into current_bal from public.profiles where id = user_id;
-  if current_bal < deduct_amount then
-    raise exception 'Insufficient credits';
+  if NOT FOUND then
+    raise exception 'insufficient_balance';
   end if;
+
+  insert into public.transactions (user_id, type, amount, description)
+    values (uid, 'spend', amt, descr);
+
+  return;
+end;
+$$ language plpgsql security definer;
+
+-- EARN CREDITS
+create or replace function public.earn_credits(uid uuid, amt int, descr text)
+returns table(new_balance int) as $$
+begin
   update public.profiles
-  set balance = balance - deduct_amount
-  where id = user_id;
+    set credits = credits + amt
+    where id = uid
+    returning credits into new_balance;
+
+  insert into public.transactions (user_id, type, amount, description)
+    values (uid, 'earn', amt, descr);
+
+  return;
 end;
 $$ language plpgsql security definer;
 
--- Function to create a task and reserve credits in escrow
-create or replace function create_task_and_reserve_credits(
-    creator_id uuid,
-    task_title text,
-    task_description text,
-    reward integer,
-    task_tags text[]
-)
-returns void as $$
+-- RESERVE CREDITS
+create or replace function public.reserve_credits(payer uuid, amount int, t_id uuid, payee uuid default null)
+returns uuid as $$
 declare
-  current_bal int;
+  escrow_id uuid;
 begin
-    -- Check if user has enough balance
-    select balance into current_bal from public.profiles where id = creator_id;
-    if current_bal < reward then
-        raise exception 'Insufficient credits to create this task.';
-    end if;
+  -- Check for sufficient balance and deduct credits
+  if not exists (select 1 from public.profiles where id = payer and credits >= amount) then
+      raise exception 'insufficient_balance';
+  end if;
 
-    -- Move credits from balance to escrow
-    update public.profiles
-    set
-        balance = balance - reward,
-        escrow_balance = escrow_balance + reward
-    where id = creator_id;
+  update public.profiles
+    set credits = credits - amount
+    where id = payer;
 
-    -- Create the task
-    insert into public.tasks(created_by, title, description, credits_reward, tags)
-    values(creator_id, task_title, task_description, reward, task_tags);
+  -- Create the escrow record
+  insert into public.escrows (task_id, payer_id, payee_id, amount, status)
+    values (t_id, payer, payee, amount, 'reserved')
+    returning id into escrow_id;
+
+  -- Log the transaction
+  insert into public.transactions (user_id, type, amount, description, meta)
+    values (payer, 'reserve', amount, 'Reserved for task', jsonb_build_object('escrow_id', escrow_id, 'task_id', t_id));
+
+  return escrow_id;
 end;
 $$ language plpgsql security definer;
 
--- Function to approve a task and release credits from escrow
-create or replace function approve_task_and_release_credits(
-    task_id_input uuid,
-    creator_id_input uuid
-)
+-- RELEASE ESCROW
+create or replace function public.release_escrow(eid uuid)
 returns void as $$
 declare
-    task_record public.tasks;
+  rec record;
 begin
-    -- Verify the user is the creator and the task is 'COMPLETED'
-    select * into task_record from public.tasks where id = task_id_input and created_by = creator_id_input and status = 'COMPLETED';
+  select * into rec from public.escrows where id = eid for update;
 
-    if task_record is null then
-        raise exception 'Task cannot be approved. It is either not found, not completed, or you are not the creator.';
-    end if;
+  if not found then
+    raise exception 'escrow_not_found';
+  end if;
 
-    -- Move credits from creator's escrow to assignee's balance
-    update public.profiles
-    set escrow_balance = escrow_balance - task_record.credits_reward
-    where id = task_record.created_by;
+  if rec.payee_id is null then
+    raise exception 'payee_not_assigned';
+  end if;
+  
+  if rec.status <> 'reserved' then
+    raise exception 'invalid_escrow_state';
+  end if;
 
-    update public.profiles
-    set balance = balance + task_record.credits_reward
-    where id = task_record.assigned_to;
+  -- add credits to payee
+  update public.profiles set credits = credits + rec.amount where id = rec.payee_id;
 
-    -- Update task status to 'PAID'
-    update public.tasks
-    set status = 'PAID', updated_at = now()
-    where id = task_id_input;
+  -- mark escrow released
+  update public.escrows set status = 'released' where id = eid;
+
+  -- log the release transaction for the payee
+  insert into public.transactions (user_id, type, amount, description, meta)
+    values (rec.payee_id, 'release', rec.amount, 'Released from escrow', jsonb_build_object('escrow_id', eid, 'task_id', rec.task_id));
 end;
 $$ language plpgsql security definer;
 ```
@@ -326,6 +349,6 @@ $$ language plpgsql security definer;
 After completing the OAuth and database setup, your application should be fully functional. Run your app and test the following:
 *   Sign in with both Google and GitHub.
 *   Navigate through the app to see if data from the database (e.g., on the Marketplace and Learn pages) is loading.
-*   Try performing actions that cost credits, like forking a template.
+*   Try performing actions that cost credits, like forking a template or creating a task.
 
 If you follow these steps, your database will be perfectly configured, and the application will work as designed.
