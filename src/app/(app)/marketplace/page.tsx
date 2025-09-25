@@ -29,8 +29,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { LayoutTemplate, Star, Handshake, Loader2, PlusCircle, CheckCircle } from 'lucide-react';
-import type { Task } from '@/lib/supabase/data/get-tasks';
-import { getTasks } from '@/lib/supabase/data/get-tasks';
+import type { Task } from '@/lib/firebase/data/get-tasks';
+import { getTasks } from '@/lib/firebase/data/get-tasks';
 // import { acceptTask, approveTask, completeTask, createTask } from '@/lib/firebase/tasks';
 
 type ActionType = 'accept' | 'complete' | 'approve';
@@ -66,7 +66,8 @@ export default function MarketplacePage() {
       toast({ title: 'Authentication Error', description: 'You must be logged in.', variant: 'destructive' });
       return;
     }
-    setSelectedTask({ task, action });
+    toast({ title: 'Coming Soon!', description: 'Task actions are being connected to Firestore.' });
+    // setSelectedTask({ task, action });
   };
 
   const handleConfirmAction = async () => {
@@ -293,3 +294,5 @@ export default function MarketplacePage() {
     </>
   );
 }
+
+    

@@ -27,10 +27,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { GraduationCap, Star, BookOpen, UserCheck, Loader2 } from 'lucide-react';
-import type { Mentor } from '@/lib/supabase/data/get-mentors';
-import { getMentors } from '@/lib/supabase/data/get-mentors';
-import type { LearningModule } from '@/lib/supabase/data/get-modules';
-import { getModules } from '@/lib/supabase/data/get-modules';
+import type { Mentor } from '@/lib/firebase/data/get-mentors';
+import { getMentors } from '@/lib/firebase/data/get-mentors';
+import type { LearningModule } from '@/lib/firebase/data/get-modules';
+import { getModules } from '@/lib/firebase/data/get-modules';
 // import { deductCredits } from '@/lib/firebase/credits';
 
 
@@ -230,3 +230,5 @@ export default function LearnPage() {
     </>
   );
 }
+
+    

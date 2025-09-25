@@ -8,7 +8,7 @@ import { Check, CreditCard, Loader2, Star } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import { CreditPack, getCreditPacks } from '@/lib/supabase/data/get-credit-packs';
+import { CreditPack, getCreditPacks } from '@/lib/firebase/data/get-credit-packs';
 // import { addCredits } from '@/lib/firebase/credits';
 
 
@@ -146,3 +146,5 @@ export default function BillingPage() {
     </div>
   );
 }
+
+    

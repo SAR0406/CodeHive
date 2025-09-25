@@ -10,16 +10,19 @@ import {
 import type { User } from 'firebase/auth';
 import { auth, db } from '@/firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
 
-interface CreditData {
+interface ProfileData {
   credits: number;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  credits: CreditData | null;
+  credits: ProfileData | null;
   logOut: () => Promise<void>;
 }
 
@@ -33,10 +36,29 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [credits, setCredits] = useState<CreditData | null>(null);
+  const [credits, setCredits] = useState<ProfileData | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // User is signed in
+        const profileRef = doc(db, 'profiles', user.uid);
+        const docSnap = await getDoc(profileRef);
+        if (!docSnap.exists()) {
+          // Create a new profile document if it doesn't exist
+          try {
+            await setDoc(profileRef, {
+              displayName: user.displayName,
+              email: user.email,
+              photoURL: user.photoURL,
+              createdAt: serverTimestamp(),
+              credits: 100, // Initial credits for new users
+            });
+          } catch (error) {
+            console.error("Error creating user profile:", error);
+          }
+        }
+      }
       setUser(user);
       setLoading(false);
     });
@@ -50,11 +72,9 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       
       const unsubscribe = onSnapshot(profileRef, (doc) => {
         if (doc.exists()) {
-          setCredits(doc.data() as CreditData);
+          setCredits(doc.data() as ProfileData);
         } else {
-          // You might want to create the profile document here if it doesn't exist
-          console.log("No profile document found for user.");
-          setCredits({ credits: 100 }); // Default credits
+          setCredits(null);
         }
       });
 
@@ -82,3 +102,5 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 export const useAuth = () => {
   return useContext(AuthContext);
 };
+
+    

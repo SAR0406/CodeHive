@@ -26,8 +26,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Library, GitFork, Loader2 } from 'lucide-react';
-import type { Template } from '@/lib/supabase/data/get-templates';
-import { getTemplates } from '@/lib/supabase/data/get-templates';
+import type { Template } from '@/lib/firebase/data/get-templates';
+import { getTemplates } from '@/lib/firebase/data/get-templates';
 // import { deductCredits } from '@/lib/firebase/credits';
 
 
@@ -162,3 +162,5 @@ export default function TemplatesPage() {
     </>
   );
 }
+
+    
