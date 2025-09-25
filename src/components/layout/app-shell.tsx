@@ -6,7 +6,6 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarInset,
-  SidebarProvider,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -54,7 +53,6 @@ const navItems = [
   { href: '/marketplace', icon: LayoutTemplate, label: 'Marketplace' },
   { href: '/templates', icon: Library, label: 'Templates' },
   { href: '/learn', icon: GraduationCap, label: 'Learn & Mentor' },
-  { href: '/data-editor', icon: Database, label: 'Data Editor' },
 ];
 
 export default function AppShell({ children }: PropsWithChildren) {
@@ -127,11 +125,11 @@ export default function AppShell({ children }: PropsWithChildren) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative flex items-center gap-2 rounded-full p-1 h-auto">
                     <Avatar className="h-9 w-9 border-2 border-border">
-                      <AvatarImage src={user?.user_metadata.avatar_url ?? `https://picsum.photos/seed/${user?.id}/40/40`} alt={user?.user_metadata.full_name ?? "User"} data-ai-hint="person portrait" />
-                      <AvatarFallback>{user?.user_metadata.full_name?.charAt(0) ?? 'U'}</AvatarFallback>
+                      <AvatarImage src={user?.photoURL ?? `https://picsum.photos/seed/${user?.uid}/40/40`} alt={user?.displayName ?? "User"} data-ai-hint="person portrait" />
+                      <AvatarFallback>{user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
                     </Avatar>
                     <div className="hidden text-left lg:block">
-                      <p className="text-sm font-medium">{user?.user_metadata.full_name ?? 'Welcome'}</p>
+                      <p className="text-sm font-medium">{user?.displayName ?? 'Welcome'}</p>
                       <div className="text-xs text-amber-400 flex items-center gap-1">
                         <Star className="size-3 fill-current"/>
                         <span>{credits !== null ? `${credits.credits.toLocaleString()}` : '...'}</span>

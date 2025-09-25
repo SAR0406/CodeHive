@@ -16,7 +16,7 @@ export default function ProfilePage() {
 
   const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // In a real app, you would update the user profile in Supabase
+    // In a real app, you would update the user profile in Firestore
     toast({
       title: 'Profile Saved!',
       description: 'Your changes have been saved successfully.',
@@ -42,8 +42,8 @@ export default function ProfilePage() {
           <CardContent className="space-y-6">
             <div className="flex items-center gap-6">
               <Avatar className="h-20 w-20 border-2 border-accent">
-                <AvatarImage src={user?.user_metadata.avatar_url ?? `https://picsum.photos/seed/${user?.id}/80/80`} alt={user?.user_metadata.full_name ?? "User"} data-ai-hint="person portrait"/>
-                <AvatarFallback>{user?.user_metadata.full_name?.charAt(0) ?? 'U'}</AvatarFallback>
+                <AvatarImage src={user?.photoURL ?? `https://picsum.photos/seed/${user?.uid}/80/80`} alt={user?.displayName ?? "User"} data-ai-hint="person portrait"/>
+                <AvatarFallback>{user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
               </Avatar>
               <div className='flex-grow'>
                 <Label htmlFor="photo">Profile Photo</Label>
@@ -56,7 +56,7 @@ export default function ProfilePage() {
                 <Label htmlFor="displayName">Display Name</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="displayName" defaultValue={user?.user_metadata.full_name ?? ''} className="pl-9" />
+                  <Input id="displayName" defaultValue={user?.displayName ?? ''} className="pl-9" />
                 </div>
               </div>
               <div className="space-y-2">

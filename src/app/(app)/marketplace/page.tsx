@@ -31,7 +31,7 @@ import { Label } from '@/components/ui/label';
 import { LayoutTemplate, Star, Handshake, Loader2, PlusCircle, CheckCircle } from 'lucide-react';
 import type { Task } from '@/lib/supabase/data/get-tasks';
 import { getTasks } from '@/lib/supabase/data/get-tasks';
-import { acceptTask, approveTask, completeTask, createTask } from '@/lib/supabase/tasks';
+// import { acceptTask, approveTask, completeTask, createTask } from '@/lib/firebase/tasks';
 
 type ActionType = 'accept' | 'complete' | 'approve';
 
@@ -74,59 +74,66 @@ export default function MarketplacePage() {
 
     setIsActionLoading(true);
     const { task, action } = selectedTask;
-
-    try {
-      let resultMessage = '';
-      if (action === 'accept') {
-        await acceptTask(task.id, user.id);
-        resultMessage = 'Task has been assigned to you.';
-      } else if (action === 'complete') {
-        await completeTask(task.id, user.id);
-        resultMessage = 'Task marked as complete. Waiting for creator approval.';
-      } else if (action === 'approve') {
-        await approveTask(task.id, user.id);
-        resultMessage = `Task approved! ${task.credits_reward} credits have been transferred.`;
-      }
+    
+    toast({ title: 'Coming Soon!', description: `This action (${action}) will be connected to Firebase soon.` });
+    
+    // try {
+    //   let resultMessage = '';
+    //   if (action === 'accept') {
+    //     await acceptTask(task.id, user.id);
+    //     resultMessage = 'Task has been assigned to you.';
+    //   } else if (action === 'complete') {
+    //     await completeTask(task.id, user.id);
+    //     resultMessage = 'Task marked as complete. Waiting for creator approval.';
+    //   } else if (action === 'approve') {
+    //     await approveTask(task.id, user.id);
+    //     resultMessage = `Task approved! ${task.credits_reward} credits have been transferred.`;
+    //   }
       
-      toast({ title: 'Success!', description: resultMessage });
-      await fetchTasks(); // Re-fetch tasks to update the UI
-    } catch (error: any) {
-      console.error(`Error performing action: ${action}`, error);
-      toast({ title: 'Error', description: error.message || 'Could not complete the action. Please try again.', variant: 'destructive' });
-    } finally {
+    //   toast({ title: 'Success!', description: resultMessage });
+    //   await fetchTasks(); // Re-fetch tasks to update the UI
+    // } catch (error: any) {
+    //   console.error(`Error performing action: ${action}`, error);
+    //   toast({ title: 'Error', description: error.message || 'Could not complete the action. Please try again.', variant: 'destructive' });
+    // } finally {
       setIsActionLoading(false);
       setSelectedTask(null);
-    }
+    // }
   };
   
   const handleCreateTask = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user) return;
     
-    const formData = new FormData(e.currentTarget);
-    const title = formData.get('title') as string;
-    const description = formData.get('description') as string;
-    const creditsReward = parseInt(formData.get('creditsReward') as string, 10);
-    const tagsStr = formData.get('tags') as string;
-    const tags = tagsStr ? tagsStr.split(',').map(tag => tag.trim()) : [];
-
-
-    if (!title || !description || !creditsReward) {
-      toast({ title: 'Missing Fields', description: 'Please fill out all fields.', variant: 'destructive' });
-      return;
-    }
-
     setIsCreateLoading(true);
-    try {
-        await createTask({ title, description, creditsReward, userId: user.id, tags });
-        toast({ title: 'Task Created!', description: 'Your task has been posted to the marketplace.' });
-        setIsCreateDialogOpen(false);
-        await fetchTasks();
-    } catch (error: any) {
-        toast({ title: 'Error Creating Task', description: error.message || 'Something went wrong.', variant: 'destructive' });
-    } finally {
-        setIsCreateLoading(false);
-    }
+    toast({ title: 'Coming Soon!', description: 'Task creation will be connected to Firebase soon.' });
+    setIsCreateLoading(false);
+    setIsCreateDialogOpen(false);
+
+    // const formData = new FormData(e.currentTarget);
+    // const title = formData.get('title') as string;
+    // const description = formData.get('description') as string;
+    // const creditsReward = parseInt(formData.get('creditsReward') as string, 10);
+    // const tagsStr = formData.get('tags') as string;
+    // const tags = tagsStr ? tagsStr.split(',').map(tag => tag.trim()) : [];
+
+
+    // if (!title || !description || !creditsReward) {
+    //   toast({ title: 'Missing Fields', description: 'Please fill out all fields.', variant: 'destructive' });
+    //   return;
+    // }
+
+    // setIsCreateLoading(true);
+    // try {
+    //     await createTask({ title, description, creditsReward, userId: user.id, tags });
+    //     toast({ title: 'Task Created!', description: 'Your task has been posted to the marketplace.' });
+    //     setIsCreateDialogOpen(false);
+    //     await fetchTasks();
+    // } catch (error: any) {
+    //     toast({ title: 'Error Creating Task', description: error.message || 'Something went wrong.', variant: 'destructive' });
+    // } finally {
+    //     setIsCreateLoading(false);
+    // }
   }
 
   const getActionForTask = (task: Task): { label: string; action: ActionType; icon: React.ElementType; disabled: boolean; variant: "default" | "secondary" | "outline" } => {
@@ -134,14 +141,14 @@ export default function MarketplacePage() {
 
     switch (task.status) {
       case 'OPEN':
-        return { label: 'Accept Task', action: 'accept', icon: Handshake, disabled: task.created_by === user.id, variant: 'default' };
+        return { label: 'Accept Task', action: 'accept', icon: Handshake, disabled: task.created_by === user.uid, variant: 'default' };
       case 'ASSIGNED':
-        if (task.assigned_to === user.id) {
+        if (task.assigned_to === user.uid) {
           return { label: 'Mark as Complete', action: 'complete', icon: CheckCircle, disabled: false, variant: 'default' };
         }
         return { label: 'Assigned', action: 'accept', icon: Handshake, disabled: true, variant: 'secondary' };
       case 'COMPLETED':
-        if (task.created_by === user.id) {
+        if (task.created_by === user.uid) {
           return { label: 'Approve & Release Credits', action: 'approve', icon: Star, disabled: false, variant: 'default' };
         }
         return { label: 'Pending Approval', action: 'complete', icon: CheckCircle, disabled: true, variant: 'secondary' };

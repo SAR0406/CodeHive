@@ -28,7 +28,7 @@ import {
 import { Library, GitFork, Loader2 } from 'lucide-react';
 import type { Template } from '@/lib/supabase/data/get-templates';
 import { getTemplates } from '@/lib/supabase/data/get-templates';
-import { deductCredits } from '@/lib/supabase/credits';
+// import { deductCredits } from '@/lib/firebase/credits';
 
 
 export default function TemplatesPage() {
@@ -70,19 +70,20 @@ export default function TemplatesPage() {
     if (!selectedTemplate || !user) return;
 
     setIsLoading(true);
-    try {
-      await deductCredits(user.id, selectedTemplate.cost, `Forked template: ${selectedTemplate.title}`);
-      toast({
-        title: 'Template Forked!',
-        description: `You have successfully forked "${selectedTemplate.title}". ${selectedTemplate.cost} credits have been deducted.`,
-      });
-    } catch (error: any) {
-      console.error('Error forking template:', error);
-      toast({ title: 'Error', description: error.message || 'Could not fork the template. Please try again.', variant: 'destructive' });
-    } finally {
+    toast({ title: 'Coming Soon!', description: 'Forking will be connected to Firebase soon.' });
+    // try {
+    //   await deductCredits(user.id, selectedTemplate.cost, `Forked template: ${selectedTemplate.title}`);
+    //   toast({
+    //     title: 'Template Forked!',
+    //     description: `You have successfully forked "${selectedTemplate.title}". ${selectedTemplate.cost} credits have been deducted.`,
+    //   });
+    // } catch (error: any) {
+    //   console.error('Error forking template:', error);
+    //   toast({ title: 'Error', description: error.message || 'Could not fork the template. Please try again.', variant: 'destructive' });
+    // } finally {
       setIsLoading(false);
       setSelectedTemplate(null);
-    }
+    // }
   };
 
   return (

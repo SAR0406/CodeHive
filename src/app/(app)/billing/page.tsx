@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { CreditPack, getCreditPacks } from '@/lib/supabase/data/get-credit-packs';
-import { addCredits } from '@/lib/supabase/credits';
+// import { addCredits } from '@/lib/firebase/credits';
 
 
 export default function BillingPage() {
@@ -39,17 +39,18 @@ export default function BillingPage() {
         return;
     }
     setLoadingPack(pack.name);
-    try {
-        await addCredits(user.id, pack.credits);
-        toast({
-            title: 'Purchase Successful!',
-            description: `${pack.credits.toLocaleString()} credits have been added to your account.`
-        });
-    } catch (error: any) {
-        toast({ title: 'Purchase Failed', description: error.message || 'Could not complete the purchase. Please try again.', variant: 'destructive' });
-    } finally {
+    toast({ title: 'Coming Soon!', description: 'Purchasing will be connected to Firebase soon.' });
+    // try {
+    //     await addCredits(user.id, pack.credits);
+    //     toast({
+    //         title: 'Purchase Successful!',
+    //         description: `${pack.credits.toLocaleString()} credits have been added to your account.`
+    //     });
+    // } catch (error: any) {
+    //     toast({ title: 'Purchase Failed', description: error.message || 'Could not complete the purchase. Please try again.', variant: 'destructive' });
+    // } finally {
         setLoadingPack(null);
-    }
+    // }
   }
 
   return (

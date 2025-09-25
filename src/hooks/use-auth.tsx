@@ -6,10 +6,11 @@ import {
   useState,
   useEffect,
   type PropsWithChildren,
-  useCallback,
 } from 'react';
-import type { User } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase/client';
+import type { User } from 'firebase/auth';
+import { auth, db } from '@/firebase/config';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 
 interface CreditData {
   credits: number;
@@ -30,95 +31,42 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
-  const supabase = createClient();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [credits, setCredits] = useState<CreditData | null>(null);
 
-  const fetchAndSetProfile = useCallback(async (userId: string, userEmail?: string, fullName?: string, avatarUrl?: string) => {
-    // First, try to fetch the existing profile
-    let { data: profile, error } = await supabase.from('profiles').select('credits').eq('id', userId).single();
-
-    if (error && error.code === 'PGRST116') { // "PGRST116" is the code for "Not a single row found"
-        // Profile doesn't exist, create it.
-        const { data: newProfile, error: insertError } = await supabase.from('profiles')
-            .insert({ 
-                id: userId, 
-                email: userEmail, 
-                display_name: fullName, 
-                photo_url: avatarUrl
-            })
-            .select('credits')
-            .single();
-
-        if (insertError) {
-            console.error('Error creating profile on sign-in:', insertError);
-            setCredits(null);
-        } else if (newProfile) {
-            setCredits(newProfile);
-        }
-    } else if (profile) {
-        setCredits(profile);
-    } else if (error) {
-        console.error('Error fetching profile:', error);
-        setCredits(null);
-    }
-  }, [supabase]);
-
-
   useEffect(() => {
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-
-      if (currentUser) {
-        await fetchAndSetProfile(currentUser.id, currentUser.email, currentUser.user_metadata.full_name, currentUser.user_metadata.avatar_url);
-      }
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setUser(user);
       setLoading(false);
-    };
+    });
 
-    getInitialSession();
+    return () => unsubscribe();
+  }, []);
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
-        setLoading(true);
-
-        if (event === 'SIGNED_IN' && currentUser) {
-            await fetchAndSetProfile(currentUser.id, currentUser.email, currentUser.user_metadata.full_name, currentUser.user_metadata.avatar_url);
-        } else if (event === 'SIGNED_OUT') {
-          setCredits(null);
-        }
-        setLoading(false);
-      }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [supabase, fetchAndSetProfile]);
-  
   useEffect(() => {
-      if (!user) return;
+    if (user) {
+      const profileRef = doc(db, 'profiles', user.uid);
+      
+      const unsubscribe = onSnapshot(profileRef, (doc) => {
+        if (doc.exists()) {
+          setCredits(doc.data() as CreditData);
+        } else {
+          // You might want to create the profile document here if it doesn't exist
+          console.log("No profile document found for user.");
+          setCredits({ credits: 100 }); // Default credits
+        }
+      });
 
-      const profileSubscription = supabase.channel('public:profiles')
-          .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, (payload) => {
-              const { credits: newCredits } = payload.new as { credits: number };
-              setCredits({ credits: newCredits });
-          })
-          .subscribe();
-
-      return () => {
-          supabase.removeChannel(profileSubscription);
-      };
-  }, [user, supabase]);
-
+      return () => unsubscribe();
+    } else {
+      setCredits(null);
+    }
+  }, [user]);
 
   const logOut = async () => {
     setLoading(true);
-    await supabase.auth.signOut();
+    await auth.signOut();
     setUser(null);
     setCredits(null);
     setLoading(false);

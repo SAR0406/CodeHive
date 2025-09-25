@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import LivePreview from '@/components/live-preview';
 import { useAuth } from '@/hooks/use-auth';
 import { generateCode } from '@/ai/flows/generate-code-flow';
-import { deductCredits } from '@/lib/supabase/credits';
+// import { deductCredits } from '@/lib/firebase/credits';
 
 export default function AIBuilderPage() {
   const [prompt, setPrompt] = useState('');
@@ -44,7 +44,8 @@ export default function AIBuilderPage() {
     const cost = 10;
 
     try {
-      await deductCredits(user.id, cost, `AI App Builder: "${prompt.substring(0, 20)}..."`);
+      // await deductCredits(user.uid, cost);
+      toast({ title: 'Credit deduction is coming soon!'});
       const result = await generateCode({ prompt });
       setGeneratedCode(result.code);
        toast({
@@ -196,5 +197,3 @@ export default function AIBuilderPage() {
     </div>
   );
 }
-
-    

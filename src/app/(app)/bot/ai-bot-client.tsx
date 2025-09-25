@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Loader2, Sparkles } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { explainCode, ExplainCodeInput } from "@/ai/flows/explain-code-flow"
-import { deductCredits } from "@/lib/supabase/credits"
+// import { deductCredits } from "@/lib/firebase/credits"
 
 export default function AIBotClient() {
   const { toast } = useToast()
@@ -43,7 +43,8 @@ export default function AIBotClient() {
       };
 
       try {
-          await deductCredits(user.id, cost, 'AI Code Explanation');
+          // await deductCredits(user.uid, cost);
+          toast({ title: 'Credit deduction is coming soon!'});
           const result = await explainCode(input);
           setExplainState(s => ({ ...s, explanation: result.explanation }));
       } catch (error: any) {

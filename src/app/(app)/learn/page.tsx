@@ -31,7 +31,7 @@ import type { Mentor } from '@/lib/supabase/data/get-mentors';
 import { getMentors } from '@/lib/supabase/data/get-mentors';
 import type { LearningModule } from '@/lib/supabase/data/get-modules';
 import { getModules } from '@/lib/supabase/data/get-modules';
-import { deductCredits } from '@/lib/supabase/credits';
+// import { deductCredits } from '@/lib/firebase/credits';
 
 
 type ActionType = 'module' | 'session';
@@ -90,20 +90,22 @@ export default function LearnPage() {
     const description = type === 'module'
       ? `Purchased module: ${(item as LearningModule).title}`
       : `Booked session with: ${(item as Mentor).name}`;
+    
+    toast({ title: 'Coming Soon!', description: 'Purchasing will be connected to Firebase soon.' });
 
-    try {
-      await deductCredits(user.id, item.cost, description)
-      toast({
-        title: 'Purchase Successful!',
-        description: `${item.cost} credits have been deducted from your account.`,
-      });
-    } catch (error: any) {
-      console.error('Error during purchase:', error);
-      toast({ title: 'Error', description: error.message || 'Could not complete the purchase. Please try again.', variant: 'destructive' });
-    } finally {
+    // try {
+    //   await deductCredits(user.id, item.cost, description)
+    //   toast({
+    //     title: 'Purchase Successful!',
+    //     description: `${item.cost} credits have been deducted from your account.`,
+    //   });
+    // } catch (error: any) {
+    //   console.error('Error during purchase:', error);
+    //   toast({ title: 'Error', description: error.message || 'Could not complete the purchase. Please try again.', variant: 'destructive' });
+    // } finally {
       setIsLoading(false);
       setSelectedItem(null);
-    }
+    // }
   };
 
   return (
@@ -126,7 +128,7 @@ export default function LearnPage() {
               ))
             ) : (
               mentors.map((mentor) => {
-                const placeholder = PlaceHolderImages.find((p) => p.id === mentor.id.toString());
+                const placeholder = PlaceHolderImages.find((p) => p.id === `mentor-${mentor.id.toString()}`);
                 return (
                   <Card key={mentor.id} className="text-center transition-all duration-300 hover:shadow-xl hover:shadow-accent/10 hover:-translate-y-1 flex flex-col">
                     <CardContent className="pt-6 flex flex-col items-center gap-4 flex-grow">
