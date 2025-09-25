@@ -1,7 +1,7 @@
 
 'use client'
 
-import { db } from "@/firebase/config";
+import { getFirebaseDb } from "@/firebase/config";
 import { collection, getDocs, query } from "firebase/firestore";
 
 export interface CreditPack {
@@ -13,6 +13,7 @@ export interface CreditPack {
 }
 
 export async function getCreditPacks(): Promise<CreditPack[]> {
+    const db = getFirebaseDb();
     const packsCollection = collection(db, 'credit_packs');
     const q = query(packsCollection);
     const querySnapshot = await getDocs(q);

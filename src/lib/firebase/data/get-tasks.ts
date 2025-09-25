@@ -1,7 +1,7 @@
 
 'use client'
 
-import { db } from "@/firebase/config";
+import { getFirebaseDb } from "@/firebase/config";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { Timestamp } from "firebase/firestore";
 
@@ -19,6 +19,7 @@ export interface Task {
 }
 
 export async function getTasks(): Promise<Task[]> {
+    const db = getFirebaseDb();
     const tasksCollection = collection(db, 'tasks');
     const q = query(tasksCollection, orderBy('created_at', 'desc'));
 

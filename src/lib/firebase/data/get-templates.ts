@@ -1,6 +1,6 @@
 
 'use client'
-import { db } from "@/firebase/config";
+import { getFirebaseDb } from "@/firebase/config";
 import { collection, getDocs, query } from "firebase/firestore";
 
 export interface Template {
@@ -11,6 +11,7 @@ export interface Template {
 }
 
 export async function getTemplates(): Promise<Template[]> {
+    const db = getFirebaseDb();
     const templatesCollection = collection(db, 'templates');
     const q = query(templatesCollection);
     const querySnapshot = await getDocs(q);

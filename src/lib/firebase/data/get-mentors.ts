@@ -1,7 +1,7 @@
 
 'use client'
 
-import { db } from "@/firebase/config";
+import { getFirebaseDb } from "@/firebase/config";
 import { collection, getDocs, query } from "firebase/firestore";
 
 export interface Mentor {
@@ -13,6 +13,7 @@ export interface Mentor {
 }
 
 export async function getMentors(): Promise<Mentor[]> {
+    const db = getFirebaseDb();
     const mentorsCollection = collection(db, 'mentors');
     const q = query(mentorsCollection);
     const querySnapshot = await getDocs(q);
