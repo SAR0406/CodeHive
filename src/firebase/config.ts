@@ -32,7 +32,7 @@ function initializeFirebase() {
 
 // Call initializeFirebase to ensure it's set up
 // This check makes sure it only runs when the API key is available
-if (firebaseConfig.apiKey) {
+if (typeof window !== 'undefined' && firebaseConfig.apiKey) {
     initializeFirebase();
 }
 
