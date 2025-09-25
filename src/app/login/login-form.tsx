@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Chrome, Github, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -50,15 +50,17 @@ export default function LoginForm() {
   };
 
   return (
-    <Card>
+    <Card className="bg-card/80 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle>Sign In</CardTitle>
+        <CardTitle>Welcome to CodeHive</CardTitle>
+        <CardDescription>Choose your preferred sign-in method to continue.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
         <Button
           variant="outline"
           onClick={() => handleSignIn('google')}
           disabled={!!isLoading}
+          size="lg"
         >
           {isLoading === 'google' ? (
             <Loader2 className="mr-2 animate-spin" />
@@ -71,6 +73,7 @@ export default function LoginForm() {
           variant="outline"
           onClick={() => handleSignIn('github')}
           disabled={!!isLoading}
+          size="lg"
         >
           {isLoading === 'github' ? (
             <Loader2 className="mr-2 animate-spin" />

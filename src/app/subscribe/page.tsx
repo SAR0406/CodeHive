@@ -66,7 +66,8 @@ export default function SubscribePage() {
         } else if (plan.cta === 'Contact Sales'){
             window.location.href = 'mailto:sales@codehive.com';
         } else {
-            // Handle upgrade logic, e.g., redirect to a payment gateway
+            // For Pro plan, we should redirect to login first if not authenticated.
+            router.push('/login');
         }
     }
 
@@ -107,6 +108,7 @@ export default function SubscribePage() {
                                             <Star className="text-amber-400 fill-current" size={16} />
                                             <span>{plan.credits.toLocaleString()} credits</span>
                                         </li>
+
                                      )}
                                 </ul>
                             </CardContent>
