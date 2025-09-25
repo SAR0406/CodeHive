@@ -8,7 +8,7 @@ import {
   type PropsWithChildren,
 } from 'react';
 import type { User } from 'firebase/auth';
-import { auth, db } from '@/firebase/config';
+import { getFirebaseAuth, getFirebaseDb } from '@/firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -37,6 +37,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [credits, setCredits] = useState<ProfileData | null>(null);
+  const auth = getFirebaseAuth();
+  const db = getFirebaseDb();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -64,7 +66,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [auth, db]);
 
   useEffect(() => {
     if (user) {
@@ -82,7 +84,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     } else {
       setCredits(null);
     }
-  }, [user]);
+  }, [user, db]);
 
   const logOut = async () => {
     setLoading(true);
@@ -102,5 +104,3 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 export const useAuth = () => {
   return useContext(AuthContext);
 };
-
-    

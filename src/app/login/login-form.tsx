@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Chrome, Github, Loader2 } from 'lucide-react';
-import { auth } from '@/firebase/config';
+import { getFirebaseAuth } from '@/firebase/config';
 import { signInWithPopup, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
 
 const GoogleIcon = () => <Chrome className="size-4" />;
@@ -16,6 +16,7 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState<false | 'google' | 'github'>(false);
   const router = useRouter();
   const { toast } = useToast();
+  const auth = getFirebaseAuth();
 
   const handleSignIn = async (providerName: 'google' | 'github') => {
     setIsLoading(providerName);
