@@ -18,10 +18,17 @@ let auth: Auth;
 let db: Firestore;
 
 function initializeFirebase() {
+  // This check ensures Firebase is only initialized on the client side.
+  // It avoids build errors during server-side rendering (SSR).
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  if (!firebaseConfig.apiKey) {
+    throw new Error("Firebase API key is not defined. Please check your environment variables.");
+  }
+  
   if (getApps().length === 0) {
-    if (!firebaseConfig.apiKey) {
-      throw new Error("Firebase API key is not defined. Please check your environment variables.");
-    }
     app = initializeApp(firebaseConfig);
   } else {
     app = getApp();
@@ -30,11 +37,8 @@ function initializeFirebase() {
   db = getFirestore(app);
 }
 
-// Call initializeFirebase to ensure it's set up
-// This check makes sure it only runs when the API key is available
-if (typeof window !== 'undefined' && firebaseConfig.apiKey) {
-    initializeFirebase();
-}
+// Call initializeFirebase to ensure it's set up on first client-side load
+initializeFirebase();
 
 function getFirebaseApp(): FirebaseApp {
     if (!app) initializeFirebase();

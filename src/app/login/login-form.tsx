@@ -16,10 +16,10 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState<false | 'google' | 'github'>(false);
   const router = useRouter();
   const { toast } = useToast();
-  const auth = getFirebaseAuth();
 
   const handleSignIn = async (providerName: 'google' | 'github') => {
     setIsLoading(providerName);
+    const auth = getFirebaseAuth(); // Get auth instance here
     const provider = providerName === 'google' ? new GoogleAuthProvider() : new GithubAuthProvider();
     
     try {
