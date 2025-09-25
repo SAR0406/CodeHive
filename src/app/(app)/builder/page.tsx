@@ -11,6 +11,8 @@ import Editor from '@monaco-editor/react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import LivePreview from '@/components/live-preview';
 import { useAuth } from '@/hooks/use-auth';
+import { generateCode } from '@/ai/flows/generate-code-flow';
+import { deductCredits } from '@/lib/supabase/credits';
 
 export default function AIBuilderPage() {
   const [prompt, setPrompt] = useState('');
@@ -23,7 +25,7 @@ export default function AIBuilderPage() {
     if (!prompt) {
       toast({
         title: 'Prompt is empty',
-        description: 'Please enter a description for the app you want to build.',
+        description: 'Please enter a description for the component you want to build.',
         variant: 'destructive',
       });
       return;
@@ -31,7 +33,7 @@ export default function AIBuilderPage() {
     if (!user) {
         toast({
             title: 'Not authenticated',
-            description: 'Please log in to generate an app.',
+            description: 'Please log in to generate code.',
             variant: 'destructive',
         });
         return;
@@ -39,24 +41,23 @@ export default function AIBuilderPage() {
 
     setIsLoading(true);
     setGeneratedCode('');
+    const cost = 10;
 
     try {
-      // AI functionality is temporarily disabled.
+      await deductCredits(user.id, cost, `AI App Builder: "${prompt.substring(0, 20)}..."`);
+      const result = await generateCode({ prompt });
+      setGeneratedCode(result.code);
        toast({
-        title: 'AI Feature Disabled',
-        description: "This feature is currently unavailable.",
-        variant: 'destructive',
+        title: 'Code Generated!',
+        description: 'Your component has been generated successfully.',
       });
-      // In a real scenario, you would call your AI service here.
-      // const result = await generateApp({ prompt, userId: user.uid });
-      // setGeneratedCode(result.code);
     } catch (error: any) {
       let description = 'Something went wrong. Please try again.';
       if (error.message.includes('Insufficient credits')) {
-        description = "You don't have enough credits to generate an app.";
+        description = "You don't have enough credits to generate code.";
       }
       toast({
-        title: 'Error Generating App',
+        title: 'Error Generating Code',
         description,
         variant: 'destructive',
       });
@@ -71,9 +72,9 @@ export default function AIBuilderPage() {
         <div>
           <h1 className="font-headline text-3xl md:text-4xl font-semibold flex items-center gap-3">
             <Bot className="size-8 text-accent" />
-            <span>AI App Builder</span>
+            <span>AI Component Builder</span>
           </h1>
-          <p className="text-muted-foreground mt-2">Generate a full-stack application from a single prompt. Costs 10 credits.</p>
+          <p className="text-muted-foreground mt-2">Generate a React component from a single prompt. Costs 10 credits.</p>
         </div>
          <Button variant="outline" disabled>
           <Figma className="mr-2" />
@@ -84,14 +85,14 @@ export default function AIBuilderPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1">
         <Card className="flex flex-col">
           <CardHeader>
-            <CardTitle>Describe Your App</CardTitle>
+            <CardTitle>Describe Your Component</CardTitle>
             <CardDescription>
-              Enter a detailed prompt describing the application you want to build. The more detail, the better the result.
+              Enter a detailed prompt describing the UI component you want to build. Be specific about elements, layout, and styling.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col flex-grow gap-4">
             <Textarea
-              placeholder="e.g., A simple to-do list app with a clean interface. Users should be able to add, edit, and delete tasks..."
+              placeholder="e.g., A responsive pricing card with three tiers: Free, Pro, and Enterprise. Each card should have a title, price, feature list, and a call-to-action button. The Pro tier should be highlighted."
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               className="flex-grow text-base"
@@ -106,7 +107,7 @@ export default function AIBuilderPage() {
               ) : (
                 <>
                   <Sparkles className="mr-2 h-5 w-5" />
-                  Generate App
+                  Generate Component
                 </>
               )}
             </Button>
@@ -128,8 +129,8 @@ export default function AIBuilderPage() {
                   </Button>
                 </div>
                 <TabsContent value="code" className="flex-grow mt-4">
-                  <div className="border rounded-lg bg-background/80 flex-grow h-full overflow-hidden">
-                      {isLoading && (
+                  <div className="border rounded-lg bg-card flex-grow h-full overflow-hidden">
+                      {isLoading && !generatedCode && (
                           <div className="flex items-center justify-center h-full text-muted-foreground">
                           <Loader2 className="mr-2 h-8 w-8 animate-spin" />
                           <span>Generating code...</span>
@@ -139,7 +140,7 @@ export default function AIBuilderPage() {
                           <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center p-4">
                           <Code className="mr-2 h-10 w-10 mb-2" />
                           <span className="font-semibold">Your generated code will appear here.</span>
-                          <p className="text-sm">Describe your app and click "Generate App" to start.</p>
+                          <p className="text-sm">Describe your component and click "Generate" to start.</p>
                           </div>
                       )}
                       {generatedCode && (
@@ -149,7 +150,7 @@ export default function AIBuilderPage() {
                               theme="vs-dark"
                               value={generatedCode}
                               options={{
-                                  readOnly: true,
+                                  readOnly: false,
                                   minimap: { enabled: false },
                                   scrollBeyondLastLine: false,
                                   fontSize: 14,
@@ -159,8 +160,8 @@ export default function AIBuilderPage() {
                   </div>
                 </TabsContent>
                 <TabsContent value="preview" className="flex-grow mt-4">
-                  <div className="border rounded-lg bg-white flex-grow h-full overflow-hidden">
-                      {isLoading && (
+                  <div className="border rounded-lg bg-background flex-grow h-full overflow-hidden">
+                      {isLoading && !generatedCode && (
                           <div className="flex items-center justify-center h-full text-muted-foreground">
                               <Loader2 className="mr-2 h-8 w-8 animate-spin" />
                               <span>Generating preview...</span>
@@ -195,3 +196,5 @@ export default function AIBuilderPage() {
     </div>
   );
 }
+
+    
