@@ -7,6 +7,9 @@ import { FirebaseProvider } from '@/lib/firebase/client-provider';
 export const metadata: Metadata = {
   title: 'CodeHive',
   description: 'Build, learn, and collaborate with AI.',
+  verification: {
+    google: '6ozqhJJFoGj4n8S0tnyRzCmWQw7JmIdxGfIm1pzuyLs',
+  },
 };
 
 export default function RootLayout({
