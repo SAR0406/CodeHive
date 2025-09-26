@@ -8,8 +8,8 @@ import {
   type PropsWithChildren,
 } from 'react';
 import type { User } from 'firebase/auth';
-import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot, getFirestore } from 'firebase/firestore';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { useFirebase } from '@/lib/firebase/client-provider';
 
 // Define a separate type for the profile data to keep things clean.
@@ -31,15 +31,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // The AuthProvider component that will wrap our application.
 export const AuthProvider = ({ children }: PropsWithChildren) => {
-  const { app } = useFirebase();
+  const { auth, db } = useFirebase();
   const [user, setUser] = useState<User | null>(null);
   const [credits, setCredits] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Function to sign the user out.
   const logOut = async () => {
-    if (!app) return;
-    const auth = getAuth(app);
+    if (!auth) return;
     await signOut(auth);
     setUser(null);
     setCredits(null);
@@ -47,8 +46,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   
   // Function to create a user profile if it doesn't exist
   const createUserProfile = async (user: User) => {
-    if (!app) return;
-    const db = getFirestore(app);
+    if (!db) return;
     const profileRef = doc(db, 'profiles', user.uid);
     const profileSnap = await getDoc(profileRef);
 
@@ -68,11 +66,10 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
 
   useEffect(() => {
-    if (!app) {
+    if (!auth) {
       setLoading(false);
       return;
     }
-    const auth = getAuth(app);
     
     // Set up a listener for authentication state changes.
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -85,12 +82,11 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
     // Cleanup the subscription when the component unmounts.
     return () => unsubscribe();
-  }, [app]);
+  }, [auth]);
 
   useEffect(() => {
     // This effect listens for changes to the user's profile in the database.
-    if (user && app) {
-      const db = getFirestore(app);
+    if (user && db) {
       const profileRef = doc(db, 'profiles', user.uid);
       
       const unsubscribe = onSnapshot(profileRef, (doc) => {
@@ -108,7 +104,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       // Cleanup the channel when the component unmounts or the user changes.
       return () => unsubscribe();
     }
-  }, [user, app]);
+  }, [user, db]);
 
   // The value provided to the context consumers.
   const value = {

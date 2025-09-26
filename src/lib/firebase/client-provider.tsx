@@ -1,30 +1,22 @@
 
 'use client';
 import { createContext, useContext, type PropsWithChildren } from 'react';
-import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getFirestore, type Firestore } from 'firebase/firestore';
-import { firebaseConfig } from './config';
+import type { FirebaseApp } from 'firebase/app';
+import type { Firestore } from 'firebase/firestore';
+import type { Auth } from 'firebase/auth';
+import { app, db, auth } from './firebase';
 
 type FirebaseContextType = {
   app: FirebaseApp | null;
   db: Firestore | null;
+  auth: Auth | null;
 };
 
-const FirebaseContext = createContext<FirebaseContextType>({ app: null, db: null });
+const FirebaseContext = createContext<FirebaseContextType>({ app: null, db: null, auth: null });
 
 export const FirebaseProvider = ({ children }: PropsWithChildren) => {
-  let app: FirebaseApp;
-  
-  if (!getApps().length) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApps()[0];
-  }
-  
-  const db = getFirestore(app);
-
   return (
-    <FirebaseContext.Provider value={{ app, db }}>
+    <FirebaseContext.Provider value={{ app, db, auth }}>
       {children}
     </FirebaseContext.Provider>
   );
