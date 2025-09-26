@@ -130,7 +130,7 @@ export default function AppShell({ children }: PropsWithChildren) {
                     </Avatar>
                     <div className="hidden text-left lg:block">
                       <p className="text-sm font-medium">{user?.displayName ?? 'Welcome'}</p>
-                      <div className="text-xs text-amber-400 flex items-center gap-1">
+                      <div className="text-xs text-primary flex items-center gap-1">
                         <Star className="size-3 fill-current"/>
                         <span>{credits !== null ? `${credits.credits.toLocaleString()}` : '...'}</span>
                       </div>
@@ -140,7 +140,7 @@ export default function AppShell({ children }: PropsWithChildren) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                   <DropdownMenuLabel className="font-normal text-xs text-amber-400 flex items-center gap-1">
+                   <DropdownMenuLabel className="font-normal text-xs text-primary flex items-center gap-1">
                         <Star className="size-3 fill-current"/>
                         <span>Credits: {credits !== null ? `${credits.credits.toLocaleString()}` : '...'}</span>
                     </DropdownMenuLabel>

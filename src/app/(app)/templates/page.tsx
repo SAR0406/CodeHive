@@ -15,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +29,7 @@ import {
 import { Library, GitFork, Loader2 } from 'lucide-react';
 import type { Template } from '@/lib/firebase/data/get-templates';
 import { getTemplates } from '@/lib/firebase/data/get-templates';
-// import { deductCredits } from '@/lib/firebase/credits';
+import { deductCredits } from '@/lib/firebase/credits';
 
 
 export default function TemplatesPage() {
@@ -70,20 +71,19 @@ export default function TemplatesPage() {
     if (!selectedTemplate || !user) return;
 
     setIsLoading(true);
-    toast({ title: 'Coming Soon!', description: 'Forking will be connected to Firebase soon.' });
-    // try {
-    //   await deductCredits(user.id, selectedTemplate.cost, `Forked template: ${selectedTemplate.title}`);
-    //   toast({
-    //     title: 'Template Forked!',
-    //     description: `You have successfully forked "${selectedTemplate.title}". ${selectedTemplate.cost} credits have been deducted.`,
-    //   });
-    // } catch (error: any) {
-    //   console.error('Error forking template:', error);
-    //   toast({ title: 'Error', description: error.message || 'Could not fork the template. Please try again.', variant: 'destructive' });
-    // } finally {
+    try {
+      await deductCredits(user.uid, selectedTemplate.cost, `Forked template: ${selectedTemplate.title}`);
+      toast({
+        title: 'Template Forked!',
+        description: `You have successfully forked "${selectedTemplate.title}". ${selectedTemplate.cost} credits have been deducted.`,
+      });
+    } catch (error: any) {
+      console.error('Error forking template:', error);
+      toast({ title: 'Error', description: error.message || 'Could not fork the template. Please try again.', variant: 'destructive' });
+    } finally {
       setIsLoading(false);
       setSelectedTemplate(null);
-    // }
+    }
   };
 
   return (
@@ -99,7 +99,16 @@ export default function TemplatesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {isLoadingTemplates ? (
             Array.from({ length: 4 }).map((_, i) => (
-                <Card key={i}><CardContent className="p-6 h-96 flex items-center justify-center"><Loader2 className="animate-spin text-muted-foreground" /></CardContent></Card>
+                <Card key={i}>
+                    <Skeleton className="aspect-video w-full" />
+                    <CardHeader>
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                    </CardHeader>
+                    <CardFooter>
+                        <Skeleton className="h-10 w-full" />
+                    </CardFooter>
+                </Card>
             ))
           ) : (
             templates.map((template) => {
@@ -123,7 +132,7 @@ export default function TemplatesPage() {
                     <CardDescription>{template.description}</CardDescription>
                   </CardHeader>
                   <CardFooter>
-                    <Button className="w-full" onClick={() => handleForkClick(template)}>
+                    <Button className="w-full" onClick={() => handleForkClick(template)} disabled={!user}>
                       <GitFork className="mr-2 h-4 w-4" />
                       Fork Template ({template.cost} Credits)
                     </Button>
@@ -141,7 +150,7 @@ export default function TemplatesPage() {
             <AlertDialogTitle>Confirm Fork</AlertDialogTitle>
             <AlertDialogDescription>
               {`Are you sure you want to fork the template "${selectedTemplate?.title}"? This will deduct `}
-              <span className="font-bold text-amber-400">{selectedTemplate?.cost} credits</span> from your account.
+              <span className="font-bold text-primary">{selectedTemplate?.cost} credits</span> from your account.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -162,5 +171,3 @@ export default function TemplatesPage() {
     </>
   );
 }
-
-    

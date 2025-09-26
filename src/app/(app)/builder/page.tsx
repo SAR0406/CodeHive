@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import LivePreview from '@/components/live-preview';
 import { useAuth } from '@/hooks/use-auth';
 import { generateCode } from '@/ai/flows/generate-code-flow';
-// import { deductCredits } from '@/lib/firebase/credits';
+import { deductCredits } from '@/lib/firebase/credits';
 
 export default function AIBuilderPage() {
   const [prompt, setPrompt] = useState('');
@@ -41,21 +41,22 @@ export default function AIBuilderPage() {
 
     setIsLoading(true);
     setGeneratedCode('');
-    const cost = 10;
+    const cost = 25; // Cost for generating a component
 
     try {
-      // await deductCredits(user.uid, cost);
-      toast({ title: 'Credit deduction is coming soon!'});
+      await deductCredits(user.uid, cost, 'Generated a component with AI Builder');
       const result = await generateCode({ prompt });
       setGeneratedCode(result.code);
        toast({
         title: 'Code Generated!',
-        description: 'Your component has been generated successfully.',
+        description: `Your component has been generated and ${cost} credits were deducted.`,
       });
     } catch (error: any) {
       let description = 'Something went wrong. Please try again.';
       if (error.message.includes('Insufficient credits')) {
         description = "You don't have enough credits to generate code.";
+      } else {
+        description = error.message;
       }
       toast({
         title: 'Error Generating Code',
@@ -75,7 +76,7 @@ export default function AIBuilderPage() {
             <Bot className="size-8 text-accent" />
             <span>AI Component Builder</span>
           </h1>
-          <p className="text-muted-foreground mt-2">Generate a React component from a single prompt. Costs 10 credits.</p>
+          <p className="text-muted-foreground mt-2">Generate a React component from a single prompt. Costs 25 credits.</p>
         </div>
          <Button variant="outline" disabled>
           <Figma className="mr-2" />

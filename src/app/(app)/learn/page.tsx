@@ -31,7 +31,7 @@ import type { Mentor } from '@/lib/firebase/data/get-mentors';
 import { getMentors } from '@/lib/firebase/data/get-mentors';
 import type { LearningModule } from '@/lib/firebase/data/get-modules';
 import { getModules } from '@/lib/firebase/data/get-modules';
-// import { deductCredits } from '@/lib/firebase/credits';
+import { deductCredits } from '@/lib/firebase/credits';
 
 
 type ActionType = 'module' | 'session';
@@ -91,21 +91,19 @@ export default function LearnPage() {
       ? `Purchased module: ${(item as LearningModule).title}`
       : `Booked session with: ${(item as Mentor).name}`;
     
-    toast({ title: 'Coming Soon!', description: 'Purchasing will be connected to Firebase soon.' });
-
-    // try {
-    //   await deductCredits(user.id, item.cost, description)
-    //   toast({
-    //     title: 'Purchase Successful!',
-    //     description: `${item.cost} credits have been deducted from your account.`,
-    //   });
-    // } catch (error: any) {
-    //   console.error('Error during purchase:', error);
-    //   toast({ title: 'Error', description: error.message || 'Could not complete the purchase. Please try again.', variant: 'destructive' });
-    // } finally {
+    try {
+      await deductCredits(user.uid, item.cost, description)
+      toast({
+        title: 'Purchase Successful!',
+        description: `${item.cost} credits have been deducted from your account.`,
+      });
+    } catch (error: any) {
+      console.error('Error during purchase:', error);
+      toast({ title: 'Error', description: error.message || 'Could not complete the purchase. Please try again.', variant: 'destructive' });
+    } finally {
       setIsLoading(false);
       setSelectedItem(null);
-    // }
+    }
   };
 
   return (
@@ -130,9 +128,9 @@ export default function LearnPage() {
               mentors.map((mentor) => {
                 const placeholder = PlaceHolderImages.find((p) => p.id === `mentor-${mentor.id.toString()}`);
                 return (
-                  <Card key={mentor.id} className="text-center transition-all duration-300 hover:shadow-xl hover:shadow-accent/10 hover:-translate-y-1 flex flex-col">
+                  <Card key={mentor.id} className="text-center transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 flex flex-col">
                     <CardContent className="pt-6 flex flex-col items-center gap-4 flex-grow">
-                      <Avatar className="h-24 w-24 border-2 border-accent">
+                      <Avatar className="h-24 w-24 border-2 border-primary">
                         {placeholder && <AvatarImage src={placeholder.imageUrl} alt={mentor.name} data-ai-hint={placeholder.imageHint} />}
                         <AvatarFallback>{mentor.name.charAt(0)}</AvatarFallback>
                       </Avatar>
@@ -152,11 +150,11 @@ export default function LearnPage() {
                       </div>
                     </CardContent>
                     <CardFooter className="flex-col gap-3 pt-4">
-                      <div className="flex items-center gap-1 text-sm text-amber-400 font-medium">
+                      <div className="flex items-center gap-1 text-sm text-yellow-400 font-medium">
                         <Star className="w-4 h-4 fill-current" />
                         <span>{mentor.reputation} Reputation</span>
                       </div>
-                      <Button className="w-full" onClick={() => handlePurchaseClick(mentor, 'session')}>
+                      <Button className="w-full" onClick={() => handlePurchaseClick(mentor, 'session')} disabled={!user}>
                         Request Session ({mentor.cost} Credits)
                       </Button>
                     </CardFooter>
@@ -176,10 +174,10 @@ export default function LearnPage() {
               ))
             ) : (
                 modules.map((mod, index) => (
-                <Card key={index} className="flex items-center transition-all duration-300 hover:shadow-xl hover:shadow-accent/10">
+                <Card key={index} className="flex items-center transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
                   <CardHeader className="pr-0">
-                    <div className="bg-accent/10 p-4 rounded-lg">
-                      <BookOpen className="h-8 w-8 text-accent" />
+                    <div className="bg-primary/10 p-4 rounded-lg">
+                      <BookOpen className="h-8 w-8 text-primary" />
                     </div>
                   </CardHeader>
                   <CardContent className="flex-grow pt-6">
@@ -187,8 +185,8 @@ export default function LearnPage() {
                     <p className="text-sm text-muted-foreground">{mod.description}</p>
                   </CardContent>
                   <CardFooter className="pr-6">
-                    <Button variant="outline" onClick={() => handlePurchaseClick(mod, 'module')}>
-                      <Star className="mr-2 h-4 w-4 text-amber-400 fill-current" />
+                    <Button variant="outline" onClick={() => handlePurchaseClick(mod, 'module')} disabled={!user}>
+                      <Star className="mr-2 h-4 w-4 text-yellow-400 fill-current" />
                       {mod.cost} Credits
                     </Button>
                   </CardFooter>
@@ -209,7 +207,7 @@ export default function LearnPage() {
                 : `Are you sure you want to book a session with ${(selectedItem?.item as Mentor).name}?`
               }
               {` This will deduct `}
-              <span className="font-bold text-amber-400">{selectedItem?.item.cost} credits</span> from your account.
+              <span className="font-bold text-primary">{selectedItem?.item.cost} credits</span> from your account.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -230,5 +228,3 @@ export default function LearnPage() {
     </>
   );
 }
-
-    

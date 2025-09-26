@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -188,7 +189,7 @@ export default function MarketplacePage() {
             </h1>
             <p className="text-muted-foreground mt-2">Find tasks, contribute to projects, and earn credits.</p>
           </div>
-           <Button onClick={() => setIsCreateDialogOpen(true)}>
+           <Button onClick={() => setIsCreateDialogOpen(true)} disabled={!user}>
              <PlusCircle className="mr-2"/>
              Create New Task
            </Button>
@@ -197,13 +198,25 @@ export default function MarketplacePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoadingTasks ? (
              Array.from({ length: 6 }).map((_, i) => (
-                <Card key={i}><CardContent className="p-6 h-64 flex items-center justify-center"><Loader2 className="animate-spin text-muted-foreground" /></CardContent></Card>
+                <Card key={i}>
+                    <CardHeader>
+                        <Skeleton className="h-5 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-10 w-full" />
+                    </CardContent>
+                     <CardFooter className="flex justify-between items-center">
+                        <Skeleton className="h-6 w-1/4" />
+                        <Skeleton className="h-10 w-2/5" />
+                    </CardFooter>
+                </Card>
              ))
           ) : (
             tasks.map((task) => {
               const { label, action, icon: Icon, disabled, variant } = getActionForTask(task);
               return (
-                <Card key={task.id} className="flex flex-col transition-all duration-300 hover:shadow-xl hover:shadow-accent/10 hover:-translate-y-1">
+                <Card key={task.id} className="flex flex-col transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1">
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <CardTitle className="text-lg">{task.title}</CardTitle>
@@ -219,7 +232,7 @@ export default function MarketplacePage() {
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-between items-center">
-                    <div className="flex items-center gap-2 font-bold text-lg text-amber-400">
+                    <div className="flex items-center gap-2 font-bold text-lg text-primary">
                       <Star className="w-5 h-5 fill-current" />
                       <span>{task.credits_reward}</span>
                     </div>
@@ -294,5 +307,3 @@ export default function MarketplacePage() {
     </>
   );
 }
-
-    

@@ -39,18 +39,12 @@ export default function BillingPage() {
         return;
     }
     setLoadingPack(pack.name);
-    toast({ title: 'Coming Soon!', description: 'Purchasing will be connected to Firebase soon.' });
-    // try {
-    //     await addCredits(user.id, pack.credits);
-    //     toast({
-    //         title: 'Purchase Successful!',
-    //         description: `${pack.credits.toLocaleString()} credits have been added to your account.`
-    //     });
-    // } catch (error: any) {
-    //     toast({ title: 'Purchase Failed', description: error.message || 'Could not complete the purchase. Please try again.', variant: 'destructive' });
-    // } finally {
+    toast({ title: 'Coming Soon!', description: 'Purchasing will be connected to Stripe or another payment provider soon.' });
+    // In a real app, you would redirect to a checkout page here
+    // For now, we'll just simulate the loading
+    setTimeout(() => {
         setLoadingPack(null);
-    // }
+    }, 2000);
   }
 
   return (
@@ -76,7 +70,7 @@ export default function BillingPage() {
                         <CardTitle className="text-lg font-semibold">Available Credits</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-4xl font-bold text-amber-400">{credits?.credits.toLocaleString() ?? '...'}</p>
+                        <p className="text-4xl font-bold text-primary">{credits?.credits.toLocaleString() ?? '...'}</p>
                         <p className="text-sm text-muted-foreground">Credits in your wallet</p>
                     </CardContent>
                 </Card>
@@ -105,7 +99,7 @@ export default function BillingPage() {
                       <Card key={pack.name} className='text-center'>
                         <CardHeader>
                             <CardTitle className='text-xl'>{pack.name}</CardTitle>
-                            <div className="flex items-center justify-center gap-2 text-amber-400">
+                            <div className="flex items-center justify-center gap-2 text-primary">
                                 <Star className="w-5 h-5 fill-current" />
                                 <span className="text-2xl font-bold">{pack.credits.toLocaleString()}</span>
                             </div>
@@ -146,5 +140,3 @@ export default function BillingPage() {
     </div>
   );
 }
-
-    
