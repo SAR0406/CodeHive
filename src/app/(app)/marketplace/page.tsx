@@ -32,12 +32,13 @@ import { Label } from '@/components/ui/label';
 import { LayoutTemplate, Star, Handshake, Loader2, PlusCircle, CheckCircle } from 'lucide-react';
 import type { Task } from '@/lib/firebase/data/get-tasks';
 import { getTasks } from '@/lib/firebase/data/get-tasks';
-// import { acceptTask, approveTask, completeTask, createTask } from '@/lib/firebase/tasks';
+import { useFirebase } from '@/lib/firebase/client-provider';
 
 type ActionType = 'accept' | 'complete' | 'approve';
 
 export default function MarketplacePage() {
   const { user } = useAuth();
+  const { db } = useFirebase();
   const { toast } = useToast();
   const [selectedTask, setSelectedTask] = useState<{ task: Task; action: ActionType } | null>(null);
   const [isActionLoading, setIsActionLoading] = useState(false);
@@ -47,9 +48,10 @@ export default function MarketplacePage() {
   const [isCreateLoading, setIsCreateLoading] = useState(false);
 
   async function fetchTasks() {
+    if (!db) return;
     setIsLoadingTasks(true);
     try {
-      const fetchedTasks = await getTasks();
+      const fetchedTasks = await getTasks(db);
       setTasks(fetchedTasks);
     } catch (error) {
       toast({ title: 'Error', description: 'Could not load marketplace tasks.', variant: 'destructive' });
@@ -60,7 +62,7 @@ export default function MarketplacePage() {
 
   useEffect(() => {
     fetchTasks();
-  }, [toast]);
+  }, [db, toast]);
 
   const handleTaskAction = (task: Task, action: ActionType) => {
     if (!user) {

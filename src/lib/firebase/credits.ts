@@ -1,7 +1,7 @@
 
 'use client'
 import { getFunctions, httpsCallable } from "firebase/functions";
-import { getFirebaseApp } from "@/firebase/config";
+import type { FirebaseApp } from "firebase/app";
 
 // It's recommended to create a dedicated file for Firebase Functions interactions.
 
@@ -13,14 +13,14 @@ import { getFirebaseApp } from "@/firebase/config";
  * 'deductCredits' and handle the logic of securely decrementing the user's
  * credit balance in Firestore.
  * 
+ * @param {FirebaseApp} app - The initialized Firebase App instance.
  * @param {string} userId - The ID of the user whose credits are to be deducted.
  * @param {number} amount - The number of credits to deduct.
  * @param {string} [description] - An optional description for the transaction log.
  * @returns {Promise<void>} A promise that resolves when the function is successfully called.
  * @throws {Error} Throws an error if the Cloud Function call fails.
  */
-export async function deductCredits(userId: string, amount: number, description?: string): Promise<void> {
-  const app = getFirebaseApp();
+export async function deductCredits(app: FirebaseApp, userId: string, amount: number, description?: string): Promise<void> {
   const functions = getFunctions(app);
   
   // 'deductCredits' is the name of the Cloud Function you need to deploy.

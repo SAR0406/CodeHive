@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -17,12 +17,14 @@ import { fixCode, FixCodeInput } from "@/ai/flows/fix-code-flow"
 import { generateTests, GenerateTestsInput } from "@/ai/flows/generate-tests-flow"
 import { deductCredits } from "@/lib/firebase/credits"
 import Editor from "@monaco-editor/react";
+import { useFirebase } from "@/lib/firebase/client-provider";
 
 type ActionType = 'explain' | 'fix' | 'test';
 
 export default function AIBotClient() {
   const { toast } = useToast()
   const { user } = useAuth();
+  const { app } = useFirebase();
   
   const [isLoading, setIsLoading] = useState<ActionType | null>(null);
 
@@ -45,13 +47,13 @@ export default function AIBotClient() {
   }
 
   const handleAction = async (action: ActionType) => {
-      if (!user) return;
+      if (!user || !app) return;
       
       setIsLoading(action);
       const cost = 10;
 
       try {
-        await deductCredits(user.uid, cost, `Used AI Bot for: ${action}`);
+        await deductCredits(app, user.uid, cost, `Used AI Bot for: ${action}`);
 
         if (action === 'explain') {
             const input: ExplainCodeInput = { code: explainState.code, language: explainState.language };

@@ -1,7 +1,7 @@
 
 'use client'
 
-import { getFirebaseDb } from "@/firebase/config";
+import type { Firestore } from "firebase/firestore";
 import { collection, getDocs, query } from "firebase/firestore";
 
 export interface LearningModule {
@@ -11,8 +11,7 @@ export interface LearningModule {
   cost: number;
 }
 
-export async function getModules(): Promise<LearningModule[]> {
-    const db = getFirebaseDb();
+export async function getModules(db: Firestore): Promise<LearningModule[]> {
     const modulesCollection = collection(db, 'learning_modules');
     const q = query(modulesCollection);
     const querySnapshot = await getDocs(q);
@@ -28,5 +27,3 @@ export async function getModules(): Promise<LearningModule[]> {
 
     return modules;
 }
-
-    

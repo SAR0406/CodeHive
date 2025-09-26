@@ -1,7 +1,7 @@
 
 'use client'
 
-import { getFirebaseDb } from "@/firebase/config";
+import type { Firestore } from "firebase/firestore";
 import { collection, getDocs, query } from "firebase/firestore";
 
 export interface CreditPack {
@@ -12,8 +12,7 @@ export interface CreditPack {
   description: string;
 }
 
-export async function getCreditPacks(): Promise<CreditPack[]> {
-    const db = getFirebaseDb();
+export async function getCreditPacks(db: Firestore): Promise<CreditPack[]> {
     const packsCollection = collection(db, 'credit_packs');
     const q = query(packsCollection);
     const querySnapshot = await getDocs(q);
@@ -29,5 +28,3 @@ export async function getCreditPacks(): Promise<CreditPack[]> {
 
     return packs;
 }
-
-    

@@ -8,9 +8,9 @@ import {
   type PropsWithChildren,
 } from 'react';
 import type { User } from 'firebase/auth';
-import { getFirebaseAuth, getFirebaseDb } from '@/firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, onSnapshot, setDoc, serverTimestamp, type Firestore } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
+import { useFirebase } from '@/lib/firebase/client-provider';
 
 interface ProfileData {
   credits: number;
@@ -34,13 +34,14 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
+  const { auth, db } = useFirebase();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [credits, setCredits] = useState<ProfileData | null>(null);
   
   const logOut = async () => {
+    if (!auth) return;
     setLoading(true);
-    const auth = getFirebaseAuth();
     await auth.signOut();
     setUser(null);
     setCredits(null);
@@ -48,8 +49,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   };
 
   useEffect(() => {
-    const auth = getFirebaseAuth();
-    const db = getFirebaseDb();
+    if (!auth || !db) return;
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -76,11 +76,10 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [auth, db]);
 
   useEffect(() => {
-    if (user) {
-      const db = getFirebaseDb();
+    if (user && db) {
       const profileRef = doc(db, 'profiles', user.uid);
       
       const unsubscribe = onSnapshot(profileRef, (doc) => {
@@ -95,7 +94,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     } else {
       setCredits(null);
     }
-  }, [user]);
+  }, [user, db]);
 
   return (
     <AuthContext.Provider value={{ user, loading, credits, logOut }}>

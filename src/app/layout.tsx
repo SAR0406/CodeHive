@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/hooks/use-auth';
+import { FirebaseProvider } from '@/lib/firebase/client-provider';
 
 export const metadata: Metadata = {
   title: 'CodeHive',
@@ -24,9 +25,11 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased dark bg-background">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <FirebaseProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </FirebaseProvider>
         <Toaster />
       </body>
     </html>

@@ -6,20 +6,28 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Chrome, Github, Loader2 } from 'lucide-react';
-import { getFirebaseAuth } from '@/firebase/config';
 import { signInWithPopup, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
+import { useFirebase } from '@/lib/firebase/client-provider';
 
 const GoogleIcon = () => <Chrome className="size-4" />;
 const GitHubIcon = () => <Github className="size-4" />;
 
 export default function LoginForm() {
+  const { auth } = useFirebase();
   const [isLoading, setIsLoading] = useState<false | 'google' | 'github'>(false);
   const router = useRouter();
   const { toast } = useToast();
 
   const handleSignIn = async (providerName: 'google' | 'github') => {
+    if (!auth) {
+        toast({
+            title: 'Authentication Error',
+            description: 'Firebase is not available. Please try again later.',
+            variant: 'destructive',
+        });
+        return;
+    }
     setIsLoading(providerName);
-    const auth = getFirebaseAuth(); // Get auth instance here
     const provider = providerName === 'google' ? new GoogleAuthProvider() : new GithubAuthProvider();
     
     try {
@@ -48,7 +56,7 @@ export default function LoginForm() {
         <Button
           variant="outline"
           onClick={() => handleSignIn('google')}
-          disabled={!!isLoading}
+          disabled={!!isLoading || !auth}
           size="lg"
         >
           {isLoading === 'google' ? (
@@ -61,7 +69,7 @@ export default function LoginForm() {
         <Button
           variant="outline"
           onClick={() => handleSignIn('github')}
-          disabled={!!isLoading}
+          disabled={!!isLoading || !auth}
           size="lg"
         >
           {isLoading === 'github' ? (

@@ -32,13 +32,14 @@ import { getMentors } from '@/lib/firebase/data/get-mentors';
 import type { LearningModule } from '@/lib/firebase/data/get-modules';
 import { getModules } from '@/lib/firebase/data/get-modules';
 import { deductCredits } from '@/lib/firebase/credits';
-
+import { useFirebase } from '@/lib/firebase/client-provider';
 
 type ActionType = 'module' | 'session';
 type Item = LearningModule | Mentor;
 
 export default function LearnPage() {
   const { user, credits } = useAuth();
+  const { app, db } = useFirebase();
   const { toast } = useToast();
   const [selectedItem, setSelectedItem] = useState<{ item: Item; type: ActionType } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,15 +51,16 @@ export default function LearnPage() {
 
   useEffect(() => {
     async function fetchData() {
+      if (!db) return;
       try {
-        setMentors(await getMentors());
+        setMentors(await getMentors(db));
       } catch (error) {
         toast({ title: 'Error', description: 'Could not load mentors.', variant: 'destructive' });
       } finally {
         setIsLoadingMentors(false);
       }
       try {
-        setModules(await getModules());
+        setModules(await getModules(db));
       } catch (error) {
         toast({ title: 'Error', description: 'Could not load learning modules.', variant: 'destructive' });
       } finally {
@@ -66,7 +68,7 @@ export default function LearnPage() {
       }
     }
     fetchData();
-  }, [toast]);
+  }, [db, toast]);
 
 
   const handlePurchaseClick = (item: Item, type: ActionType) => {
@@ -82,7 +84,7 @@ export default function LearnPage() {
   };
 
   const handleConfirmPurchase = async () => {
-    if (!selectedItem || !user) return;
+    if (!selectedItem || !user || !app) return;
 
     setIsLoading(true);
 
@@ -92,7 +94,7 @@ export default function LearnPage() {
       : `Booked session with: ${(item as Mentor).name}`;
     
     try {
-      await deductCredits(user.uid, item.cost, description)
+      await deductCredits(app, user.uid, item.cost, description)
       toast({
         title: 'Purchase Successful!',
         description: `${item.cost} credits have been deducted from your account.`,

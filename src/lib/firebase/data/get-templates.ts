@@ -1,6 +1,6 @@
 
 'use client'
-import { getFirebaseDb } from "@/firebase/config";
+import type { Firestore } from "firebase/firestore";
 import { collection, getDocs, query } from "firebase/firestore";
 
 export interface Template {
@@ -10,8 +10,7 @@ export interface Template {
   cost: number;
 }
 
-export async function getTemplates(): Promise<Template[]> {
-    const db = getFirebaseDb();
+export async function getTemplates(db: Firestore): Promise<Template[]> {
     const templatesCollection = collection(db, 'templates');
     const q = query(templatesCollection);
     const querySnapshot = await getDocs(q);
@@ -27,5 +26,3 @@ export async function getTemplates(): Promise<Template[]> {
 
     return templates;
 }
-
-    

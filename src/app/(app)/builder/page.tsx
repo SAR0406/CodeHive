@@ -13,6 +13,7 @@ import LivePreview from '@/components/live-preview';
 import { useAuth } from '@/hooks/use-auth';
 import { generateCode } from '@/ai/flows/generate-code-flow';
 import { deductCredits } from '@/lib/firebase/credits';
+import { useFirebase } from '@/lib/firebase/client-provider';
 
 export default function AIBuilderPage() {
   const [prompt, setPrompt] = useState('');
@@ -20,6 +21,7 @@ export default function AIBuilderPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { app } = useFirebase();
 
   const handleGenerate = async () => {
     if (!prompt) {
@@ -30,7 +32,7 @@ export default function AIBuilderPage() {
       });
       return;
     }
-    if (!user) {
+    if (!user || !app) {
         toast({
             title: 'Not authenticated',
             description: 'Please log in to generate code.',
@@ -44,7 +46,7 @@ export default function AIBuilderPage() {
     const cost = 25; // Cost for generating a component
 
     try {
-      await deductCredits(user.uid, cost, 'Generated a component with AI Builder');
+      await deductCredits(app, user.uid, cost, 'Generated a component with AI Builder');
       const result = await generateCode({ prompt });
       setGeneratedCode(result.code);
        toast({

@@ -30,10 +30,12 @@ import { Library, GitFork, Loader2 } from 'lucide-react';
 import type { Template } from '@/lib/firebase/data/get-templates';
 import { getTemplates } from '@/lib/firebase/data/get-templates';
 import { deductCredits } from '@/lib/firebase/credits';
+import { useFirebase } from '@/lib/firebase/client-provider';
 
 
 export default function TemplatesPage() {
   const { user, credits } = useAuth();
+  const { app, db } = useFirebase();
   const { toast } = useToast();
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,8 +44,9 @@ export default function TemplatesPage() {
 
   useEffect(() => {
     async function fetchTemplates() {
+      if (!db) return;
       try {
-        const fetchedTemplates = await getTemplates();
+        const fetchedTemplates = await getTemplates(db);
         setTemplates(fetchedTemplates);
       } catch (error) {
         toast({ title: 'Error', description: 'Could not load templates.', variant: 'destructive' });
@@ -52,7 +55,7 @@ export default function TemplatesPage() {
       }
     }
     fetchTemplates();
-  }, [toast]);
+  }, [db, toast]);
 
 
   const handleForkClick = (template: Template) => {
@@ -68,11 +71,11 @@ export default function TemplatesPage() {
   };
 
   const handleConfirmFork = async () => {
-    if (!selectedTemplate || !user) return;
+    if (!selectedTemplate || !user || !app) return;
 
     setIsLoading(true);
     try {
-      await deductCredits(user.uid, selectedTemplate.cost, `Forked template: ${selectedTemplate.title}`);
+      await deductCredits(app, user.uid, selectedTemplate.cost, `Forked template: ${selectedTemplate.title}`);
       toast({
         title: 'Template Forked!',
         description: `You have successfully forked "${selectedTemplate.title}". ${selectedTemplate.cost} credits have been deducted.`,

@@ -1,7 +1,7 @@
 
 'use client'
 
-import { getFirebaseDb } from "@/firebase/config";
+import type { Firestore } from "firebase/firestore";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { Timestamp } from "firebase/firestore";
 
@@ -18,8 +18,7 @@ export interface Task {
   updated_at: Timestamp;
 }
 
-export async function getTasks(): Promise<Task[]> {
-    const db = getFirebaseDb();
+export async function getTasks(db: Firestore): Promise<Task[]> {
     const tasksCollection = collection(db, 'tasks');
     const q = query(tasksCollection, orderBy('created_at', 'desc'));
 
@@ -41,5 +40,3 @@ export async function getTasks(): Promise<Task[]> {
 
     return tasks;
 }
-
-    

@@ -9,11 +9,12 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { CreditPack, getCreditPacks } from '@/lib/firebase/data/get-credit-packs';
-// import { addCredits } from '@/lib/firebase/credits';
+import { useFirebase } from '@/lib/firebase/client-provider';
 
 
 export default function BillingPage() {
   const { user, credits } = useAuth();
+  const { db } = useFirebase();
   const { toast } = useToast();
   const [loadingPack, setLoadingPack] = useState<string | null>(null);
   const [creditPacks, setCreditPacks] = useState<CreditPack[]>([]);
@@ -21,8 +22,9 @@ export default function BillingPage() {
 
   useEffect(() => {
     async function fetchPacks() {
+      if (!db) return;
       try {
-        const packs = await getCreditPacks();
+        const packs = await getCreditPacks(db);
         setCreditPacks(packs);
       } catch (error) {
         toast({ title: 'Error', description: 'Could not load credit packs.', variant: 'destructive' });
@@ -31,7 +33,7 @@ export default function BillingPage() {
       }
     }
     fetchPacks();
-  }, [toast]);
+  }, [db, toast]);
 
   const handleBuyCredits = async (pack: CreditPack) => {
     if (!user) {
