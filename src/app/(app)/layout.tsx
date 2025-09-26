@@ -19,7 +19,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
   if (loading || !user) {
     return (
-      <div className="dark app-container flex items-center justify-center">
+      <div className="dark app-container flex items-center justify-center bg-background">
         <Loader2 className="size-10 animate-spin text-muted-foreground" />
       </div>
     );

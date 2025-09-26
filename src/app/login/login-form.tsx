@@ -1,40 +1,31 @@
-
 'use client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Chrome, Github, Loader2 } from 'lucide-react';
-import { signInWithPopup, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, GithubAuthProvider, signInWithRedirect } from 'firebase/auth';
 import { useFirebase } from '@/lib/firebase/client-provider';
+
 
 const GoogleIcon = () => <Chrome className="size-4" />;
 const GitHubIcon = () => <Github className="size-4" />;
 
 export default function LoginForm() {
-  const { auth } = useFirebase();
+  const { app } = useFirebase();
   const [isLoading, setIsLoading] = useState<false | 'google' | 'github'>(false);
-  const router = useRouter();
   const { toast } = useToast();
 
   const handleSignIn = async (providerName: 'google' | 'github') => {
-    if (!auth) {
-        toast({
-            title: 'Authentication Error',
-            description: 'Firebase is not available. Please try again later.',
-            variant: 'destructive',
-        });
-        return;
-    }
+    if (!app) return;
     setIsLoading(providerName);
+    const auth = getAuth(app);
     const provider = providerName === 'google' ? new GoogleAuthProvider() : new GithubAuthProvider();
     
     try {
-      await signInWithPopup(auth, provider);
-      // The useAuth hook will handle the redirect on successful login.
+      await signInWithRedirect(auth, provider);
     } catch (error: any) {
-      toast({
+       toast({
         title: 'Authentication Error',
         description: error.message,
         variant: 'destructive',
@@ -53,7 +44,7 @@ export default function LoginForm() {
         <Button
           variant="outline"
           onClick={() => handleSignIn('google')}
-          disabled={!!isLoading || !auth}
+          disabled={!!isLoading}
           size="lg"
         >
           {isLoading === 'google' ? (
@@ -66,7 +57,7 @@ export default function LoginForm() {
         <Button
           variant="outline"
           onClick={() => handleSignIn('github')}
-          disabled={!!isLoading || !auth}
+          disabled={!!isLoading}
           size="lg"
         >
           {isLoading === 'github' ? (
