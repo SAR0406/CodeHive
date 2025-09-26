@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/componentsui/select"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Sparkles, Wand2, TestTube, Code } from "lucide-react"
@@ -50,7 +50,7 @@ export default function AIBotClient() {
       if (!user || !app) return;
       
       setIsLoading(action);
-      const cost = 10;
+      const cost = 5;
 
       try {
         await deductCredits(app, user.uid, cost, `Used AI Bot for: ${action}`);
@@ -125,7 +125,7 @@ export default function AIBotClient() {
         <Card>
           <CardHeader>
             <CardTitle>Explain Code Snippet</CardTitle>
-            <CardDescription>Get a plain English explanation of a piece of code. Costs 10 credits.</CardDescription>
+            <CardDescription>Get a plain English explanation of a piece of code. Costs 5 credits.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -154,7 +154,7 @@ export default function AIBotClient() {
         <Card>
           <CardHeader>
             <CardTitle>Suggest Code Fixes</CardTitle>
-            <CardDescription>Provide code and error messages to get suggested fixes. Costs 10 credits.</CardDescription>
+            <CardDescription>Provide code and error messages to get suggested fixes. Costs 5 credits.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -185,7 +185,7 @@ export default function AIBotClient() {
         <Card>
           <CardHeader>
             <CardTitle>Generate Unit Tests</CardTitle>
-            <CardDescription>Automatically generate unit tests for your code. Costs 10 credits.</CardDescription>
+            <CardDescription>Automatically generate unit tests for your code. Costs 5 credits.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

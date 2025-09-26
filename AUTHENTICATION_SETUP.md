@@ -1,3 +1,4 @@
+md
 # Supabase Setup Guide
 
 This guide provides the necessary steps to fully configure your CodeHive application's Supabase backend. This involves setting up authentication providers and running the initial database schema script.
@@ -302,8 +303,7 @@ begin
     returning id into escrow_id;
 
   -- Log the transaction
-  insert into public.transactions (user_id, type, amount, description, meta)
-    values (payer, 'reserve', amount, 'Reserved for task', jsonb_build_object('escrow_id', escrow_id, 'task_id', t_id));
+  insert into public.transactions (user_id, type, 'reserve', amount, 'Reserved for task', jsonb_build_object('escrow_id', escrow_id, 'task_id', t_id));
 
   return escrow_id;
 end;

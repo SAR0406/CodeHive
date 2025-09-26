@@ -24,7 +24,7 @@ export async function deductCredits(app: FirebaseApp, userId: string, amount: nu
   const functions = getFunctions(app);
   
   // 'deductCredits' is the name of the Cloud Function you need to deploy.
-  const callDeductCredits = httpsCallable(functions, 'deductCredits');
+  const callDeductCredits = httpsCallable(functions, 'spendCredits');
 
   try {
     const result = await callDeductCredits({ amount, description });
