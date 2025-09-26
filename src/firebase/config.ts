@@ -1,4 +1,3 @@
-
 'use client';
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
@@ -6,39 +5,29 @@ import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
-const getFirebaseConfig = () => {
-    const firebaseConfig = {
-      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-    };
-    
-    if (!firebaseConfig.apiKey) {
-      throw new Error("Firebase API key is not defined. Please check your environment variables.");
-    }
+// This is safe to expose on the client-side
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+};
 
-    return firebaseConfig;
+// This check ensures that the API key is present, and that we are in a browser environment.
+if (typeof window !== 'undefined' && !firebaseConfig.apiKey) {
+  throw new Error("Firebase API key is not defined. Please check your environment variables.");
 }
-
 
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 
-function initializeFirebase() {
-  // This check ensures Firebase is only initialized on the client side.
-  // It avoids build errors during server-side rendering (SSR).
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  const config = getFirebaseConfig();
-  
+// Initialize Firebase only on the client side
+if (typeof window !== 'undefined') {
   if (getApps().length === 0) {
-    app = initializeApp(config);
+    app = initializeApp(firebaseConfig);
   } else {
     app = getApp();
   }
@@ -46,21 +35,29 @@ function initializeFirebase() {
   db = getFirestore(app);
 }
 
-// Call initializeFirebase to ensure it's set up on first client-side load
-initializeFirebase();
 
 function getFirebaseApp(): FirebaseApp {
-    if (!app) initializeFirebase();
+    if (!app) {
+        if (getApps().length === 0) {
+            app = initializeApp(firebaseConfig);
+        } else {
+            app = getApp();
+        }
+    }
     return app;
 }
 
 function getFirebaseAuth(): Auth {
-    if (!auth) initializeFirebase();
+    if (!auth) {
+        auth = getAuth(getFirebaseApp());
+    }
     return auth;
 }
 
 function getFirebaseDb(): Firestore {
-    if (!db) initializeFirebase();
+    if (!db) {
+        db = getFirestore(getFirebaseApp());
+    }
     return db;
 }
 
