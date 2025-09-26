@@ -1,13 +1,13 @@
 
 'use client';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 import { CodeHiveIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Star } from "lucide-react";
+import { Check, Star, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/use-auth";
-import { useEffect } from "react";
 
 const plans = [
     {
@@ -69,6 +69,14 @@ export default function SubscribePage() {
             // For Pro plan, we should redirect to login first if not authenticated.
             router.push('/login');
         }
+    }
+    
+    if (loading || user) {
+        return (
+          <div className="flex min-h-screen items-center justify-center bg-background">
+            <Loader2 className="size-10 animate-spin text-muted-foreground" />
+          </div>
+        );
     }
 
     return (

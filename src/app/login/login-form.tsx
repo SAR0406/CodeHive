@@ -32,10 +32,7 @@ export default function LoginForm() {
     
     try {
       await signInWithPopup(auth, provider);
-      // On successful sign-in, the onAuthStateChanged listener in useAuth
-      // will handle the user state update and redirect.
-      // We can optimistically redirect here.
-      router.push('/dashboard');
+      // The useAuth hook will handle the redirect on successful login.
     } catch (error: any) {
       toast({
         title: 'Authentication Error',

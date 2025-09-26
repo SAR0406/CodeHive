@@ -1,12 +1,33 @@
 
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 import { CodeHiveIcon } from '@/components/icons';
 import Link from 'next/link';
 import LoginForm from './login-form';
 import Spline from '@splinetool/react-spline';
+import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, loading, router]);
+
+  if (loading || user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="size-10 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen items-stretch bg-background">
       <div className="hidden lg:flex lg:w-1/2 items-center justify-center relative bg-card/40">
