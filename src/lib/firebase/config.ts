@@ -1,37 +1,30 @@
 'use client';
-import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
-import { getFirestore, type Firestore } from 'firebase/firestore';
-import { getAuth, type Auth } from 'firebase/auth';
+import { createContext, useContext, type PropsWithChildren } from 'react';
+import type { FirebaseApp } from 'firebase/app';
+import type { Firestore } from 'firebase/firestore';
+import type { Auth } from 'firebase/auth';
+import { app, db, auth } from './firebase';
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+type FirebaseContextType = {
+  app: FirebaseApp | null;
+  db: Firestore | null;
+  auth: Auth | null;
 };
 
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
+const FirebaseContext = createContext<FirebaseContextType>({ app: null, db: null, auth: null });
 
-if (typeof window !== 'undefined') {
-  try {
-    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    auth = getAuth(app);
-    db = getFirestore(app);
-  } catch (error) {
-    console.error("Firebase initialization error:", error);
-    // Set to null or handle appropriately if initialization fails
-    app = null!; 
-    auth = null!;
-    db = null!;
+export const FirebaseProvider = ({ children }: PropsWithChildren) => {
+  return (
+    <FirebaseContext.Provider value={{ app, db, auth }}>
+      {children}
+    </FirebaseContext.Provider>
+  );
+};
+
+export const useFirebase = () => {
+  const context = useContext(FirebaseContext);
+  if (context === undefined) {
+    throw new Error('useFirebase must be used within a FirebaseProvider');
   }
-} else {
-  app = null!;
-  auth = null!;
-  db = null!;
-}
-
-export { app, auth, db };
+  return context;
+};
