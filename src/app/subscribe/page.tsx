@@ -1,12 +1,11 @@
 
 'use client';
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { CodeHiveIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Star, Loader2 } from "lucide-react";
+import { Check, Star } from "lucide-react";
 import Link from "next/link";
 
 const plans = [
@@ -50,33 +49,29 @@ const plans = [
 ];
 
 export default function SubscribePage() {
-    const { user, loading } = useAuth();
+    const { user } = useAuth();
     const router = useRouter();
 
-    useEffect(() => {
-        if (!loading && user) {
-            router.replace('/dashboard');
-        }
-    }, [user, loading, router]);
-
-
     const handlePlanClick = (plan: any) => {
-        if(plan.cta === 'Get Started'){
-             router.push('/login');
-        } else if (plan.cta === 'Contact Sales'){
-            window.location.href = 'mailto:sales@codehive.com';
+        if (user) {
+            // User is logged in
+            if (plan.cta === 'Get Started') {
+                 router.push('/dashboard'); // Already on free plan, go to dashboard
+            } else if (plan.cta === 'Contact Sales'){
+                window.location.href = 'mailto:sales@codehive.com';
+            } else {
+                // Here you would redirect to a checkout page for the Pro plan
+                alert('Redirecting to Stripe checkout for Pro plan... (Coming soon!)');
+            }
         } else {
-            // For Pro plan, we should redirect to login first if not authenticated.
-            router.push('/login');
+            // User is not logged in
+            if (plan.cta === 'Contact Sales'){
+                window.location.href = 'mailto:sales@codehive.com';
+            } else {
+                // For Free or Pro plan, redirect to login first
+                router.push('/login');
+            }
         }
-    }
-    
-    if (loading || user) {
-        return (
-          <div className="flex min-h-screen items-center justify-center bg-background">
-            <Loader2 className="size-10 animate-spin text-muted-foreground" />
-          </div>
-        );
     }
 
     return (
@@ -126,7 +121,7 @@ export default function SubscribePage() {
                                     variant={plan.isPopular ? 'default' : 'secondary'}
                                     onClick={() => handlePlanClick(plan)}
                                 >
-                                    {plan.cta}
+                                    {user && plan.name === 'Free' ? 'Go to Dashboard' : plan.cta}
                                 </Button>
                             </CardFooter>
                         </Card>
