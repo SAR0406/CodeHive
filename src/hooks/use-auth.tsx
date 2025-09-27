@@ -24,7 +24,7 @@ interface AuthContextType {
   user: User | null;
   credits: ProfileData | null;
   loading: boolean;
-  logOut: () => Promise<void>;
+  logOut: () => void;
 }
 
 // Create the context with a default value.
@@ -39,12 +39,12 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [loading, setLoading] = useState(true);
 
   // Function to sign the user out.
-  const logOut = async () => {
+  const logOut = () => {
     if (!auth) return;
-    await signOut(auth);
-    setUser(null);
-    setCredits(null);
-    router.push('/login');
+    signOut(auth).then(() => {
+      // onAuthStateChanged will handle the rest
+      router.push('/login');
+    });
   };
   
   // Function to create a user profile if it doesn't exist
@@ -81,17 +81,18 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setLoading(true);
       if (user) {
-        setUser(user);
         await createUserProfile(user);
+        setUser(user);
       } else {
         setUser(null);
+        setCredits(null);
       }
       setLoading(false);
     });
 
     // Cleanup the subscription when the component unmounts.
     return () => unsubscribe();
-  }, [auth]);
+  }, [auth, db]);
 
   useEffect(() => {
     // This effect listens for changes to the user's profile in the database.
@@ -111,9 +112,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
       // Cleanup the channel when the component unmounts or the user changes.
       return () => unsubscribe();
-    } else {
-      // If there is no user, there is no profile to listen to.
-      setCredits(null);
     }
   }, [user, db]);
 
