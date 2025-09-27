@@ -9,7 +9,7 @@ import {
 } from 'react';
 import type { User } from 'firebase/auth';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { useFirebase } from '@/lib/firebase/client-provider';
 import { useRouter } from 'next/navigation';
 
@@ -61,9 +61,9 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           email: user.email,
           display_name: user.displayName,
           photo_url: user.photoURL,
-          credits: 100, // Starting credits
+          credits: 100, // Starting credits for new users
           reputation: 0,
-          created_at: new Date()
+          created_at: serverTimestamp() // Use server timestamp for consistency
         });
       } catch (error) {
         console.error("Error creating user profile:", error);
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   };
 
   useEffect(() => {
-    if (!auth) {
+    if (!auth || !db) {
       setLoading(false);
       return;
     }
@@ -89,8 +89,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         // User is signed out.
         setUser(null);
         setCredits(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     // Cleanup the subscription when the component unmounts.
@@ -106,11 +106,15 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         if (doc.exists()) {
             setCredits(doc.data() as ProfileData);
         } else {
+            // This case might happen if the profile is deleted manually.
             setCredits(null);
         }
+        // Once we have the user and their profile data, loading is complete.
+        setLoading(false);
       }, (error) => {
           console.error("Error listening to profile changes:", error);
           setCredits(null);
+          setLoading(false);
       });
 
       // Cleanup the channel when the component unmounts or the user changes.
