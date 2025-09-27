@@ -1,12 +1,14 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Default to read-only for authenticated users.
-    // All sensitive writes should be handled by Cloud Functions.
+    // Default to read-only for authenticated users, deny all writes.
+    // All write/update/delete operations should be handled by secure Cloud Functions.
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
     }
   }
 }
