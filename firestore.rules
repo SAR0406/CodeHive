@@ -1,31 +1,26 @@
 
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Deny all writes by default, allow reads by default to authenticated users
+  
+    // Default deny all reads and writes
     match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Allow authenticated users to READ from any top-level collection.
+    // This is necessary for the UI to display data.
+    match /{collection}/{docId} {
       allow read: if request.auth != null;
-      allow write: if false; // Deny all client-side writes by default
+    }
+    
+    // Allow users to read their own transactions sub-collection.
+    match /profiles/{userId}/transactions/{transactionId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Allow server-side (Cloud Functions) to write to the profiles collection
-    match /profiles/{userId} {
-        allow write: if get(/databases/$(database)/documents/functions/access/$(request.auth.uid)).data.canWrite == true;
-    }
-
-    // Allow users to create their own profile and transaction documents
-    match /profiles/{userId} {
-      allow create: if request.auth.uid == userId;
-      
-      match /transactions/{transactionId} {
-        allow create: if request.auth.uid == userId;
-      }
-    }
-
-    // Allow creating tasks if authenticated
-    match /tasks/{taskId} {
-        allow create: if request.auth != null;
-    }
+    // Writes are implicitly denied and must be handled by server-side
+    // Cloud Functions, which have privileged access.
   }
 }
