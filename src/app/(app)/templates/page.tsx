@@ -28,7 +28,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Library, GitFork, Loader2 } from 'lucide-react';
 import type { Template } from '@/lib/firebase/data/get-templates';
-import { getTemplates } from '@/lib/firebase/data/get-templates';
 import { deductCredits } from '@/lib/firebase/credits';
 import { useFirebase } from '@/lib/firebase/client-provider';
 import { onSnapshot, collection, query } from 'firebase/firestore';

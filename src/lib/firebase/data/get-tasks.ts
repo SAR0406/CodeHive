@@ -3,8 +3,9 @@
 
 import type { FirebaseApp } from "firebase/app";
 import type { Firestore } from "firebase/firestore";
-import { collection, getDocs, query, orderBy, doc, addDoc, updateDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { collection, query, orderBy, doc, addDoc, updateDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { deductCredits } from "../credits";
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 export interface Task {
   id: string;
@@ -19,27 +20,6 @@ export interface Task {
   updated_at: Timestamp;
 }
 
-export async function getTasks(db: Firestore): Promise<Task[]> {
-    const tasksCollection = collection(db, 'tasks');
-    const q = query(tasksCollection, orderBy('created_at', 'desc'));
-
-    const querySnapshot = await getDocs(q);
-
-    if (querySnapshot.empty) {
-        console.log("No tasks found in Firestore.");
-        return [];
-    }
-
-    const tasks = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-            id: doc.id,
-            ...data,
-        } as Task;
-    });
-
-    return tasks;
-}
 
 // --- Write Operations ---
 
@@ -83,11 +63,7 @@ export async function completeTask(db: Firestore, taskId: string) {
     });
 }
 
-import { getFunctions, httpsCallable } from "firebase/functions";
-
 export async function approveTask(app: FirebaseApp, taskId: string, assigneeId: string, creatorId: string, amount: number) {
-    const taskRef = doc(app.firestore(), 'tasks', taskId);
-
     // Call the cloud function to handle the credit transfer
     const functions = getFunctions(app, 'us-central1');
     const creditTransfer = httpsCallable(functions, 'creditTransfer');

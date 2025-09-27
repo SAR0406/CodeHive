@@ -31,7 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { LayoutTemplate, Star, Handshake, Loader2, PlusCircle, CheckCircle } from 'lucide-react';
 import type { Task } from '@/lib/firebase/data/get-tasks';
-import { getTasks, createTask, acceptTask, completeTask, approveTask } from '@/lib/firebase/data/get-tasks';
+import { createTask, acceptTask, completeTask, approveTask } from '@/lib/firebase/data/get-tasks';
 import { useFirebase } from '@/lib/firebase/client-provider';
 import { onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 

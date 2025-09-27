@@ -28,9 +28,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { GraduationCap, Star, BookOpen, UserCheck, Loader2 } from 'lucide-react';
 import type { Mentor } from '@/lib/firebase/data/get-mentors';
-import { getMentors } from '@/lib/firebase/data/get-mentors';
 import type { LearningModule } from '@/lib/firebase/data/get-modules';
-import { getModules } from '@/lib/firebase/data/get-modules';
 import { deductCredits } from '@/lib/firebase/credits';
 import { useFirebase } from '@/lib/firebase/client-provider';
 import { onSnapshot, collection, query } from 'firebase/firestore';
@@ -219,10 +217,10 @@ export default function LearnPage() {
             <AlertDialogDescription>
               {selectedItem?.type === 'module'
                 ? `Are you sure you want to purchase the module "${(selectedItem?.item as LearningModule)?.title}"?`
-                : `Are you sure you want to book a session with ${(selectedItem?.item as Mentor)?.name}?`
+                : `Are you sure you want to book a session with ${selectedItem?.item.name}?`
               }
               {` This will deduct `}
-              <span className="font-bold text-primary">{selectedItem?.item?.cost} credits</span> from your account.
+              <span className="font-bold text-primary">{selectedItem?.item.cost} credits</span> from your account.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
