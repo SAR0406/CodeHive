@@ -218,11 +218,11 @@ export default function LearnPage() {
             <AlertDialogTitle>Confirm Your Purchase</AlertDialogTitle>
             <AlertDialogDescription>
               {selectedItem?.type === 'module'
-                ? `Are you sure you want to purchase the module "${(selectedItem.item as LearningModule).title}"?`
-                : `Are you sure you want to book a session with ${(selectedItem?.item as Mentor).name}?`
+                ? `Are you sure you want to purchase the module "${(selectedItem?.item as LearningModule)?.title}"?`
+                : `Are you sure you want to book a session with ${(selectedItem?.item as Mentor)?.name}?`
               }
               {` This will deduct `}
-              <span className="font-bold text-primary">{selectedItem?.item.cost} credits</span> from your account.
+              <span className="font-bold text-primary">{selectedItem?.item?.cost} credits</span> from your account.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
