@@ -143,7 +143,7 @@ export default function AIBotClient() {
                     <ResultDisplay isLoading={isLoading === 'explain'} result={explainState.result} title="Explanation" />
                 </div>
             </div>
-            <div className="self-start">
+            <div className="self-start pt-4">
                 <Button onClick={() => handleAction('explain')} disabled={!!isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Explain</Button>
             </div>
           </CardContent>
@@ -174,7 +174,7 @@ export default function AIBotClient() {
                 </div>
              </div>
              <ResultDisplay isLoading={isLoading === 'fix'} result={fixState.result} code={fixState.fixedCode} language={fixState.language} title="Suggested Fix" />
-            <div className="self-start">
+            <div className="self-start pt-4">
                 <Button onClick={() => handleAction('fix')} disabled={!!isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Suggest Fixes</Button>
             </div>
           </CardContent>
@@ -218,7 +218,7 @@ export default function AIBotClient() {
                     <ResultDisplay isLoading={isLoading === 'test'} result={testState.result} code={testState.testCode} language={testState.language} title="Generated Tests" />
                 </div>
             </div>
-            <div className="self-start">
+            <div className="self-start pt-4">
                 <Button onClick={() => handleAction('test')} disabled={!!isLoading || !user}><Sparkles className="mr-2 h-4 w-4" /> Generate Tests</Button>
             </div>
           </CardContent>
@@ -227,5 +227,3 @@ export default function AIBotClient() {
     </Tabs>
   )
 }
-
-    
