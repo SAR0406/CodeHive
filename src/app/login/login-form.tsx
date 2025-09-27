@@ -1,3 +1,4 @@
+
 'use client';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -12,18 +13,25 @@ const GoogleIcon = () => <Chrome className="size-4" />;
 const GitHubIcon = () => <Github className="size-4" />;
 
 export default function LoginForm() {
-  const { app } = useFirebase();
+  const { auth } = useFirebase();
   const [isLoading, setIsLoading] = useState<false | 'google' | 'github'>(false);
   const { toast } = useToast();
 
   const handleSignIn = async (providerName: 'google' | 'github') => {
-    if (!app) return;
+    if (!auth) {
+      toast({
+        title: 'Authentication Error',
+        description: 'Firebase is not available. Please try again later.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setIsLoading(providerName);
-    const auth = getAuth(app);
     const provider = providerName === 'google' ? new GoogleAuthProvider() : new GithubAuthProvider();
     
     try {
       await signInWithRedirect(auth, provider);
+      // The user will be redirected, and the onAuthStateChanged listener in useAuth will handle the rest.
     } catch (error: any) {
        toast({
         title: 'Authentication Error',
@@ -50,9 +58,8 @@ export default function LoginForm() {
           {isLoading === 'google' ? (
             <Loader2 className="mr-2 animate-spin" />
           ) : (
-            <GoogleIcon />
+            <><GoogleIcon /><span className="ml-2">Sign in with Google</span></>
           )}
-          Sign in with Google
         </Button>
         <Button
           variant="outline"
@@ -63,9 +70,8 @@ export default function LoginForm() {
           {isLoading === 'github' ? (
             <Loader2 className="mr-2 animate-spin" />
           ) : (
-            <GitHubIcon />
+            <><GitHubIcon /><span className="ml-2">Sign in with GitHub</span></>
           )}
-          Sign in with GitHub
         </Button>
       </CardContent>
     </Card>

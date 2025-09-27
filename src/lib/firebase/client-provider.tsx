@@ -4,7 +4,7 @@ import { createContext, useContext, type PropsWithChildren } from 'react';
 import type { FirebaseApp } from 'firebase/app';
 import type { Firestore } from 'firebase/firestore';
 import type { Auth } from 'firebase/auth';
-import { app, db, auth } from './firebase';
+import { app, db, auth } from './firebase'; // Import the initialized instances
 
 type FirebaseContextType = {
   app: FirebaseApp | null;
@@ -12,9 +12,11 @@ type FirebaseContextType = {
   auth: Auth | null;
 };
 
-const FirebaseContext = createContext<FirebaseContextType>({ app: null, db: null, auth: null });
+// The context now holds the single, initialized instances.
+const FirebaseContext = createContext<FirebaseContextType>({ app, db, auth });
 
 export const FirebaseProvider = ({ children }: PropsWithChildren) => {
+  // The value is now constant, ensuring all consumers get the same Firebase instances.
   return (
     <FirebaseContext.Provider value={{ app, db, auth }}>
       {children}

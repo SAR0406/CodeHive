@@ -12,11 +12,14 @@ export default function AppLayout({ children }: PropsWithChildren) {
   const router = useRouter();
 
   useEffect(() => {
+    // If loading is finished and there is no user, redirect to login.
     if (!loading && !user) {
       router.replace('/login');
     }
   }, [loading, user, router]);
 
+  // While loading, or if there is no user yet, show a loading screen.
+  // This prevents a flash of the app content before the redirect happens.
   if (loading || !user) {
     return (
       <div className="dark app-container flex items-center justify-center bg-background">
@@ -25,6 +28,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
     );
   }
 
+  // If loading is finished and there is a user, render the app shell.
   return (
     <div className="dark app-container">
       <AppShell>{children}</AppShell>

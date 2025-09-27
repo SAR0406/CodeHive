@@ -11,6 +11,7 @@ import type { User } from 'firebase/auth';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { useFirebase } from '@/lib/firebase/client-provider';
+import { useRouter } from 'next/navigation';
 
 // Define a separate type for the profile data to keep things clean.
 interface ProfileData {
@@ -32,6 +33,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // The AuthProvider component that will wrap our application.
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const { auth, db } = useFirebase();
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [credits, setCredits] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,6 +44,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     await signOut(auth);
     setUser(null);
     setCredits(null);
+    router.push('/login');
   };
   
   // Function to create a user profile if it doesn't exist
@@ -52,18 +55,21 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
     if (!profileSnap.exists()) {
       // User is new, create a profile with default values
-      await setDoc(profileRef, {
-        id: user.uid,
-        email: user.email,
-        display_name: user.displayName,
-        photo_url: user.photoURL,
-        credits: 100, // Starting credits
-        reputation: 0,
-        created_at: new Date()
-      });
+      try {
+        await setDoc(profileRef, {
+          id: user.uid,
+          email: user.email,
+          display_name: user.displayName,
+          photo_url: user.photoURL,
+          credits: 100, // Starting credits
+          reputation: 0,
+          created_at: new Date()
+        });
+      } catch (error) {
+        console.error("Error creating user profile:", error);
+      }
     }
   };
-
 
   useEffect(() => {
     if (!auth) {
@@ -73,9 +79,12 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     
     // Set up a listener for authentication state changes.
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
+      setLoading(true);
       if (user) {
+        setUser(user);
         await createUserProfile(user);
+      } else {
+        setUser(null);
       }
       setLoading(false);
     });
@@ -93,7 +102,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         if (doc.exists()) {
             setCredits(doc.data() as ProfileData);
         } else {
-            // This might happen briefly if the profile is being created
             setCredits(null);
         }
       }, (error) => {
@@ -103,6 +111,9 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
       // Cleanup the channel when the component unmounts or the user changes.
       return () => unsubscribe();
+    } else {
+      // If there is no user, there is no profile to listen to.
+      setCredits(null);
     }
   }, [user, db]);
 

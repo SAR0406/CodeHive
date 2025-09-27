@@ -17,20 +17,16 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 
-if (typeof window !== 'undefined') {
-  try {
-    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    auth = getAuth(app);
-    db = getFirestore(app);
-  } catch (error) {
-    console.error("Firebase initialization error:", error);
-    // Set to null or handle appropriately if initialization fails
-    app = null!; 
-    auth = null!;
-    db = null!;
-  }
-} else {
-  app = null!;
+// This code will only run on the client side
+try {
+  app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+  auth = getAuth(app);
+  db = getFirestore(app);
+} catch (error) {
+  console.error("Firebase initialization error:", error);
+  // In case of an error, we provide null or dummy objects
+  // to prevent the app from crashing entirely.
+  app = null!; 
   auth = null!;
   db = null!;
 }
