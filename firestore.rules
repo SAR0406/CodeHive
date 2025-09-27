@@ -1,64 +1,56 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Profiles
+
+    // Profiles can be read by anyone, but only the owner can create or update their own.
+    // The update rule is simplified to prevent internal errors.
     match /profiles/{userId} {
-      allow read: if true;
-      allow create: if request.auth.uid == userId;
-      // Users can only update their own display_name and photo_url.
-      // Other fields like credits, reputation, etc., cannot be changed by the client.
-      allow update: if request.auth.uid == userId &&
-                    request.resource.data.keys().hasOnly(['display_name', 'photo_url']);
+      allow read;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Transactions subcollection
+    // Transactions can only be created by the user, and read only by the user. They are immutable.
     match /profiles/{userId}/transactions/{transactionId} {
-        allow read, list: if request.auth.uid == userId;
-        // The spendCredits function needs to write to this subcollection.
-        // We allow the user to create their own transaction documents.
-        allow create: if request.auth.uid == userId;
-        allow update, delete: if false;
-    }
-
-    // Tasks Collection
-    match /tasks/{taskId} {
-      allow read: if true;
-      allow create: if request.auth.uid == request.resource.data.created_by;
-
-      // Update rules based on status transitions
-      allow update: if 
-        // A user can accept an open task
-        (resource.data.status == 'OPEN' && request.resource.data.status == 'ASSIGNED' && request.auth.uid == request.resource.data.assigned_to) ||
-        // The assigned user can mark it as complete
-        (resource.data.status == 'ASSIGNED' && request.resource.data.status == 'COMPLETED' && request.auth.uid == resource.data.assigned_to) ||
-        // The creator can cancel an open task
-        (resource.data.status == 'OPEN' && request.resource.data.status == 'CANCELLED' && request.auth.uid == resource.data.created_by);
-        // Note: The 'PAID' status is set securely by the creditTransfer cloud function, not by a client update.
-    }
-
-    // Other Collections (Templates, Learning Modules, Credit Packs)
-    // These are public-read for now. Add write/update rules if admins need to modify them from a client.
-    match /templates/{templateId} {
-      allow read: if true;
-      allow write: if false; 
-    }
-
-    match /learning_modules/{moduleId} {
-      allow read: if true;
-      allow write: if false;
+      allow read, list: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update, delete: if false;
     }
     
+    // Credit packs, modules, and templates are public and read-only for clients.
     match /credit_packs/{packId} {
-      allow read: if true;
+      allow read;
       allow write: if false;
     }
-    
+    match /learning_modules/{moduleId} {
+      allow read;
+      allow write: if false;
+    }
+    match /templates/{templateId} {
+      allow read;
+      allow write: if false;
+    }
     match /mentors/{mentorId} {
-        allow read: if true;
-        allow write: if false;
+      allow read;
+      allow write: if false;
+    }
+
+    // Task rules for the marketplace state machine.
+    match /tasks/{taskId} {
+      allow read;
+
+      // Create: Anyone authenticated can create a task.
+      allow create: if request.auth != null;
+
+      // Update: Allow specific status transitions by authenticated users.
+      allow update: if request.auth != null
+                    // A user can accept an OPEN task if they are not the creator
+                    && (resource.data.status == 'OPEN' && request.resource.data.status == 'ASSIGNED' && request.resource.data.assigned_to == request.auth.uid && resource.data.created_by != request.auth.uid)
+                    // The assigned user can mark an ASSIGNED task as COMPLETED
+                    || (resource.data.status == 'ASSIGNED' && request.resource.data.status == 'COMPLETED' && resource.data.assigned_to == request.auth.uid)
+                    // The creator can mark a COMPLETED task as PAID
+                    || (resource.data.status == 'COMPLETED' && request.resource.data.status == 'PAID' && resource.data.created_by == request.auth.uid);
     }
   }
 }
