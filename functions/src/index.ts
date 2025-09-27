@@ -5,6 +5,72 @@ import * as admin from "firebase-admin";
 admin.initializeApp();
 const db = admin.firestore();
 
+// Import seed data
+const creditPacks = require('./seed/seed-credit-packs.json');
+const learningModules = require('./seed/seed-learning-modules.json');
+const mentors = require('./seed/seed-mentors.json');
+const tasks = require('./seed/seed-tasks.json');
+const templates = require('./seed/seed-templates.json');
+
+
+/**
+ * A callable function to seed the database with initial data.
+ * This is idempotent and will not overwrite existing collections.
+ */
+export const seedDatabase = functions.https.onCall(async (data, context) => {
+    // This UID should be of the first user/admin.
+    // In a real app, you'd use custom claims to authorize this.
+    const ADMIN_UID = 'REPLACE_WITH_YOUR_ADMIN_UID'; 
+
+    if (context.auth?.uid !== ADMIN_UID) {
+        throw new functions.https.HttpsError('permission-denied', 'You do not have permission to perform this action.');
+    }
+    
+    // Check if seeding has already been done
+    const seedMetaRef = db.collection('internal').doc('seedStatus');
+    const seedMetaDoc = await seedMetaRef.get();
+    if (seedMetaDoc.exists && seedMetaDoc.data()?.completed) {
+         return { success: true, message: 'Database has already been seeded.' };
+    }
+
+    const batch = db.batch();
+
+    const seedCollection = async (collectionName: string, seedData: any[]) => {
+        const collectionRef = db.collection(collectionName);
+        const snapshot = await collectionRef.limit(1).get();
+        if (snapshot.empty) {
+            console.log(`Seeding ${collectionName}...`);
+            seedData.forEach((item, index) => {
+                // For tasks, replace placeholder user with admin user
+                if (collectionName === 'tasks') {
+                    item.created_by = ADMIN_UID;
+                }
+                const docRef = collectionRef.doc(`${index + 1}`);
+                batch.set(docRef, { ...item, created_at: admin.firestore.FieldValue.serverTimestamp() });
+            });
+        }
+    };
+
+    try {
+        await seedCollection('credit_packs', creditPacks);
+        await seedCollection('learning_modules', learningModules);
+        await seedCollection('mentors', mentors);
+        await seedCollection('tasks', tasks);
+        await seedCollection('templates', templates);
+
+        // Mark seeding as complete
+        batch.set(seedMetaRef, { completed: true, seeded_at: admin.firestore.FieldValue.serverTimestamp() });
+
+        await batch.commit();
+        
+        return { success: true, message: 'Database seeded successfully!' };
+    } catch (error) {
+        console.error("Error seeding database:", error);
+        throw new functions.https.HttpsError('internal', 'An unexpected error occurred during database seeding.');
+    }
+});
+
+
 /**
  * A transactional cloud function to deduct credits from a user's account.
  */

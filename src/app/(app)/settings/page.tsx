@@ -6,14 +6,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, CreditCard, HardDrive, LogOut, Moon, Palette, Shield, Sun, User, UserCheck } from "lucide-react";
+import { Bell, CreditCard, HardDrive, LogOut, Moon, Palette, Shield, Sun, User, UserCheck, Database, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useTheme } from 'next-themes'
+import { useTheme } from 'next-themes';
+import { useAuth } from "@/hooks/use-auth";
+import { useFirebase } from "@/lib/firebase/client-provider";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import React, { useState } from 'react';
 
 
 export default function SettingsPage() {
     const { toast } = useToast();
     const { theme, setTheme } = useTheme()
+    const { user } = useAuth();
+    const { app } = useFirebase();
+    const [isSeeding, setIsSeeding] = useState(false);
+
+    // This is a simple way to restrict seeding to a specific admin user for this demo.
+    // In a real app, you would use custom claims or a more robust role system.
+    const ADMIN_UID = 'REPLACE_WITH_YOUR_ADMIN_UID'; // IMPORTANT: Replace with the actual UID of the admin user from Firebase Auth
 
     const handleLogoutAll = () => {
         toast({
@@ -21,6 +32,31 @@ export default function SettingsPage() {
             description: 'You have been successfully logged out from all other devices.',
         });
     };
+
+    const handleSeedDatabase = async () => {
+        if (!app || !user) {
+            toast({ title: 'Error', description: 'You must be logged in to perform this action.', variant: 'destructive' });
+            return;
+        }
+
+        setIsSeeding(true);
+        try {
+            const functions = getFunctions(app, 'us-central1');
+            const seedDatabase = httpsCallable(functions, 'seedDatabase');
+            const result = await seedDatabase();
+            const data = result.data as { success: boolean, message: string };
+            if (data.success) {
+                toast({ title: 'Database Seeded!', description: data.message });
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error: any) {
+            toast({ title: 'Error Seeding Database', description: error.message || 'An unknown error occurred.', variant: 'destructive' });
+        } finally {
+            setIsSeeding(false);
+        }
+    };
+
 
     return (
         <div className="flex flex-col gap-8">
@@ -78,6 +114,19 @@ export default function SettingsPage() {
                            </div>
                         </CardContent>
                     </Card>
+                     {user && user.uid === ADMIN_UID && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2"><Database className="text-accent" /> Admin Tools</CardTitle>
+                                <CardDescription>Initialize the database with sample data. This should only be run once.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Button variant="secondary" onClick={handleSeedDatabase} disabled={isSeeding}>
+                                    {isSeeding ? <><Loader2 className="mr-2 animate-spin"/> Seeding...</> : 'Seed Database'}
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
                 <div className="flex flex-col gap-8">
                     <Card>

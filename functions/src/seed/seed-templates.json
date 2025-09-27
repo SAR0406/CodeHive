@@ -1,0 +1,23 @@
+
+[
+    {
+        "title": "E-commerce Storefront",
+        "description": "A modern, responsive e-commerce template with a shopping cart and product pages.",
+        "cost": 500
+    },
+    {
+        "title": "Minimalist Blog",
+        "description": "A clean, content-focused blog template with markdown support.",
+        "cost": 250
+    },
+    {
+        "title": "Creative Portfolio",
+        "description": "A visually stunning portfolio to showcase your creative work, with a gallery and contact form.",
+        "cost": 350
+    },
+    {
+        "title": "SaaS Landing Page",
+        "description": "A high-converting landing page for your SaaS product, including feature sections and pricing.",
+        "cost": 400
+    }
+]

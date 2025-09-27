@@ -1,0 +1,35 @@
+
+[
+    {
+        "title": "Design a new logo for a startup",
+        "description": "We need a modern, minimalist logo for our new SaaS company, 'InnovateAI'. Please provide concepts in SVG format.",
+        "tags": ["design", "logo", "ui"],
+        "credits_reward": 500,
+        "status": "OPEN",
+        "created_by": "placeholder_user"
+    },
+    {
+        "title": "Create a reusable React pricing component",
+        "description": "Build a responsive pricing table component using React and Tailwind CSS. It should support 3 tiers and a toggle for monthly/yearly billing.",
+        "tags": ["react", "frontend", "tailwind"],
+        "credits_reward": 1200,
+        "status": "OPEN",
+        "created_by": "placeholder_user"
+    },
+    {
+        "title": "Write documentation for a REST API",
+        "description": "Document our new API endpoints for user management. Must be in OpenAPI/Swagger format. We will provide the endpoint details.",
+        "tags": ["documentation", "api", "writing"],
+        "credits_reward": 800,
+        "status": "OPEN",
+        "created_by": "placeholder_user"
+    },
+    {
+        "title": "Set up a CI/CD pipeline with GitHub Actions",
+        "description": "Configure a GitHub Actions workflow to automatically test and deploy our Next.js application to Firebase Hosting.",
+        "tags": ["devops", "ci/cd", "firebase"],
+        "credits_reward": 1500,
+        "status": "OPEN",
+        "created_by": "placeholder_user"
+    }
+]

@@ -1,0 +1,27 @@
+
+[
+    {
+        "name": "Jane Doe",
+        "specialties": ["React", "UI/UX"],
+        "reputation": 150,
+        "cost": 250
+    },
+    {
+        "name": "John Smith",
+        "specialties": ["Firebase", "Node.js"],
+        "reputation": 220,
+        "cost": 300
+    },
+    {
+        "name": "Alex Ray",
+        "specialties": ["Next.js", "AI Integration"],
+        "reputation": 180,
+        "cost": 400
+    },
+    {
+        "name": "Sarah Chen",
+        "specialties": ["DevOps", "GraphQL"],
+        "reputation": 300,
+        "cost": 350
+    }
+]

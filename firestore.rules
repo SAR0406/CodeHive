@@ -1,58 +1,82 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Read-only collections for app data
-    match /(credit_packs|learning_modules|mentors|templates)/{docId} {
-      allow read: if request.auth != null;
-      allow write: if false; // Nobody can write from the client
-    }
 
-    // User Profiles
+    // Helper function to check ownership
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Anyone can read profiles, but only owners can create/update specific fields
     match /profiles/{userId} {
       allow read: if request.auth != null;
       
-      // A user can create their own profile upon signing up.
-      // We validate the initial data to ensure fairness.
-      allow create: if request.auth.uid == userId
-                    && request.resource.data.credits == 100
-                    && request.resource.data.reputation == 0
-                    && request.resource.data.email == request.auth.token.email
-                    && request.resource.data.id == request.auth.uid;
+      allow create: if isOwner(userId)
+        && request.resource.data.credits == 100
+        && request.resource.data.reputation == 0;
 
-      // Updates are handled by the 'updateUserProfile' Cloud Function.
-      // Direct client-side updates are disallowed to prevent tampering with credits/reputation.
-      allow update: if false;
-      allow delete: if false;
-
-      // Transaction subcollection
-      match /transactions/{transactionId} {
-          // A user can only read their own transaction history.
-          allow read: if request.auth.uid == userId;
-          // Transaction logs are created by cloud functions, not clients.
-          allow write: if false;
-      }
+      // Users can only update their own display name and photo URL.
+      // All other fields like credits and reputation are locked.
+      allow update: if isOwner(userId)
+        && request.resource.data.display_name != resource.data.display_name
+        && request.resource.data.photo_url != resource.data.photo_url
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.credits == resource.data.credits
+        && request.resource.data.reputation == resource.data.reputation;
+    }
+    
+    // Users can only read/create their own transactions, cannot update/delete
+    match /profiles/{userId}/transactions/{transactionId} {
+      allow read, list, create: if isOwner(userId);
+      allow update, delete: if false;
     }
 
-    // Tasks in the marketplace
+    // Tasks can be read by anyone, but writes are controlled
     match /tasks/{taskId} {
       allow read: if request.auth != null;
+      
+      // Allow creation only if the user is authenticated
+      allow create: if request.auth != null && request.resource.data.created_by == request.auth.uid;
+      
+      // Allow updates based on status transitions
+      allow update: if request.auth != null && (
+        // Creator can cancel an OPEN task
+        (resource.data.status == 'OPEN' && request.resource.data.status == 'CANCELLED' && resource.data.created_by == request.auth.uid) ||
+        // Any authenticated user (except creator) can accept an OPEN task
+        (resource.data.status == 'OPEN' && request.resource.data.status == 'ASSIGNED' && resource.data.assigned_to == null && request.auth.uid != resource.data.created_by) ||
+        // Assignee can mark an ASSIGNED task as COMPLETED
+        (resource.data.status == 'ASSIGNED' && request.resource.data.status == 'COMPLETED' && resource.data.assigned_to == request.auth.uid) ||
+        // Creator can mark a COMPLETED task as PAID
+        (resource.data.status == 'COMPLETED' && request.resource.data.status == 'PAID' && resource.data.created_by == request.auth.uid)
+      );
+    }
+    
+    // Read-only collections for application data
+    match /credit_packs/{packId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+    
+    match /learning_modules/{moduleId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+    
+    match /mentors/{mentorId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
 
-      // Anyone can create a task if they are authenticated.
-      // The cost is deducted via a Cloud Function, not validated here.
-      allow create: if request.auth.uid == request.resource.data.created_by;
-
-      // Task updates are state-machine based
-      allow update: if request.auth != null &&
-        // The creator can cancel an OPEN task
-        (resource.data.status == 'OPEN' && request.resource.data.status == 'CANCELLED' && request.auth.uid == resource.data.created_by) ||
-        // A user can accept an OPEN task
-        (resource.data.status == 'OPEN' && request.resource.data.status == 'ASSIGNED' && request.auth.uid == request.resource.data.assigned_to) ||
-        // The assignee can mark an ASSIGNED task as COMPLETED
-        (resource.data.status == 'ASSIGNED' && request.resource.data.status == 'COMPLETED' && request.auth.uid == resource.data.assigned_to) ||
-        // The creator approves a COMPLETED task, which is handled by the creditTransfer cloud function that sets status to PAID
-        (resource.data.status == 'COMPLETED' && request.resource.data.status == 'PAID' && request.auth.uid == resource.data.created_by);
+    match /templates/{templateId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+    
+    // Allow admin (service account or specific UID) to write to internal docs
+    match /internal/{docId} {
+       allow read, write: if false; // Deny all client access
     }
   }
 }

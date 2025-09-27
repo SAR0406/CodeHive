@@ -1,0 +1,23 @@
+
+[
+    {
+        "title": "Introduction to React Hooks",
+        "description": "Learn the fundamentals of React Hooks and state management.",
+        "cost": 50
+    },
+    {
+        "title": "Advanced Tailwind CSS",
+        "description": "Master advanced techniques for responsive and custom styling.",
+        "cost": 75
+    },
+    {
+        "title": "Firebase for Web Developers",
+        "description": "A deep dive into Firestore, Auth, and Cloud Functions.",
+        "cost": 100
+    },
+    {
+        "title": "Next.js App Router",
+        "description": "Understand server components, layouts, and data fetching.",
+        "cost": 120
+    }
+]

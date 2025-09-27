@@ -1,0 +1,21 @@
+
+[
+    {
+        "name": "Starter Pack",
+        "credits": 1000,
+        "price": 10,
+        "description": "Perfect for getting started."
+    },
+    {
+        "name": "Developer Pack",
+        "credits": 5000,
+        "price": 45,
+        "description": "For more frequent users."
+    },
+    {
+        "name": "Power User Pack",
+        "credits": 15000,
+        "price": 120,
+        "description": "Best value for heavy usage."
+    }
+]
