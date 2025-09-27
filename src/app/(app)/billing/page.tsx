@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { CreditPack, getCreditPacks } from '@/lib/firebase/data/get-credit-packs';
 import { useFirebase } from '@/lib/firebase/client-provider';
+import { getTasks, type Task } from '@/lib/firebase/data/get-tasks';
 
 
 export default function BillingPage() {
@@ -19,10 +20,13 @@ export default function BillingPage() {
   const [loadingPack, setLoadingPack] = useState<string | null>(null);
   const [creditPacks, setCreditPacks] = useState<CreditPack[]>([]);
   const [isLoadingPacks, setIsLoadingPacks] = useState(true);
+  const [escrowedCredits, setEscrowedCredits] = useState<number | null>(null);
 
   useEffect(() => {
-    async function fetchPacks() {
-      if (!db) return;
+    async function fetchData() {
+      if (!db || !user) return;
+      
+      // Fetch credit packs
       try {
         const packs = await getCreditPacks(db);
         setCreditPacks(packs);
@@ -31,9 +35,20 @@ export default function BillingPage() {
       } finally {
         setIsLoadingPacks(false);
       }
+
+      // Fetch tasks and calculate escrow
+      try {
+        const tasks = await getTasks(db);
+        const userTasks = tasks.filter(task => task.assigned_to === user.uid && (task.status === 'ASSIGNED' || task.status === 'COMPLETED'));
+        const totalEscrow = userTasks.reduce((acc, task) => acc + task.credits_reward, 0);
+        setEscrowedCredits(totalEscrow);
+      } catch (error) {
+        toast({ title: 'Error', description: 'Could not calculate credits in escrow.', variant: 'destructive' });
+        setEscrowedCredits(0);
+      }
     }
-    fetchPacks();
-  }, [db, toast]);
+    fetchData();
+  }, [db, user, toast]);
 
   const handleBuyCredits = async (pack: CreditPack) => {
     if (!user) {
@@ -81,7 +96,8 @@ export default function BillingPage() {
                         <CardTitle className="text-lg font-semibold">In Escrow</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-4xl font-bold">...
+                        <p className="text-4xl font-bold">
+                           {escrowedCredits === null ? '...' : escrowedCredits.toLocaleString()}
                         </p>
                          <p className="text-sm text-muted-foreground">Credits reserved for your open tasks</p>
                     </CardContent>
