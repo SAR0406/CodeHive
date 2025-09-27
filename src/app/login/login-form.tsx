@@ -56,7 +56,10 @@ export default function LoginForm() {
           size="lg"
         >
           {isLoading === 'google' ? (
-            <Loader2 className="mr-2 animate-spin" />
+            <>
+              <Loader2 className="mr-2 animate-spin" />
+              Redirecting...
+            </>
           ) : (
             <><GoogleIcon /><span className="ml-2">Sign in with Google</span></>
           )}
@@ -68,7 +71,10 @@ export default function LoginForm() {
           size="lg"
         >
           {isLoading === 'github' ? (
-            <Loader2 className="mr-2 animate-spin" />
+            <>
+              <Loader2 className="mr-2 animate-spin" />
+              Redirecting...
+            </>
           ) : (
             <><GitHubIcon /><span className="ml-2">Sign in with GitHub</span></>
           )}

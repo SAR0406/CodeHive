@@ -4,7 +4,7 @@ import type { PropsWithChildren } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/app-shell';
 import { useAuth } from '@/hooks/use-auth';
-import { Loader2 } from 'lucide-react';
+import { CodeHiveIcon } from '@/components/icons';
 import { useEffect } from 'react';
 
 export default function AppLayout({ children }: PropsWithChildren) {
@@ -22,8 +22,9 @@ export default function AppLayout({ children }: PropsWithChildren) {
   // This prevents a flash of the app content before the redirect happens.
   if (loading || !user) {
     return (
-      <div className="dark app-container flex items-center justify-center bg-background">
-        <Loader2 className="size-10 animate-spin text-muted-foreground" />
+      <div className="dark app-container flex flex-col items-center justify-center bg-background gap-4">
+        <CodeHiveIcon className="size-12 text-accent animate-pulse" />
+        <p className="text-muted-foreground">Authenticating...</p>
       </div>
     );
   }

@@ -22,8 +22,9 @@ export default function LoginPage() {
 
   if (loading || user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="size-10 animate-spin text-muted-foreground" />
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background gap-4">
+        <CodeHiveIcon className="size-12 text-accent animate-pulse" />
+        <p className="text-muted-foreground">Loading your session...</p>
       </div>
     );
   }
