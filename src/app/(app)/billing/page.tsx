@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { CreditPack, getCreditPacks } from '@/lib/firebase/data/get-credit-packs';
 import { useFirebase } from '@/lib/firebase/client-provider';
-import { getTasks, type Task } from '@/lib/firebase/data/get-tasks';
+import { onTasksUpdateForUser, type Task } from '@/lib/firebase/data/get-tasks';
 import { onTransactionsUpdate, Transaction } from '@/lib/firebase/data/get-transactions';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -26,10 +26,9 @@ export default function BillingPage() {
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(true);
 
   useEffect(() => {
-    async function fetchData() {
-      if (!db || !user) return;
+    async function fetchCreditPacksData() {
+      if (!db) return;
       
-      // Fetch credit packs
       try {
         const packs = await getCreditPacks(db);
         setCreditPacks(packs);
@@ -38,31 +37,31 @@ export default function BillingPage() {
       } finally {
         setIsLoadingPacks(false);
       }
-
-      // Fetch tasks and calculate escrow
-      try {
-        const tasks = await getTasks(db);
-        const userTasks = tasks.filter(task => task.created_by === user.uid && (task.status === 'OPEN' || task.status === 'ASSIGNED' || task.status === 'COMPLETED'));
-        const totalEscrow = userTasks.reduce((acc, task) => acc + task.credits_reward, 0);
-        setEscrowedCredits(totalEscrow);
-      } catch (error) {
-        toast({ title: 'Error', description: 'Could not calculate credits in escrow.', variant: 'destructive' });
-        setEscrowedCredits(0);
-      }
     }
-    fetchData();
-  }, [db, user, toast]);
+    fetchCreditPacksData();
+  }, [db, toast]);
   
   useEffect(() => {
     if (!db || !user) return;
     
+    // Listen for user's tasks to calculate escrow
+    const unsubscribeTasks = onTasksUpdateForUser(db, user.uid, (userTasks) => {
+        const openTasks = userTasks.filter(task => task.status === 'OPEN' || task.status === 'ASSIGNED' || task.status === 'COMPLETED');
+        const totalEscrow = openTasks.reduce((acc, task) => acc + task.credits_reward, 0);
+        setEscrowedCredits(totalEscrow);
+    });
+
+    // Listen for transactions
     setIsLoadingTransactions(true);
-    const unsubscribe = onTransactionsUpdate(db, user.uid, (newTransactions) => {
+    const unsubscribeTransactions = onTransactionsUpdate(db, user.uid, (newTransactions) => {
         setTransactions(newTransactions);
         setIsLoadingTransactions(false);
     });
     
-    return () => unsubscribe();
+    return () => {
+      unsubscribeTasks();
+      unsubscribeTransactions();
+    };
 
   }, [db, user]);
 

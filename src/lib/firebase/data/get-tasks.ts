@@ -3,7 +3,7 @@
 
 import type { FirebaseApp } from "firebase/app";
 import type { Firestore } from "firebase/firestore";
-import { collection, query, orderBy, doc, addDoc, updateDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { collection, query, where, doc, addDoc, updateDoc, serverTimestamp, Timestamp, onSnapshot } from "firebase/firestore";
 import { deductCredits } from "../credits";
 import { getFunctions, httpsCallable } from "firebase/functions";
 
@@ -76,4 +76,23 @@ export async function approveTask(app: FirebaseApp, taskId: string, assigneeId: 
     });
 
     // The cloud function will update the task status to 'PAID'
+}
+
+// --- Read Operations ---
+export function onTasksUpdateForUser(db: Firestore, userId: string, callback: (tasks: Task[]) => void): () => void {
+    const tasksCollection = collection(db, 'tasks');
+    const q = query(tasksCollection, where('created_by', '==', userId));
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const userTasks = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+        } as Task));
+        callback(userTasks);
+    }, (error) => {
+        console.error("Error fetching user tasks:", error);
+        callback([]);
+    });
+
+    return unsubscribe;
 }
