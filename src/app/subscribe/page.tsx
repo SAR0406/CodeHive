@@ -9,7 +9,7 @@ import { Check, Loader2, Star } from "lucide-react";
 import Link from "next/link";
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase } from '@/lib/firebase/client-provider';
-import { doc, updateDoc } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
 
 const plans = [
@@ -54,7 +54,7 @@ const plans = [
 
 export default function SubscribePage() {
     const { user } = useAuth();
-    const { db } = useFirebase();
+    const { app } = useFirebase();
     const router = useRouter();
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
@@ -65,18 +65,25 @@ export default function SubscribePage() {
             return;
         }
 
-        if (user && db) {
+        if (user && app) {
             if (plan.name === 'Pro') {
                 setIsLoading(true);
                 try {
-                    const userProfileRef = doc(db, 'profiles', user.uid);
-                    // For testing, just add a large number of credits
-                    await updateDoc(userProfileRef, { credits: 100000 });
-                    toast({
-                        title: 'Upgrade Successful!',
-                        description: 'You now have Pro access with 100,000 credits.'
-                    });
-                    router.push('/dashboard');
+                    const functions = getFunctions(app, 'us-central1');
+                    const grantProAccess = httpsCallable(functions, 'grantProAccess');
+                    const result = await grantProAccess();
+                    const data = result.data as { success: boolean, message: string };
+
+                    if (data.success) {
+                        toast({
+                            title: 'Upgrade Successful!',
+                            description: data.message || 'You now have Pro access.'
+                        });
+                        router.push('/dashboard');
+                    } else {
+                        throw new Error(data.message || 'An unknown error occurred.');
+                    }
+                    
                 } catch (error: any) {
                     toast({
                         title: 'Error Upgrading',

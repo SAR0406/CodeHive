@@ -263,3 +263,54 @@ export const updateUserProfile = functions.https.onCall(async (data, context) =>
     );
   }
 });
+
+
+/**
+ * A callable function to grant a user Pro Plan access.
+ * In a real app, this would be triggered by a payment webhook.
+ */
+export const grantProAccess = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "The function must be called while authenticated."
+    );
+  }
+
+  const uid = context.auth.uid;
+  const profileRef = db.collection("profiles").doc(uid);
+  const proCredits = 100000; // Credits for "purchasing" the pro plan
+
+  try {
+    const profileDoc = await profileRef.get();
+    if (!profileDoc.exists) {
+      throw new functions.https.HttpsError("not-found", "User profile not found.");
+    }
+    
+    // Use a transaction to be safe, though a simple update is likely fine here.
+    await db.runTransaction(async (transaction) => {
+        const newBalance = (profileDoc.data()?.credits || 0) + proCredits;
+        transaction.update(profileRef, { credits: newBalance });
+
+        const userTransactionsRef = profileRef.collection('transactions').doc();
+        transaction.set(userTransactionsRef, {
+            type: 'earn',
+            amount: proCredits,
+            description: 'Upgraded to Pro Plan',
+            created_at: admin.firestore.FieldValue.serverTimestamp(),
+            balance_after: newBalance,
+        });
+    });
+
+    return { success: true, message: `Pro access granted. ${proCredits} credits added.` };
+  } catch (error) {
+    console.error("Error granting Pro access for UID:", uid, error);
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
+    throw new functions.https.HttpsError(
+      "internal",
+      "An unexpected error occurred while upgrading your plan."
+    );
+  }
+});
