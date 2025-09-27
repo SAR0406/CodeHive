@@ -1,31 +1,33 @@
 
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Users can read and update their own profile, and create it.
     match /profiles/{userId} {
+      // Allow a user to read and update their own profile.
       allow read, update: if request.auth.uid == userId;
-      allow create: if request.auth.uid == userId;
     }
 
-    // Allow authenticated users to LIST and READ from public collections.
-    // The `list` permission is required to query entire collections.
-    match /tasks/{document=**} {
-      allow get, list: if request.auth != null;
+    // Public collections are readable by any authenticated user.
+    // Writes are disabled for now to prevent unauthorized changes.
+    match /credit_packs/{packId} {
+      allow list, get: if request.auth != null;
     }
-    match /templates/{document=**} {
-      allow get, list: if request.auth != null;
+    match /learning_modules/{moduleId} {
+      allow list, get: if request.auth != null;
     }
-    match /mentors/{document=**} {
-      allow get, list: if request.auth != null;
+    match /mentors/{mentorId} {
+      allow list, get: if request.auth != null;
     }
-    match /learning_modules/{document=**} {
-      allow get, list: if request.auth != null;
+    match /tasks/{taskId} {
+      allow list, get: if request.auth != null;
     }
-     match /credit_packs/{document=**} {
-      allow get, list: if request.auth != null;
+    match /templates/{templateId} {
+      allow list, get: if request.auth != null;
+    }
+    
+    // Fallback rule to deny all other access
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

@@ -5,9 +5,12 @@ import { useAuth } from '@/hooks/use-auth';
 import { CodeHiveIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Star } from "lucide-react";
+import { Check, Loader2, Star } from "lucide-react";
 import Link from "next/link";
 import { useToast } from '@/hooks/use-toast';
+import { useFirebase } from '@/lib/firebase/client-provider';
+import { doc, updateDoc } from 'firebase/firestore';
+import { useState } from 'react';
 
 const plans = [
     {
@@ -51,32 +54,43 @@ const plans = [
 
 export default function SubscribePage() {
     const { user } = useAuth();
+    const { db } = useFirebase();
     const router = useRouter();
     const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handlePlanClick = (plan: any) => {
-        if (user) {
-            // User is logged in
-            if (plan.cta === 'Get Started') {
-                 router.push('/dashboard'); // Already on free plan, go to dashboard
-            } else if (plan.cta === 'Contact Sales'){
-                window.location.href = 'mailto:sales@codehive.com';
+    const handlePlanClick = async (plan: any) => {
+        if (plan.cta === 'Contact Sales') {
+            window.location.href = 'mailto:sales@codehive.com';
+            return;
+        }
+
+        if (user && db) {
+            if (plan.name === 'Pro') {
+                setIsLoading(true);
+                try {
+                    const userProfileRef = doc(db, 'profiles', user.uid);
+                    // For testing, just add a large number of credits
+                    await updateDoc(userProfileRef, { credits: 100000 });
+                    toast({
+                        title: 'Upgrade Successful!',
+                        description: 'You now have Pro access with 100,000 credits.'
+                    });
+                    router.push('/dashboard');
+                } catch (error: any) {
+                    toast({
+                        title: 'Error Upgrading',
+                        description: error.message || 'Could not complete the upgrade. Please try again.',
+                        variant: 'destructive'
+                    });
+                } finally {
+                    setIsLoading(false);
+                }
             } else {
-                // Redirect to billing page to manage subscription
-                router.push('/billing');
-                toast({
-                    title: 'Manage Your Subscription',
-                    description: 'You can upgrade to Pro from the billing page.'
-                });
+                 router.push('/dashboard');
             }
         } else {
-            // User is not logged in
-            if (plan.cta === 'Contact Sales'){
-                window.location.href = 'mailto:sales@codehive.com';
-            } else {
-                // For Free or Pro plan, redirect to login first
-                router.push('/login');
-            }
+            router.push('/login');
         }
     }
 
@@ -126,8 +140,9 @@ export default function SubscribePage() {
                                     className="w-full" 
                                     variant={plan.isPopular ? 'default' : 'secondary'}
                                     onClick={() => handlePlanClick(plan)}
+                                    disabled={isLoading}
                                 >
-                                    {user && plan.name === 'Free' ? 'Go to Dashboard' : plan.cta}
+                                    {isLoading && plan.isPopular ? <Loader2 className="animate-spin" /> : (user && plan.name === 'Free' ? 'Go to Dashboard' : plan.cta)}
                                 </Button>
                             </CardFooter>
                         </Card>
