@@ -6,11 +6,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Chrome, Github, Loader2 } from 'lucide-react';
-import { GoogleAuthProvider, GithubAuthProvider, signInWithPopup } from 'firebase/auth';
+import { 
+  GoogleAuthProvider, 
+  GithubAuthProvider, 
+  signInWithPopup, 
+  fetchSignInMethodsForEmail,
+  linkWithCredential,
+  type AuthError
+} from 'firebase/auth';
 import { useFirebase } from '@/lib/firebase/client-provider';
 
 const GoogleIcon = () => <Chrome className="size-4" />;
 const GitHubIcon = () => <Github className="size-4" />;
+
+// Store credential across re-renders if linking is needed
+let pendingCredential: any = null;
 
 export default function LoginForm() {
   const { auth } = useFirebase();
@@ -32,16 +42,45 @@ export default function LoginForm() {
     
     try {
       const result = await signInWithPopup(auth, provider);
-      // On successful sign-in, the onAuthStateChanged listener in useAuth
-      // will handle the user state update. We can then redirect.
-      toast({
-        title: 'Login Successful!',
-        description: `Welcome, ${result.user.displayName || 'user'}!`,
-      });
+
+      // If there was a pending credential, link it now.
+      if (pendingCredential && result.user) {
+        await linkWithCredential(result.user, pendingCredential);
+        pendingCredential = null; // Clear it after linking
+        toast({
+          title: 'Account Linked!',
+          description: 'Your accounts have been successfully linked.',
+        });
+      } else {
+        toast({
+          title: 'Login Successful!',
+          description: `Welcome, ${result.user.displayName || 'user'}!`,
+        });
+      }
+
       router.push('/dashboard');
+
     } catch (error: any) {
-       // Handle specific errors, like user closing the popup
-       if (error.code === 'auth/popup-closed-by-user') {
+       const authError = error as AuthError;
+
+       if (authError.code === 'auth/account-exists-with-different-credential') {
+          // This is the specific error we need to handle.
+          // Get the pending credential from the error.
+          pendingCredential = authError.customData.credential;
+          const email = authError.customData.email;
+
+          // Find out which provider the user originally signed up with.
+          const methods = await fetchSignInMethodsForEmail(auth, email as string);
+          
+          // Inform the user.
+          toast({
+            title: 'Account Exists',
+            description: `You've already signed up with ${methods[0]}. Please sign in with ${methods[0]} to link your ${providerName} account.`,
+            variant: 'destructive',
+            duration: 7000,
+          });
+
+       } else if (authError.code === 'auth/popup-closed-by-user') {
          toast({
            title: 'Sign-in Cancelled',
            description: 'You closed the sign-in window before completing the process.',
@@ -50,7 +89,7 @@ export default function LoginForm() {
        } else {
          toast({
            title: 'Authentication Error',
-           description: error.message || 'An unknown error occurred.',
+           description: authError.message || 'An unknown error occurred.',
            variant: 'destructive',
          });
        }
