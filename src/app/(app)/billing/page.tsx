@@ -4,14 +4,15 @@
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, CreditCard, Loader2, Star } from 'lucide-react';
+import { CreditCard, Loader2, Star, ArrowRight, TrendingUp, TrendingDown } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { CreditPack, getCreditPacks } from '@/lib/firebase/data/get-credit-packs';
 import { useFirebase } from '@/lib/firebase/client-provider';
 import { getTasks, type Task } from '@/lib/firebase/data/get-tasks';
-
+import { onTransactionsUpdate, Transaction } from '@/lib/firebase/data/get-transactions';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function BillingPage() {
   const { user, credits } = useAuth();
@@ -21,6 +22,8 @@ export default function BillingPage() {
   const [creditPacks, setCreditPacks] = useState<CreditPack[]>([]);
   const [isLoadingPacks, setIsLoadingPacks] = useState(true);
   const [escrowedCredits, setEscrowedCredits] = useState<number | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoadingTransactions, setIsLoadingTransactions] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
@@ -39,7 +42,7 @@ export default function BillingPage() {
       // Fetch tasks and calculate escrow
       try {
         const tasks = await getTasks(db);
-        const userTasks = tasks.filter(task => task.assigned_to === user.uid && (task.status === 'ASSIGNED' || task.status === 'COMPLETED'));
+        const userTasks = tasks.filter(task => task.created_by === user.uid && (task.status === 'OPEN' || task.status === 'ASSIGNED' || task.status === 'COMPLETED'));
         const totalEscrow = userTasks.reduce((acc, task) => acc + task.credits_reward, 0);
         setEscrowedCredits(totalEscrow);
       } catch (error) {
@@ -49,6 +52,19 @@ export default function BillingPage() {
     }
     fetchData();
   }, [db, user, toast]);
+  
+  useEffect(() => {
+    if (!db || !user) return;
+    
+    setIsLoadingTransactions(true);
+    const unsubscribe = onTransactionsUpdate(db, user.uid, (newTransactions) => {
+        setTransactions(newTransactions);
+        setIsLoadingTransactions(false);
+    });
+    
+    return () => unsubscribe();
+
+  }, [db, user]);
 
   const handleBuyCredits = async (pack: CreditPack) => {
     if (!user) {
@@ -147,12 +163,44 @@ export default function BillingPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Payment History</CardTitle>
-            <CardDescription>No recent transactions found.</CardDescription>
+            <CardTitle>Recent Transactions</CardTitle>
+            <CardDescription>A log of your recent credit activity.</CardDescription>
           </CardHeader>
-          <CardContent className="text-center text-muted-foreground py-16">
-            <p>Your payment history will appear here.</p>
+          <CardContent className="flex flex-col gap-4">
+            {isLoadingTransactions ? (
+                <div className="text-center text-muted-foreground py-16">
+                    <Loader2 className="animate-spin mx-auto"/>
+                </div>
+            ) : transactions.length > 0 ? (
+                transactions.slice(0, 5).map(tx => (
+                    <div key={tx.id} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-3">
+                           {tx.type === 'spend' ? <TrendingDown className="size-5 text-destructive" /> : <TrendingUp className="size-5 text-green-500" />}
+                           <div>
+                            <p className="font-medium line-clamp-1">{tx.description}</p>
+                            <p className="text-xs text-muted-foreground">{formatDistanceToNow(tx.created_at.toDate(), { addSuffix: true })}</p>
+                           </div>
+                        </div>
+                        <div className={`font-semibold ${tx.type === 'spend' ? 'text-destructive' : 'text-green-500'}`}>
+                           {tx.type === 'spend' ? '-' : '+'}
+                           {tx.amount.toLocaleString()}
+                        </div>
+                    </div>
+                ))
+            ) : (
+                <div className="text-center text-muted-foreground py-16">
+                     <p>No recent transactions found.</p>
+                </div>
+            )}
           </CardContent>
+          <CardFooter>
+            <Button variant="outline" asChild className="w-full">
+                <Link href="/billing/transactions">
+                    View All Transactions
+                    <ArrowRight className="ml-2"/>
+                </Link>
+            </Button>
+          </CardFooter>
         </Card>
       </div>
     </div>

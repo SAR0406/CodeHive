@@ -1,13 +1,56 @@
-
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    // TEMPORARY: Allow all authenticated users to read and write to all documents.
-    // This is to resolve a persistent "internal" error and get the app functional.
-    // This is NOT secure for production.
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // Profiles can be read by anyone, but only the owner can create/update their own.
+    match /profiles/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+    }
+    
+    // Users can only manage their own transactions
+    match /profiles/{userId}/transactions/{transactionId} {
+        allow read, list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update, delete: if false; // Transactions are immutable
+    }
+
+    // Tasks can be read by anyone, but writes are restricted.
+    match /tasks/{taskId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn(); // Further checks are in cloud functions
+      allow update: if isSignedIn(); // Further checks are in cloud functions
+    }
+    
+    // Read-only collections
+    match /credit_packs/{packId} {
+        allow read: if isSignedIn();
+        allow write: if false;
+    }
+
+    match /learning_modules/{moduleId} {
+        allow read: if isSignedIn();
+        allow write: if false;
+    }
+    
+    match /mentors/{mentorId} {
+        allow read: if isSignedIn();
+        allow write: if false;
+    }
+
+    match /templates/{templateId} {
+        allow read: if isSignedIn();
+        allow write: if false;
     }
   }
 }
