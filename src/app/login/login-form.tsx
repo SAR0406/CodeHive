@@ -12,6 +12,7 @@ import {
   signInWithPopup, 
   fetchSignInMethodsForEmail,
   linkWithCredential,
+  type AuthProvider as FirebaseAuthProvider,
   type AuthError
 } from 'firebase/auth';
 import { useFirebase } from '@/lib/firebase/client-provider';
@@ -28,6 +29,17 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState<false | 'google' | 'github'>(false);
   const { toast } = useToast();
 
+  const getProviderName = (providerId: string) => {
+    switch (providerId) {
+      case 'google.com':
+        return 'Google';
+      case 'github.com':
+        return 'GitHub';
+      default:
+        return providerId;
+    }
+  };
+
   const handleSignIn = async (providerName: 'google' | 'github') => {
     if (!auth) {
       toast({
@@ -38,7 +50,7 @@ export default function LoginForm() {
       return;
     }
     setIsLoading(providerName);
-    const provider = providerName === 'google' ? new GoogleAuthProvider() : new GithubAuthProvider();
+    const provider: FirebaseAuthProvider = providerName === 'google' ? new GoogleAuthProvider() : new GithubAuthProvider();
     
     try {
       const result = await signInWithPopup(auth, provider);
@@ -54,7 +66,7 @@ export default function LoginForm() {
       } else {
         toast({
           title: 'Login Successful!',
-          description: `Welcome, ${result.user.displayName || 'user'}!`,
+          description: `Welcome back, ${result.user.displayName || 'user'}!`,
         });
       }
 
@@ -66,20 +78,24 @@ export default function LoginForm() {
        if (authError.code === 'auth/account-exists-with-different-credential') {
           // This is the specific error we need to handle.
           // Get the pending credential from the error.
-          pendingCredential = authError.customData.credential;
-          const email = authError.customData.email;
+          pendingCredential = authError.customData?._tokenResponse?.pendingCredential;
+          const email = authError.customData.email as string;
 
           // Find out which provider the user originally signed up with.
-          const methods = await fetchSignInMethodsForEmail(auth, email as string);
+          const methods = await fetchSignInMethodsForEmail(auth, email);
           
-          // Inform the user.
-          toast({
-            title: 'Account Exists',
-            description: `You've already signed up with ${methods[0]}. Please sign in with ${methods[0]} to link your ${providerName} account.`,
-            variant: 'destructive',
-            duration: 7000,
-          });
-
+          if (methods.length > 0) {
+            const existingProvider = getProviderName(methods[0]);
+            const newProvider = getProviderName(provider.providerId);
+            
+            // Inform the user.
+            toast({
+              title: 'Account Exists',
+              description: `You've already signed up with ${existingProvider}. Please sign in with ${existingProvider} to link your ${newProvider} account.`,
+              variant: 'destructive',
+              duration: 7000,
+            });
+          }
        } else if (authError.code === 'auth/popup-closed-by-user') {
          toast({
            title: 'Sign-in Cancelled',
@@ -87,6 +103,7 @@ export default function LoginForm() {
            variant: 'destructive',
          });
        } else {
+         console.error('Authentication Error:', authError);
          toast({
            title: 'Authentication Error',
            description: authError.message || 'An unknown error occurred.',
