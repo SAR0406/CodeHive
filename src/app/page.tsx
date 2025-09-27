@@ -1,4 +1,5 @@
 
+
 'use client';
 import { Button } from '@/components/ui/button';
 import { AmazonLogo, CodeHiveIcon, DellLogo, MicrosoftLogo, OracleLogo, SapLogo, ShopifyLogo, SlackLogo, WebflowLogo, WixLogo, WordpressLogo, CreateContentIcon, OptimizeContentIcon, DistributeContentIcon, ZapierLogo } from '@/components/icons';
@@ -125,7 +126,7 @@ export default function LandingPage() {
             </p>
             <div className="flex items-center gap-4">
               <Button size="lg" asChild className="bg-primary text-primary-foreground hover:bg-neutral-200">
-                <Link href={getStartedLink()}>
+                <Link href="/subscribe">
                   Get started for free
                 </Link>
               </Button>
@@ -228,7 +229,7 @@ export default function LandingPage() {
                     What will you discover?
                 </h2>
                 <Button size="lg" asChild className="bg-primary text-primary-foreground hover:bg-neutral-200 mt-4">
-                    <Link href={getStartedLink()}>
+                    <Link href="/subscribe">
                       Get started for free
                     </Link>
                 </Button>
@@ -266,6 +267,7 @@ export default function LandingPage() {
           <div className="flex flex-col gap-3">
              <h4 className="font-semibold text-white">CodeHive Library</h4>
             <Button variant="link" className="p-0 justify-start text-muted-foreground hover:text-white h-auto">Go to CodeHive</Button>
+
           </div>
         </div>
         <div className="container mx-auto mt-12 pt-8 border-t border-white/10 flex justify-between items-center text-sm text-muted-foreground">
