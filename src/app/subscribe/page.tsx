@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Star } from "lucide-react";
 import Link from "next/link";
+import { useToast } from '@/hooks/use-toast';
 
 const plans = [
     {
@@ -51,6 +52,7 @@ const plans = [
 export default function SubscribePage() {
     const { user } = useAuth();
     const router = useRouter();
+    const { toast } = useToast();
 
     const handlePlanClick = (plan: any) => {
         if (user) {
@@ -60,8 +62,12 @@ export default function SubscribePage() {
             } else if (plan.cta === 'Contact Sales'){
                 window.location.href = 'mailto:sales@codehive.com';
             } else {
-                // Here you would redirect to a checkout page for the Pro plan
-                alert('Redirecting to Stripe checkout for Pro plan... (Coming soon!)');
+                // Redirect to billing page to manage subscription
+                router.push('/billing');
+                toast({
+                    title: 'Manage Your Subscription',
+                    description: 'You can upgrade to Pro from the billing page.'
+                });
             }
         } else {
             // User is not logged in
