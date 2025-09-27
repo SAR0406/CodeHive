@@ -4,63 +4,54 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Profiles: Users can read anyone's profile, but only write to their own.
-    // They cannot change their own credits or reputation directly.
+    // --- Profile Data ---
+    // Users can read their own profile.
+    // Users can update their display name and photo url.
+    // Users CANNOT update their own credits or reputation directly.
     match /profiles/{userId} {
-      allow read: if request.auth != null;
+      allow read: if request.auth.uid == userId;
+      // Allow users to update only specific, non-sensitive fields.
+      allow update: if request.auth.uid == userId && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['display_name', 'photo_url']);
       allow create: if request.auth.uid == userId;
-      allow update: if request.auth.uid == userId
-                    && !(request.resource.data.credits > resource.data.credits)
-                    && !(request.resource.data.reputation > resource.data.reputation);
     }
 
-    // User Transactions: Users can only create transactions for themselves. No one can update or delete them.
+    // Allow users to read their own transaction history
     match /profiles/{userId}/transactions/{transactionId} {
-        allow read: if request.auth.uid == userId;
-        allow create: if request.auth.uid == userId;
-        allow update, delete: if false;
+        allow read, create: if request.auth.uid == userId;
     }
 
-    // Credit Packs: Read-only for authenticated users.
-    match /credit_packs/{packId} {
-      allow read: if request.auth != null;
-      allow write: if false; // Managed via admin only
-    }
-
-    // Learning Modules: Read-only for authenticated users.
-    match /learning_modules/{moduleId} {
-      allow read: if request.auth != null;
-      allow write: if false; // Managed via admin only
-    }
-
-    // Mentors: Read-only for authenticated users.
-    match /mentors/{mentorId} {
-      allow read: if request.auth != null;
-      allow write: if false; // Managed via admin only
-    }
-    
-    // Templates: Read-only for authenticated users.
+    // --- Public Read-Only Data ---
+    // Anyone authenticated can read templates, modules, and mentors.
     match /templates/{templateId} {
-      allow read: if request.auth != null;
-      allow write: if false; // Managed via admin only
+      allow list, get: if request.auth != null;
     }
-    
-    // Tasks: Authenticated users can list all tasks.
-    match /tasks/{taskId} {
-      allow read: if request.auth != null;
+    match /learning_modules/{moduleId} {
+      allow list, get: if request.auth != null;
+    }
+    match /mentors/{mentorId} {
+        allow list, get: if request.auth != null;
+    }
+     match /credit_packs/{packId} {
+        allow list, get: if request.auth != null;
+    }
 
-      // Allow task creation if user is authenticated
-      allow create: if request.auth != null
-                    && request.resource.data.created_by == request.auth.uid
-                    && request.resource.data.status == 'OPEN';
+    // --- Marketplace Tasks ---
+    match /tasks/{taskId} {
+      // Anyone authenticated can view (list and get) tasks.
+      allow list, get: if request.auth != null;
+
+      // Logged-in user can create a task. Credits are handled by a function.
+      allow create: if request.auth != null && request.resource.data.created_by == request.auth.uid;
       
-      // Allow updates based on status transitions
+      // Allow updates based on task status transitions
       allow update: if request.auth != null && (
-        // Accepting a task
+        // Case 1: Accepting a task
         (resource.data.status == 'OPEN' && request.resource.data.status == 'ASSIGNED' && request.resource.data.assigned_to == request.auth.uid) ||
-        // Completing a task
+        // Case 2: Completing a task
         (resource.data.status == 'ASSIGNED' && request.resource.data.status == 'COMPLETED' && resource.data.assigned_to == request.auth.uid) ||
-        // Approving/Paying for a task (done via cloud function, so client can't set to PAID)
+        // Case 3: Task creator cancelling an OPEN task
+        (resource.data.status == 'OPEN' && request.resource.data.status == 'CANCELLED' && resource.data.created_by == request.auth.uid) ||
+        // Case 4: Approving a task (status set to PAID by cloud function)
         (resource.data.status == 'COMPLETED' && request.resource.data.status == 'PAID' && resource.data.created_by == request.auth.uid)
       );
     }
