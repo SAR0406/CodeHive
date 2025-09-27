@@ -31,6 +31,7 @@ import type { Template } from '@/lib/firebase/data/get-templates';
 import { getTemplates } from '@/lib/firebase/data/get-templates';
 import { deductCredits } from '@/lib/firebase/credits';
 import { useFirebase } from '@/lib/firebase/client-provider';
+import { onSnapshot, collection, query } from 'firebase/firestore';
 
 
 export default function TemplatesPage() {
@@ -43,18 +44,20 @@ export default function TemplatesPage() {
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
 
   useEffect(() => {
-    async function fetchTemplates() {
-      if (!db) return;
-      try {
-        const fetchedTemplates = await getTemplates(db);
-        setTemplates(fetchedTemplates);
-      } catch (error) {
-        toast({ title: 'Error', description: 'Could not load templates.', variant: 'destructive' });
-      } finally {
-        setIsLoadingTemplates(false);
-      }
-    }
-    fetchTemplates();
+    if (!db) return;
+    setIsLoadingTemplates(true);
+    const templatesQuery = query(collection(db, 'templates'));
+    const unsubscribe = onSnapshot(templatesQuery, (snapshot) => {
+      const fetchedTemplates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Template));
+      setTemplates(fetchedTemplates);
+      setIsLoadingTemplates(false);
+    }, (error) => {
+      console.error(error);
+      toast({ title: 'Error', description: 'Could not load templates.', variant: 'destructive' });
+      setIsLoadingTemplates(false);
+    });
+
+    return () => unsubscribe();
   }, [db, toast]);
 
 

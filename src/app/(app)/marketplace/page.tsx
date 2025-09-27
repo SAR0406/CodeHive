@@ -31,14 +31,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { LayoutTemplate, Star, Handshake, Loader2, PlusCircle, CheckCircle } from 'lucide-react';
 import type { Task } from '@/lib/firebase/data/get-tasks';
-import { getTasks } from '@/lib/firebase/data/get-tasks';
+import { getTasks, createTask, acceptTask, completeTask, approveTask } from '@/lib/firebase/data/get-tasks';
 import { useFirebase } from '@/lib/firebase/client-provider';
+import { onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 
 type ActionType = 'accept' | 'complete' | 'approve';
 
 export default function MarketplacePage() {
   const { user } = useAuth();
-  const { db } = useFirebase();
+  const { db, app } = useFirebase();
   const { toast } = useToast();
   const [selectedTask, setSelectedTask] = useState<{ task: Task; action: ActionType } | null>(null);
   const [isActionLoading, setIsActionLoading] = useState(false);
@@ -47,100 +48,108 @@ export default function MarketplacePage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCreateLoading, setIsCreateLoading] = useState(false);
 
-  async function fetchTasks() {
-    if (!db) return;
-    setIsLoadingTasks(true);
-    try {
-      const fetchedTasks = await getTasks(db);
-      setTasks(fetchedTasks);
-    } catch (error) {
-      toast({ title: 'Error', description: 'Could not load marketplace tasks.', variant: 'destructive' });
-    } finally {
-      setIsLoadingTasks(false);
-    }
-  }
-
   useEffect(() => {
-    fetchTasks();
+    if (!db) return;
+    
+    setIsLoadingTasks(true);
+    const tasksCollection = collection(db, 'tasks');
+    const q = query(tasksCollection, orderBy('created_at', 'desc'));
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      if (querySnapshot.empty) {
+        setTasks([]);
+      } else {
+        const fetchedTasks = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        } as Task));
+        setTasks(fetchedTasks);
+      }
+      setIsLoadingTasks(false);
+    }, (error) => {
+      console.error("Error fetching tasks:", error);
+      toast({ title: 'Error', description: 'Could not load marketplace tasks.', variant: 'destructive' });
+      setIsLoadingTasks(false);
+    });
+
+    return () => unsubscribe();
   }, [db, toast]);
+
 
   const handleTaskAction = (task: Task, action: ActionType) => {
     if (!user) {
       toast({ title: 'Authentication Error', description: 'You must be logged in.', variant: 'destructive' });
       return;
     }
-    toast({ title: 'Coming Soon!', description: 'Task actions are being connected to Firestore.' });
-    // setSelectedTask({ task, action });
+    setSelectedTask({ task, action });
   };
 
   const handleConfirmAction = async () => {
-    if (!selectedTask || !user) return;
+    if (!selectedTask || !user || !app) return;
 
     setIsActionLoading(true);
     const { task, action } = selectedTask;
     
-    toast({ title: 'Coming Soon!', description: `This action (${action}) will be connected to Firebase soon.` });
-    
-    // try {
-    //   let resultMessage = '';
-    //   if (action === 'accept') {
-    //     await acceptTask(task.id, user.id);
-    //     resultMessage = 'Task has been assigned to you.';
-    //   } else if (action === 'complete') {
-    //     await completeTask(task.id, user.id);
-    //     resultMessage = 'Task marked as complete. Waiting for creator approval.';
-    //   } else if (action === 'approve') {
-    //     await approveTask(task.id, user.id);
-    //     resultMessage = `Task approved! ${task.credits_reward} credits have been transferred.`;
-    //   }
+    try {
+      let resultMessage = '';
+      if (action === 'accept') {
+        await acceptTask(app, db, task.id, user.uid);
+        resultMessage = 'Task has been assigned to you.';
+      } else if (action === 'complete') {
+        await completeTask(db, task.id);
+        resultMessage = 'Task marked as complete. Waiting for creator approval.';
+      } else if (action === 'approve') {
+        await approveTask(app, task.id, task.assigned_to!, task.created_by, task.credits_reward);
+        resultMessage = `Task approved! ${task.credits_reward} credits have been transferred.`;
+      }
       
-    //   toast({ title: 'Success!', description: resultMessage });
-    //   await fetchTasks(); // Re-fetch tasks to update the UI
-    // } catch (error: any) {
-    //   console.error(`Error performing action: ${action}`, error);
-    //   toast({ title: 'Error', description: error.message || 'Could not complete the action. Please try again.', variant: 'destructive' });
-    // } finally {
+      toast({ title: 'Success!', description: resultMessage });
+    } catch (error: any) {
+      console.error(`Error performing action: ${action}`, error);
+      toast({ title: 'Error', description: error.message || 'Could not complete the action. Please try again.', variant: 'destructive' });
+    } finally {
       setIsActionLoading(false);
       setSelectedTask(null);
-    // }
+    }
   };
   
   const handleCreateTask = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user) return;
-    
+    if (!user || !app) return;
+
+    const formData = new FormData(e.currentTarget);
+    const title = formData.get('title') as string;
+    const description = formData.get('description') as string;
+    const creditsRewardStr = formData.get('creditsReward') as string;
+    const tagsStr = formData.get('tags') as string;
+
+    if (!title || !description || !creditsRewardStr) {
+      toast({ title: 'Missing Fields', description: 'Please fill out all required fields.', variant: 'destructive' });
+      return;
+    }
+
+    const creditsReward = parseInt(creditsRewardStr, 10);
+    const tags = tagsStr ? tagsStr.split(',').map(tag => tag.trim()) : [];
+
+
+    if (isNaN(creditsReward) || creditsReward <= 0) {
+      toast({ title: 'Invalid Reward', description: 'Credit reward must be a positive number.', variant: 'destructive' });
+      return;
+    }
+
     setIsCreateLoading(true);
-    toast({ title: 'Coming Soon!', description: 'Task creation will be connected to Firebase soon.' });
-    setIsCreateLoading(false);
-    setIsCreateDialogOpen(false);
-
-    // const formData = new FormData(e.currentTarget);
-    // const title = formData.get('title') as string;
-    // const description = formData.get('description') as string;
-    // const creditsReward = parseInt(formData.get('creditsReward') as string, 10);
-    // const tagsStr = formData.get('tags') as string;
-    // const tags = tagsStr ? tagsStr.split(',').map(tag => tag.trim()) : [];
-
-
-    // if (!title || !description || !creditsReward) {
-    //   toast({ title: 'Missing Fields', description: 'Please fill out all fields.', variant: 'destructive' });
-    //   return;
-    // }
-
-    // setIsCreateLoading(true);
-    // try {
-    //     await createTask({ title, description, creditsReward, userId: user.id, tags });
-    //     toast({ title: 'Task Created!', description: 'Your task has been posted to the marketplace.' });
-    //     setIsCreateDialogOpen(false);
-    //     await fetchTasks();
-    // } catch (error: any) {
-    //     toast({ title: 'Error Creating Task', description: error.message || 'Something went wrong.', variant: 'destructive' });
-    // } finally {
-    //     setIsCreateLoading(false);
-    // }
+    try {
+        await createTask(app, user.uid, { title, description, credits_reward: creditsReward, tags });
+        toast({ title: 'Task Created!', description: 'Your task has been posted and credits are in escrow.' });
+        setIsCreateDialogOpen(false);
+    } catch (error: any) {
+        toast({ title: 'Error Creating Task', description: error.message || 'Something went wrong.', variant: 'destructive' });
+    } finally {
+        setIsCreateLoading(false);
+    }
   }
 
-  const getActionForTask = (task: Task): { label: string; action: ActionType; icon: React.ElementType; disabled: boolean; variant: "default" | "secondary" | "outline" } => {
+  const getActionForTask = (task: Task): { label: string; action: ActionType; icon: React.ElementType; disabled: boolean; variant: "default" | "secondary" | "outline" | "destructive" } => {
     if (!user) return { label: 'Log in to Participate', action: 'accept', icon: Handshake, disabled: true, variant: 'secondary' };
 
     switch (task.status) {

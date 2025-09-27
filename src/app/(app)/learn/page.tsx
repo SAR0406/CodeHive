@@ -33,6 +33,7 @@ import type { LearningModule } from '@/lib/firebase/data/get-modules';
 import { getModules } from '@/lib/firebase/data/get-modules';
 import { deductCredits } from '@/lib/firebase/credits';
 import { useFirebase } from '@/lib/firebase/client-provider';
+import { onSnapshot, collection, query } from 'firebase/firestore';
 
 type ActionType = 'module' | 'session';
 type Item = LearningModule | Mentor;
@@ -50,24 +51,36 @@ export default function LearnPage() {
   const [isLoadingModules, setIsLoadingModules] = useState(true);
 
   useEffect(() => {
-    async function fetchData() {
-      if (!db) return;
-      try {
-        setMentors(await getMentors(db));
-      } catch (error) {
-        toast({ title: 'Error', description: 'Could not load mentors.', variant: 'destructive' });
-      } finally {
-        setIsLoadingMentors(false);
-      }
-      try {
-        setModules(await getModules(db));
-      } catch (error) {
-        toast({ title: 'Error', description: 'Could not load learning modules.', variant: 'destructive' });
-      } finally {
-        setIsLoadingModules(false);
-      }
-    }
-    fetchData();
+    if (!db) return;
+
+    // Listen for mentors
+    const mentorsQuery = query(collection(db, 'mentors'));
+    const unsubscribeMentors = onSnapshot(mentorsQuery, (snapshot) => {
+      const fetchedMentors = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Mentor));
+      setMentors(fetchedMentors);
+      setIsLoadingMentors(false);
+    }, (error) => {
+      console.error(error);
+      toast({ title: 'Error', description: 'Could not load mentors.', variant: 'destructive' });
+      setIsLoadingMentors(false);
+    });
+
+    // Listen for modules
+    const modulesQuery = query(collection(db, 'learning_modules'));
+    const unsubscribeModules = onSnapshot(modulesQuery, (snapshot) => {
+      const fetchedModules = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LearningModule));
+      setModules(fetchedModules);
+      setIsLoadingModules(false);
+    }, (error) => {
+      console.error(error);
+      toast({ title: 'Error', description: 'Could not load learning modules.', variant: 'destructive' });
+      setIsLoadingModules(false);
+    });
+
+    return () => {
+      unsubscribeMentors();
+      unsubscribeModules();
+    };
   }, [db, toast]);
 
 

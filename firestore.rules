@@ -1,33 +1,68 @@
 
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Profiles: Users can read anyone's profile, but only write to their own.
+    // They cannot change their own credits or reputation directly.
     match /profiles/{userId} {
-      // Allow a user to read and update their own profile.
-      allow read, update: if request.auth.uid == userId;
+      allow read: if request.auth != null;
+      allow create: if request.auth.uid == userId;
+      allow update: if request.auth.uid == userId
+                    && !(request.resource.data.credits > resource.data.credits)
+                    && !(request.resource.data.reputation > resource.data.reputation);
     }
 
-    // Public collections are readable by any authenticated user.
-    // Writes are disabled for now to prevent unauthorized changes.
+    // User Transactions: Users can only create transactions for themselves. No one can update or delete them.
+    match /profiles/{userId}/transactions/{transactionId} {
+        allow read: if request.auth.uid == userId;
+        allow create: if request.auth.uid == userId;
+        allow update, delete: if false;
+    }
+
+    // Credit Packs: Read-only for authenticated users.
     match /credit_packs/{packId} {
-      allow list, get: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false; // Managed via admin only
     }
+
+    // Learning Modules: Read-only for authenticated users.
     match /learning_modules/{moduleId} {
-      allow list, get: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false; // Managed via admin only
     }
+
+    // Mentors: Read-only for authenticated users.
     match /mentors/{mentorId} {
-      allow list, get: if request.auth != null;
-    }
-    match /tasks/{taskId} {
-      allow list, get: if request.auth != null;
-    }
-    match /templates/{templateId} {
-      allow list, get: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false; // Managed via admin only
     }
     
-    // Fallback rule to deny all other access
-    match /{document=**} {
-      allow read, write: if false;
+    // Templates: Read-only for authenticated users.
+    match /templates/{templateId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Managed via admin only
+    }
+    
+    // Tasks: Authenticated users can list all tasks.
+    match /tasks/{taskId} {
+      allow read: if request.auth != null;
+
+      // Allow task creation if user is authenticated
+      allow create: if request.auth != null
+                    && request.resource.data.created_by == request.auth.uid
+                    && request.resource.data.status == 'OPEN';
+      
+      // Allow updates based on status transitions
+      allow update: if request.auth != null && (
+        // Accepting a task
+        (resource.data.status == 'OPEN' && request.resource.data.status == 'ASSIGNED' && request.resource.data.assigned_to == request.auth.uid) ||
+        // Completing a task
+        (resource.data.status == 'ASSIGNED' && request.resource.data.status == 'COMPLETED' && resource.data.assigned_to == request.auth.uid) ||
+        // Approving/Paying for a task (done via cloud function, so client can't set to PAID)
+        (resource.data.status == 'COMPLETED' && request.resource.data.status == 'PAID' && resource.data.created_by == request.auth.uid)
+      );
     }
   }
 }

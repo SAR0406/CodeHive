@@ -1,9 +1,10 @@
 
 'use client'
 
+import type { FirebaseApp } from "firebase/app";
 import type { Firestore } from "firebase/firestore";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
-import { Timestamp } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, doc, addDoc, updateDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { deductCredits } from "../credits";
 
 export interface Task {
   id: string;
@@ -34,9 +35,69 @@ export async function getTasks(db: Firestore): Promise<Task[]> {
         return {
             id: doc.id,
             ...data,
-            // Timestamps are automatically handled by Firestore, no need to convert
         } as Task;
     });
 
     return tasks;
+}
+
+// --- Write Operations ---
+
+interface CreateTaskData {
+    title: string;
+    description: string;
+    credits_reward: number;
+    tags: string[];
+}
+
+export async function createTask(app: FirebaseApp, userId: string, taskData: CreateTaskData) {
+    // 1. Deduct credits from the creator first (held in escrow)
+    await deductCredits(app, userId, taskData.credits_reward, `Created task: ${taskData.title}`);
+
+    // 2. If deduction is successful, create the task document
+    const db = app.firestore();
+    const tasksCollection = collection(db, 'tasks');
+    await addDoc(tasksCollection, {
+        ...taskData,
+        created_by: userId,
+        status: 'OPEN',
+        created_at: serverTimestamp(),
+        updated_at: serverTimestamp(),
+    });
+}
+
+export async function acceptTask(app: FirebaseApp, db: Firestore, taskId: string, userId: string) {
+    const taskRef = doc(db, 'tasks', taskId);
+    await updateDoc(taskRef, {
+        assigned_to: userId,
+        status: 'ASSIGNED',
+        updated_at: serverTimestamp(),
+    });
+}
+
+export async function completeTask(db: Firestore, taskId: string) {
+    const taskRef = doc(db, 'tasks', taskId);
+    await updateDoc(taskRef, {
+        status: 'COMPLETED',
+        updated_at: serverTimestamp(),
+    });
+}
+
+import { getFunctions, httpsCallable } from "firebase/functions";
+
+export async function approveTask(app: FirebaseApp, taskId: string, assigneeId: string, creatorId: string, amount: number) {
+    const taskRef = doc(app.firestore(), 'tasks', taskId);
+
+    // Call the cloud function to handle the credit transfer
+    const functions = getFunctions(app, 'us-central1');
+    const creditTransfer = httpsCallable(functions, 'creditTransfer');
+    
+    await creditTransfer({
+        taskId: taskId,
+        assigneeId: assigneeId,
+        creatorId: creatorId,
+        amount: amount,
+    });
+
+    // The cloud function will update the task status to 'PAID'
 }
