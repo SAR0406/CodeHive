@@ -85,7 +85,7 @@ export default function MarketplacePage() {
   };
 
   const handleConfirmAction = async () => {
-    if (!selectedTask || !user || !app) return;
+    if (!selectedTask || !user || !app || !db) return;
 
     setIsActionLoading(true);
     const { task, action } = selectedTask;
@@ -93,7 +93,7 @@ export default function MarketplacePage() {
     try {
       let resultMessage = '';
       if (action === 'accept') {
-        await acceptTask(app, db, task.id, user.uid);
+        await acceptTask(db, task.id, user.uid);
         resultMessage = 'Task has been assigned to you.';
       } else if (action === 'complete') {
         await completeTask(db, task.id);
@@ -115,7 +115,7 @@ export default function MarketplacePage() {
   
   const handleCreateTask = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user || !app) return;
+    if (!user || !app || !db) return;
 
     const formData = new FormData(e.currentTarget);
     const title = formData.get('title') as string;
@@ -139,7 +139,7 @@ export default function MarketplacePage() {
 
     setIsCreateLoading(true);
     try {
-        await createTask(app, user.uid, { title, description, credits_reward: creditsReward, tags });
+        await createTask(app, db, user.uid, { title, description, credits_reward: creditsReward, tags });
         toast({ title: 'Task Created!', description: 'Your task has been posted and credits are in escrow.' });
         setIsCreateDialogOpen(false);
     } catch (error: any) {
@@ -245,7 +245,7 @@ export default function MarketplacePage() {
                   <CardFooter className="flex justify-between items-center">
                     <div className="flex items-center gap-2 font-bold text-lg text-primary">
                       <Star className="w-5 h-5 fill-current" />
-                      <span>{task.credits_reward}</span>
+                      <span>{task.credits_reward.toLocaleString()}</span>
                     </div>
                     <Button onClick={() => handleTaskAction(task, action)} disabled={disabled} variant={variant}>
                       <Icon className="mr-2 h-4 w-4" />

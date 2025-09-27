@@ -30,12 +30,11 @@ interface CreateTaskData {
     tags: string[];
 }
 
-export async function createTask(app: FirebaseApp, userId: string, taskData: CreateTaskData) {
+export async function createTask(app: FirebaseApp, db: Firestore, userId: string, taskData: CreateTaskData) {
     // 1. Deduct credits from the creator first (held in escrow)
     await deductCredits(app, userId, taskData.credits_reward, `Created task: ${taskData.title}`);
 
     // 2. If deduction is successful, create the task document
-    const db = app.firestore();
     const tasksCollection = collection(db, 'tasks');
     await addDoc(tasksCollection, {
         ...taskData,
@@ -46,7 +45,7 @@ export async function createTask(app: FirebaseApp, userId: string, taskData: Cre
     });
 }
 
-export async function acceptTask(app: FirebaseApp, db: Firestore, taskId: string, userId: string) {
+export async function acceptTask(db: Firestore, taskId: string, userId: string) {
     const taskRef = doc(db, 'tasks', taskId);
     await updateDoc(taskRef, {
         assigned_to: userId,
