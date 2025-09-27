@@ -3,7 +3,7 @@
 
 import type { FirebaseApp } from "firebase/app";
 import type { Firestore } from "firebase/firestore";
-import { collection, query, where, doc, addDoc, updateDoc, serverTimestamp, Timestamp, onSnapshot } from "firebase/firestore";
+import { collection, query, where, doc, addDoc, updateDoc, serverTimestamp, Timestamp, onSnapshot, orderBy } from "firebase/firestore";
 import { deductCredits } from "../credits";
 import { getFunctions, httpsCallable } from "firebase/functions";
 
@@ -32,7 +32,7 @@ interface CreateTaskData {
 
 export async function createTask(app: FirebaseApp, db: Firestore, userId: string, taskData: CreateTaskData) {
     // 1. Deduct credits from the creator first (held in escrow)
-    await deductCredits(app, userId, taskData.credits_reward, `Created task: ${taskData.title}`);
+    await deductCredits(app, userId, taskData.credits_reward, `Escrow for task: ${taskData.title}`);
 
     // 2. If deduction is successful, create the task document
     const tasksCollection = collection(db, 'tasks');
@@ -78,6 +78,29 @@ export async function approveTask(app: FirebaseApp, taskId: string, assigneeId: 
 }
 
 // --- Read Operations ---
+export function onTasksUpdate(db: Firestore, callback: (tasks: Task[]) => void): () => void {
+    const tasksCollection = collection(db, 'tasks');
+    const q = query(tasksCollection, orderBy('created_at', 'desc'));
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      if (querySnapshot.empty) {
+        callback([]);
+      } else {
+        const fetchedTasks = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        } as Task));
+        callback(fetchedTasks);
+      }
+    }, (error) => {
+      console.error("Error fetching tasks:", error);
+      callback([]);
+    });
+
+    return unsubscribe;
+}
+
+
 export function onTasksUpdateForUser(db: Firestore, userId: string, callback: (tasks: Task[]) => void): () => void {
     const tasksCollection = collection(db, 'tasks');
     const q = query(tasksCollection, where('created_by', '==', userId));

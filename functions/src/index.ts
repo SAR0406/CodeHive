@@ -41,11 +41,11 @@ export const seedDatabase = functions.https.onCall(async (data, context) => {
         if (snapshot.empty) {
             console.log(`Seeding ${collectionName}...`);
             seedData.forEach((item, index) => {
+                const docRef = collectionRef.doc(); // Let Firestore generate IDs
                 // For tasks, replace placeholder user with admin user
                 if (collectionName === 'tasks') {
                     item.created_by = ADMIN_UID;
                 }
-                const docRef = collectionRef.doc(`${index + 1}`);
                 batch.set(docRef, { ...item, created_at: admin.firestore.FieldValue.serverTimestamp() });
             });
         }
@@ -162,7 +162,7 @@ export const creditTransfer = functions.https.onCall(async (data, context) => {
          throw new functions.https.HttpsError("permission-denied", "Only the task creator can approve payment.");
     }
     if (!taskId || !assigneeId || !creatorId || typeof amount !== 'number' || amount <= 0) {
-        throw new functions.https.HttpsError("invalid-argument", "Missing or invalid arguments for credit transfer.");
+        throw new functions.httpss.HttpsError("invalid-argument", "Missing or invalid arguments for credit transfer.");
     }
 
     const assigneeProfileRef = db.collection('profiles').doc(assigneeId);
@@ -289,7 +289,8 @@ export const grantProAccess = functions.https.onCall(async (data, context) => {
     
     // Use a transaction to be safe, though a simple update is likely fine here.
     await db.runTransaction(async (transaction) => {
-        const newBalance = (profileDoc.data()?.credits || 0) + proCredits;
+        const currentBalance = profileDoc.data()?.credits || 0;
+        const newBalance = currentBalance + proCredits;
         transaction.update(profileRef, { credits: newBalance });
 
         const userTransactionsRef = profileRef.collection('transactions').doc();

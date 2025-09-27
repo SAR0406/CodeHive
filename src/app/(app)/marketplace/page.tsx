@@ -31,9 +31,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { LayoutTemplate, Star, Handshake, Loader2, PlusCircle, CheckCircle } from 'lucide-react';
 import type { Task } from '@/lib/firebase/data/get-tasks';
-import { createTask, acceptTask, completeTask, approveTask } from '@/lib/firebase/data/get-tasks';
+import { createTask, acceptTask, completeTask, approveTask, onTasksUpdate } from '@/lib/firebase/data/get-tasks';
 import { useFirebase } from '@/lib/firebase/client-provider';
-import { onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 
 type ActionType = 'accept' | 'complete' | 'approve';
 
@@ -52,28 +51,13 @@ export default function MarketplacePage() {
     if (!db) return;
     
     setIsLoadingTasks(true);
-    const tasksCollection = collection(db, 'tasks');
-    const q = query(tasksCollection, orderBy('created_at', 'desc'));
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      if (querySnapshot.empty) {
-        setTasks([]);
-      } else {
-        const fetchedTasks = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        } as Task));
+    const unsubscribe = onTasksUpdate(db, (fetchedTasks) => {
         setTasks(fetchedTasks);
-      }
-      setIsLoadingTasks(false);
-    }, (error) => {
-      console.error("Error fetching tasks:", error);
-      toast({ title: 'Error', description: 'Could not load marketplace tasks.', variant: 'destructive' });
-      setIsLoadingTasks(false);
+        setIsLoadingTasks(false);
     });
 
     return () => unsubscribe();
-  }, [db, toast]);
+  }, [db]);
 
 
   const handleTaskAction = (task: Task, action: ActionType) => {
