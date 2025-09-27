@@ -78,12 +78,15 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     }
     
     // Set up a listener for authentication state changes.
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setLoading(true);
-      if (user) {
-        await createUserProfile(user);
-        setUser(user);
+      if (currentUser) {
+        // User is signed in.
+        // Ensure their profile exists before we proceed.
+        await createUserProfile(currentUser);
+        setUser(currentUser);
       } else {
+        // User is signed out.
         setUser(null);
         setCredits(null);
       }
