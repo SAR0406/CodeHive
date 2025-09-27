@@ -7,20 +7,57 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Mail, Save } from 'lucide-react';
+import { User, Mail, Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useFirebase } from '@/lib/firebase/client-provider';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import React, { useState } from 'react';
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const { app } = useFirebase();
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Use local state to manage form inputs for immediate feedback
+  const [displayName, setDisplayName] = useState(user?.displayName ?? '');
 
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // In a real app, you would update the user profile in Firestore
-    toast({
-      title: 'Profile Saved!',
-      description: 'Your changes have been saved successfully.',
-    });
+    if (!app || !user) {
+        toast({ title: "Not Authenticated", description: "You must be logged in to save your profile.", variant: "destructive"});
+        return;
+    }
+
+    setIsLoading(true);
+
+    try {
+        const functions = getFunctions(app, 'us-central1');
+        const updateUserProfile = httpsCallable(functions, 'updateUserProfile');
+        
+        // In a real app, you would handle photoURL uploads to Cloud Storage first,
+        // then pass the URL to the function. For now, we only update the display name.
+        const result = await updateUserProfile({ displayName });
+
+        const data = result.data as { success: boolean, message: string };
+        if (data.success) {
+            toast({
+              title: 'Profile Saved!',
+              description: data.message,
+            });
+        } else {
+            throw new Error(data.message);
+        }
+    } catch (error: any) {
+        console.error("Error saving profile:", error);
+        toast({
+            title: 'Error Saving Profile',
+            description: error.message || "An unexpected error occurred.",
+            variant: "destructive"
+        });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   return (
@@ -56,22 +93,36 @@ export default function ProfilePage() {
                 <Label htmlFor="displayName">Display Name</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="displayName" defaultValue={user?.displayName ?? ''} className="pl-9" />
+                  <Input 
+                    id="displayName" 
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)} 
+                    className="pl-9" 
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                  <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="email" type="email" defaultValue={user?.email ?? ''} className="pl-9" readOnly/>
+                  <Input id="email" type="email" defaultValue={user?.email ?? ''} className="pl-9" readOnly disabled/>
                 </div>
               </div>
             </div>
           </CardContent>
           <CardFooter className="border-t pt-6 flex justify-end">
-            <Button type="submit">
-              <Save className="mr-2" />
-              Save Changes
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2" />
+                  Save Changes
+                </>
+              )}
             </Button>
           </CardFooter>
         </form>

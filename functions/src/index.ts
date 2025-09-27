@@ -147,3 +147,53 @@ export const creditTransfer = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError("internal", "An unexpected error occurred during credit transfer.");
     }
 });
+
+
+/**
+ * A callable function to securely update a user's profile.
+ */
+export const updateUserProfile = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "The function must be called while authenticated."
+    );
+  }
+
+  const uid = context.auth.uid;
+  const { displayName, photoURL } = data;
+
+  const profileRef = db.collection("profiles").doc(uid);
+  const updateData: { [key: string]: any } = {};
+
+  // Validate and build the update object
+  if (typeof displayName === 'string' && displayName.length > 0) {
+    updateData.display_name = displayName;
+  }
+  if (typeof photoURL === 'string' && photoURL.length > 0) {
+    // A basic check for a URL format. In a real app, you might want more robust validation.
+    if (photoURL.startsWith('http://') || photoURL.startsWith('https://')) {
+        updateData.photo_url = photoURL;
+    }
+  }
+  
+  if (Object.keys(updateData).length === 0) {
+    throw new functions.https.HttpsError(
+        "invalid-argument",
+        "No valid fields to update were provided."
+    );
+  }
+  
+  updateData.updated_at = admin.firestore.FieldValue.serverTimestamp();
+
+  try {
+    await profileRef.update(updateData);
+    return { success: true, message: "Profile updated successfully." };
+  } catch (error) {
+    console.error("Error updating user profile for UID:", uid, error);
+    throw new functions.https.HttpsError(
+      "internal",
+      "An unexpected error occurred while updating the profile."
+    );
+  }
+});
