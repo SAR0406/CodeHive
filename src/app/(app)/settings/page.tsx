@@ -39,6 +39,11 @@ export default function SettingsPage() {
             return;
         }
 
+        if (user.uid !== ADMIN_UID) {
+            toast({ title: 'Permission Denied', description: 'You are not authorized to perform this action.', variant: 'destructive' });
+            return;
+        }
+
         setIsSeeding(true);
         try {
             const functions = getFunctions(app, 'us-central1');

@@ -112,7 +112,7 @@ export const spendCredits = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError(
           "failed-precondition",
           "You do not have enough credits to complete this action.",
-          { reason: "insufficient_balance" }
+          { details: "insufficient_balance" }
         );
       }
 
