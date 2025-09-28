@@ -362,6 +362,7 @@ export const createTask = functions.https.onCall(async (data, context) => {
       description: `Escrow for task: ${title}`,
       created_at: admin.firestore.FieldValue.serverTimestamp(),
       balance_after: newBalance,
+      meta: { escrow: true }
     });
 
     // 3. Create the task document
@@ -446,6 +447,10 @@ export const completeTask = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError("permission-denied", "You are not the assignee for this task.");
     }
 
+    if (taskDoc.data()?.status !== 'ASSIGNED') {
+        throw new functions.https.HttpsError("failed-precondition", "This task is not in an 'ASSIGNED' state.");
+    }
+
     await taskRef.update({
         status: 'COMPLETED',
         updated_at: admin.firestore.FieldValue.serverTimestamp(),
@@ -453,5 +458,3 @@ export const completeTask = functions.https.onCall(async (data, context) => {
 
     return { success: true };
 });
-
-    

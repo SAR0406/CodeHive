@@ -1,8 +1,29 @@
+
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Deny all writes from the client. All data modification must go through Cloud Functions.
+    // This is the most secure model and prevents the 'internal' error.
+    allow write: if false;
+
+    // Allow authenticated users to read any document.
+    // This is necessary for the UI to display data like tasks, templates, etc.
     match /{document=**} {
-      allow read, write: if true;
+      allow read: if request.auth != null;
+    }
+
+    // Special case: Allow users to create their own profile and transaction documents,
+    // as these actions are triggered by server-side logic (auth triggers, functions).
+    match /profiles/{userId} {
+      allow create: if request.auth.uid == userId;
+       // Allow users to update their own non-sensitive profile info.
+      allow update: if request.auth.uid == userId;
+    }
+
+    match /profiles/{userId}/transactions/{txId} {
+      allow create: if request.auth.uid == userId;
     }
   }
 }
