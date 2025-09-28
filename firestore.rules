@@ -1,19 +1,29 @@
-
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    // Deny all reads and writes by default
+
+    // Allow users to read from any collection for UI display purposes.
     match /{document=**} {
-      allow read, write: if false;
+      allow read: if request.auth != null;
+      // Deny all client-side writes by default.
+      // Specific write rules below will grant targeted access.
+      allow write: if false;
     }
-    
-    // Allow authenticated users to read from any collection.
-    // This is necessary for UI components to display data.
-    match /{path=**}/ {
-    	allow read: if request.auth != null;
+
+    // Allow users to create their own profile document, but not overwrite it.
+    match /profiles/{userId} {
+      allow create: if request.auth != null && request.auth.uid == userId;
+
+      // Allow users to update specific, non-sensitive fields on their own profile.
+      // They cannot change their own credits or reputation.
+      allow update: if request.auth != null && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['display_name', 'photo_url', 'updated_at'])
+        && request.resource.data.size() <= 3;
+    }
+
+    // Allow users to create transaction documents in their own transactions subcollection.
+    match /profiles/{userId}/transactions/{transactionId} {
+        allow create: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
-    
