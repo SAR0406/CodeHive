@@ -1,19 +1,11 @@
+
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can only manage their own profile and transactions.
-    match /profiles/{userId}/{documents=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Tasks can be read by anyone authenticated.
-    // Writes are handled by secure Cloud Functions.
-    match /tasks/{taskId} {
-      allow read: if request.auth != null;
-      allow create, update: if request.auth != null;
-    }
-    
-    // Other collections are readable by authenticated users, but writable only from the server.
+    // Default-deny all client-side writes to all collections.
+    // All data modifications must go through secure Cloud Functions.
+    // Allow authenticated users to read any document.
     match /{document=**} {
       allow read: if request.auth != null;
       allow write: if false;
