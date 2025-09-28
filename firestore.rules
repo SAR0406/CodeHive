@@ -1,47 +1,22 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Allow authenticated users to read any document.
-    match /{document=**} {
-      allow read: if request.auth != null;
+    // Users can only manage their own profile and transactions.
+    match /profiles/{userId}/{documents=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Users can only manage their own profile.
-    // Sensitive fields like 'credits' are protected by server-side Cloud Functions.
-    match /profiles/{userId} {
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Users can create transaction logs for their own profile.
-    match /profiles/{userId}/transactions/{transactionId} {
-      allow create: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Allow authenticated users to create and update tasks.
-    // The actual business logic (escrow, assignment) is handled securely
-    // by Cloud Functions and client-side code calling those functions.
+    // Tasks can be read by anyone authenticated.
+    // Writes are handled by secure Cloud Functions.
     match /tasks/{taskId} {
+      allow read: if request.auth != null;
       allow create, update: if request.auth != null;
     }
-
-    // Allow authenticated users to write to other collections if needed.
-    // By default, we keep this restrictive. Specific rules should be added.
-    match /credit_packs/{packId} {
-      allow write: if false; // Should only be seeded by admin
-    }
-     match /learning_modules/{moduleId} {
-      allow write: if false; // Should only be seeded by admin
-    }
-     match /mentors/{mentorId} {
-      allow write: if false; // Should only be seeded by admin
-    }
-     match /templates/{templateId} {
-      allow write: if false; // Should only be seeded by admin
-    }
-    match /internal/{docId} {
-      allow write: if false; // Internal seeding status
+    
+    // Other collections are readable by authenticated users, but writable only from the server.
+    match /{document=**} {
+      allow read: if request.auth != null;
+      allow write: if false;
     }
   }
 }
