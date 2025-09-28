@@ -40,7 +40,7 @@ export const seedDatabase = functions.https.onCall(async (data, context) => {
         const snapshot = await collectionRef.limit(1).get();
         if (snapshot.empty) {
             console.log(`Seeding ${collectionName}...`);
-            seedData.forEach((item, index) => {
+            seedData.forEach((item) => {
                 const docRef = collectionRef.doc(); // Let Firestore generate IDs
                 // For tasks, replace placeholder user with admin user
                 if (collectionName === 'tasks') {
@@ -111,8 +111,8 @@ export const spendCredits = functions.https.onCall(async (data, context) => {
       if (currentCredits < amount) {
         throw new functions.https.HttpsError(
           "failed-precondition",
-          "insufficient_balance",
-          "You do not have enough credits to complete this action."
+          "You do not have enough credits to complete this action.",
+          "insufficient_balance"
         );
       }
 
@@ -162,7 +162,7 @@ export const creditTransfer = functions.https.onCall(async (data, context) => {
          throw new functions.https.HttpsError("permission-denied", "Only the task creator can approve payment.");
     }
     if (!taskId || !assigneeId || !creatorId || typeof amount !== 'number' || amount <= 0) {
-        throw new functions.httpss.HttpsError("invalid-argument", "Missing or invalid arguments for credit transfer.");
+        throw new functions.https.HttpsError("invalid-argument", "Missing or invalid arguments for credit transfer.");
     }
 
     const assigneeProfileRef = db.collection('profiles').doc(assigneeId);
@@ -253,6 +253,7 @@ export const updateUserProfile = functions.https.onCall(async (data, context) =>
   updateData.updated_at = admin.firestore.FieldValue.serverTimestamp();
 
   try {
+    // Use `update` which will fail if the document doesn't exist.
     await profileRef.update(updateData);
     return { success: true, message: "Profile updated successfully." };
   } catch (error) {
@@ -282,13 +283,13 @@ export const grantProAccess = functions.https.onCall(async (data, context) => {
   const proCredits = 100000; // Credits for "purchasing" the pro plan
 
   try {
-    const profileDoc = await profileRef.get();
-    if (!profileDoc.exists) {
-      throw new functions.https.HttpsError("not-found", "User profile not found.");
-    }
-    
-    // Use a transaction to be safe, though a simple update is likely fine here.
+     // Use a transaction to ensure atomic updates.
     await db.runTransaction(async (transaction) => {
+        const profileDoc = await transaction.get(profileRef);
+        if (!profileDoc.exists) {
+             throw new functions.https.HttpsError("not-found", "User profile not found.");
+        }
+
         const currentBalance = profileDoc.data()?.credits || 0;
         const newBalance = currentBalance + proCredits;
         transaction.update(profileRef, { credits: newBalance });
