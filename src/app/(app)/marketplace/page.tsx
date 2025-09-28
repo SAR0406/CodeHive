@@ -69,7 +69,7 @@ export default function MarketplacePage() {
   };
 
   const handleConfirmAction = async () => {
-    if (!selectedTask || !user || !app || !db) return;
+    if (!selectedTask || !user || !app) return;
 
     setIsActionLoading(true);
     const { task, action } = selectedTask;
@@ -77,10 +77,10 @@ export default function MarketplacePage() {
     try {
       let resultMessage = '';
       if (action === 'accept') {
-        await acceptTask(db, task.id, user.uid);
+        await acceptTask(app, task.id);
         resultMessage = 'Task has been assigned to you.';
       } else if (action === 'complete') {
-        await completeTask(db, task.id);
+        await completeTask(app, task.id);
         resultMessage = 'Task marked as complete. Waiting for creator approval.';
       } else if (action === 'approve') {
         await approveTask(app, task.id, task.assigned_to!, task.created_by, task.credits_reward);
@@ -99,7 +99,7 @@ export default function MarketplacePage() {
   
   const handleCreateTask = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user || !app || !db) return;
+    if (!user || !app) return;
 
     const formData = new FormData(e.currentTarget);
     const title = formData.get('title') as string;
@@ -112,18 +112,18 @@ export default function MarketplacePage() {
       return;
     }
 
-    const creditsReward = parseInt(creditsRewardStr, 10);
+    const credits_reward = parseInt(creditsRewardStr, 10);
     const tags = tagsStr ? tagsStr.split(',').map(tag => tag.trim()) : [];
 
 
-    if (isNaN(creditsReward) || creditsReward <= 0) {
+    if (isNaN(credits_reward) || credits_reward <= 0) {
       toast({ title: 'Invalid Reward', description: 'Credit reward must be a positive number.', variant: 'destructive' });
       return;
     }
 
     setIsCreateLoading(true);
     try {
-        await createTask(app, db, user.uid, { title, description, credits_reward: creditsReward, tags });
+        await createTask(app, { title, description, credits_reward, tags });
         toast({ title: 'Task Created!', description: 'Your task has been posted and credits are in escrow.' });
         setIsCreateDialogOpen(false);
     } catch (error: any) {

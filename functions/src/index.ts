@@ -318,3 +318,138 @@ export const grantProAccess = functions.https.onCall(async (data, context) => {
     );
   }
 });
+
+
+/**
+ * A callable function to create a new task in the marketplace.
+ * It deducts credits from the creator and holds them in escrow.
+ */
+export const createTask = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "You must be logged in to create a task.");
+  }
+
+  const { title, description, credits_reward, tags } = data;
+  const uid = context.auth.uid;
+
+  if (!title || !description || typeof credits_reward !== 'number' || credits_reward <= 0) {
+    throw new functions.https.HttpsError("invalid-argument", "Please provide a valid title, description, and credit reward.");
+  }
+
+  const profileRef = db.collection("profiles").doc(uid);
+  const tasksRef = db.collection("tasks");
+
+  return db.runTransaction(async (transaction) => {
+    const profileDoc = await transaction.get(profileRef);
+    if (!profileDoc.exists) {
+      throw new functions.https.HttpsError("not-found", "User profile not found.");
+    }
+
+    const currentCredits = profileDoc.data()?.credits || 0;
+    if (currentCredits < credits_reward) {
+      throw new functions.https.HttpsError("failed-precondition", "Insufficient credits to create this task.");
+    }
+
+    // 1. Deduct/escrow credits from creator
+    const newBalance = currentCredits - credits_reward;
+    transaction.update(profileRef, { credits: newBalance });
+
+    // 2. Log the escrow transaction
+    const userTransactionsRef = profileRef.collection('transactions').doc();
+    transaction.set(userTransactionsRef, {
+      type: 'spend',
+      amount: credits_reward,
+      description: `Escrow for task: ${title}`,
+      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      balance_after: newBalance,
+    });
+
+    // 3. Create the task document
+    transaction.set(tasksRef.doc(), {
+      title,
+      description,
+      credits_reward,
+      tags: tags || [],
+      created_by: uid,
+      status: 'OPEN',
+      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    
+    return { success: true };
+  });
+});
+
+
+/**
+ * A callable function for a user to accept an open task.
+ */
+export const acceptTask = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "You must be logged in to accept a task.");
+    }
+
+    const { taskId } = data;
+    const uid = context.auth.uid;
+
+    if (!taskId) {
+        throw new functions.https.HttpsError("invalid-argument", "Task ID is required.");
+    }
+
+    const taskRef = db.collection('tasks').doc(taskId);
+    const taskDoc = await taskRef.get();
+
+    if (!taskDoc.exists) {
+        throw new functions.https.HttpsError("not-found", "Task not found.");
+    }
+    const taskData = taskDoc.data()!;
+
+    if (taskData.status !== 'OPEN') {
+        throw new functions.https.HttpsError("failed-precondition", "This task is not open for assignment.");
+    }
+    if (taskData.created_by === uid) {
+        throw new functions.https.HttpsError("failed-precondition", "You cannot accept your own task.");
+    }
+
+    await taskRef.update({
+        assigned_to: uid,
+        status: 'ASSIGNED',
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return { success: true };
+});
+
+
+/**
+ * A callable function for an assignee to mark a task as complete.
+ */
+export const completeTask = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "You must be logged in.");
+    }
+    const { taskId } = data;
+    const uid = context.auth.uid;
+
+    if (!taskId) {
+        throw new functions.https.HttpsError("invalid-argument", "Task ID is required.");
+    }
+
+    const taskRef = db.collection('tasks').doc(taskId);
+    const taskDoc = await taskRef.get();
+
+    if (!taskDoc.exists) {
+        throw new functions.https.HttpsError("not-found", "Task not found.");
+    }
+
+    if (taskDoc.data()?.assigned_to !== uid) {
+        throw new functions.https.HttpsError("permission-denied", "You are not the assignee for this task.");
+    }
+
+    await taskRef.update({
+        status: 'COMPLETED',
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return { success: true };
+});

@@ -3,9 +3,8 @@
 
 import type { FirebaseApp } from "firebase/app";
 import type { Firestore } from "firebase/firestore";
-import { collection, query, where, doc, addDoc, updateDoc, serverTimestamp, Timestamp, onSnapshot, orderBy } from "firebase/firestore";
-import { deductCredits } from "../credits";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { collection, query, where, doc, updateDoc, serverTimestamp, Timestamp, onSnapshot, orderBy } from "firebase/firestore";
+import { getFunctions, httpsCallable, HttpsCallable } from "firebase/functions";
 
 export interface Task {
   id: string;
@@ -30,51 +29,45 @@ interface CreateTaskData {
     tags: string[];
 }
 
-export async function createTask(app: FirebaseApp, db: Firestore, userId: string, taskData: CreateTaskData) {
-    // 1. Deduct credits from the creator first (held in escrow)
-    await deductCredits(app, userId, taskData.credits_reward, `Escrow for task: ${taskData.title}`);
+// Helper to get a callable function instance
+const getCallable = <T, U>(app: FirebaseApp, name: string): HttpsCallable<T, U> => {
+    const functions = getFunctions(app, 'us-central1');
+    return httpsCallable<T, U>(functions, name);
+};
 
-    // 2. If deduction is successful, create the task document
-    const tasksCollection = collection(db, 'tasks');
-    await addDoc(tasksCollection, {
-        ...taskData,
-        created_by: userId,
-        status: 'OPEN',
-        created_at: serverTimestamp(),
-        updated_at: serverTimestamp(),
-    });
+
+export async function createTask(app: FirebaseApp, taskData: CreateTaskData) {
+    const callCreateTask = getCallable<CreateTaskData, { success: boolean }>(app, 'createTask');
+    try {
+        const result = await callCreateTask(taskData);
+        if (!result.data.success) {
+            throw new Error('Failed to create task on the server.');
+        }
+    } catch (error: any) {
+        console.error("Error creating task:", error);
+        // Re-throw a more user-friendly error message
+        throw new Error(error.message || "An unexpected error occurred while creating the task.");
+    }
 }
 
-export async function acceptTask(db: Firestore, taskId: string, userId: string) {
-    const taskRef = doc(db, 'tasks', taskId);
-    await updateDoc(taskRef, {
-        assigned_to: userId,
-        status: 'ASSIGNED',
-        updated_at: serverTimestamp(),
-    });
+export async function acceptTask(app: FirebaseApp, taskId: string) {
+    const callAcceptTask = getCallable<{ taskId: string }, { success: boolean }>(app, 'acceptTask');
+    await callAcceptTask({ taskId });
 }
 
-export async function completeTask(db: Firestore, taskId: string) {
-    const taskRef = doc(db, 'tasks', taskId);
-    await updateDoc(taskRef, {
-        status: 'COMPLETED',
-        updated_at: serverTimestamp(),
-    });
+export async function completeTask(app: FirebaseApp, taskId: string) {
+    const callCompleteTask = getCallable<{ taskId: string }, { success: boolean }>(app, 'completeTask');
+    await callCompleteTask({ taskId });
 }
 
 export async function approveTask(app: FirebaseApp, taskId: string, assigneeId: string, creatorId: string, amount: number) {
-    // Call the cloud function to handle the credit transfer
-    const functions = getFunctions(app, 'us-central1');
-    const creditTransfer = httpsCallable(functions, 'creditTransfer');
-    
-    await creditTransfer({
+    const callCreditTransfer = getCallable<any, any>(app, 'creditTransfer');
+    await callCreditTransfer({
         taskId: taskId,
         assigneeId: assigneeId,
         creatorId: creatorId,
         amount: amount,
     });
-
-    // The cloud function will update the task status to 'PAID'
 }
 
 // --- Read Operations ---
