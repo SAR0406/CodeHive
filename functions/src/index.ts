@@ -112,7 +112,7 @@ export const spendCredits = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError(
           "failed-precondition",
           "You do not have enough credits to complete this action.",
-          "insufficient_balance"
+          { reason: "insufficient_balance" }
         );
       }
 
@@ -280,7 +280,7 @@ export const grantProAccess = functions.https.onCall(async (data, context) => {
 
   const uid = context.auth.uid;
   const profileRef = db.collection("profiles").doc(uid);
-  const proCredits = 100000; // Credits for "purchasing" the pro plan
+  const proCredits = 5000; // Credits for "purchasing" the pro plan
 
   try {
      // Use a transaction to ensure atomic updates.
@@ -292,6 +292,8 @@ export const grantProAccess = functions.https.onCall(async (data, context) => {
 
         const currentBalance = profileDoc.data()?.credits || 0;
         const newBalance = currentBalance + proCredits;
+        
+        // This update is secure because it happens on the server.
         transaction.update(profileRef, { credits: newBalance });
 
         const userTransactionsRef = profileRef.collection('transactions').doc();
@@ -316,5 +318,3 @@ export const grantProAccess = functions.https.onCall(async (data, context) => {
     );
   }
 });
-
-    

@@ -1,29 +1,61 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Allow users to read from any collection for UI display purposes.
-    match /{document=**} {
+    
+    // Profiles:
+    // - Authenticated users can read any profile to see display names/photos.
+    // - A user can create their own profile document.
+    // - A user can ONLY update their own non-sensitive profile fields.
+    // - They CANNOT update their own credits or reputation. This must be done by a Cloud Function.
+    match /profiles/{userId} {
       allow read: if request.auth != null;
-      // Deny all client-side writes by default.
-      // Specific write rules below will grant targeted access.
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId
+                    && request.resource.data.credits == resource.data.credits
+                    && request.resource.data.reputation == resource.data.reputation;
+      
+      // Transactions:
+      // A user can create their own transaction history (which is done via Cloud Functions).
+      // They cannot update or delete past transactions.
+      match /transactions/{transactionId} {
+        allow read, create: if request.auth != null && request.auth.uid == userId;
+        allow update, delete: if false;
+      }
+    }
+
+    // Tasks:
+    // - Authenticated users can read all tasks.
+    // - Only Cloud Functions can create tasks (to ensure credit escrow).
+    // - Users can update tasks (e.g., to assign or complete), but status changes
+    //   and credit transfers are validated by secure Cloud Functions.
+    match /tasks/{taskId} {
+      allow read: if request.auth != null;
+      allow create: if false; // Creation is handled by create-task function
+      allow update: if request.auth != null;
+    }
+
+    // Read-only collections for clients. All writes are handled by seeding/admin functions.
+    match /credit_packs/{packId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+    match /learning_modules/{moduleId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+    match /mentors/{mentorId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+    match /templates/{templateId} {
+      allow read: if request.auth != null;
       allow write: if false;
     }
 
-    // Allow users to create their own profile document, but not overwrite it.
-    match /profiles/{userId} {
-      allow create: if request.auth != null && request.auth.uid == userId;
-
-      // Allow users to update specific, non-sensitive fields on their own profile.
-      // They cannot change their own credits or reputation.
-      allow update: if request.auth != null && request.auth.uid == userId
-        && request.resource.data.keys().hasOnly(['display_name', 'photo_url', 'updated_at'])
-        && request.resource.data.size() <= 3;
-    }
-
-    // Allow users to create transaction documents in their own transactions subcollection.
-    match /profiles/{userId}/transactions/{transactionId} {
-        allow create: if request.auth != null && request.auth.uid == userId;
+    // Internal collection for seeding metadata, should not be client-accessible.
+    match /internal/{docId} {
+        allow read, write: if false;
     }
   }
 }
