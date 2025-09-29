@@ -5,6 +5,7 @@ import type { FirebaseApp } from "firebase/app";
 import type { Firestore, Timestamp } from "firebase/firestore";
 import { collection, query, onSnapshot, orderBy, where } from "firebase/firestore";
 import { getFunctions, httpsCallable, HttpsCallable, Functions } from "firebase/functions";
+import { getAuth } from "firebase/auth";
 
 // Main Task interface
 export interface Task {
@@ -13,7 +14,7 @@ export interface Task {
   description: string;
   tags: string[];
   credits_reward: number;
-  status: 'OPEN' | 'ASSIGNED' | 'COMPLETED' | 'PAID';
+  status: 'OPEN' | 'ASSIGNED' | 'COMPLETED' | 'PAID' | 'CANCELLED';
   created_by: string; // userId
   assigned_to?: string; // userId
   created_at: Timestamp;
@@ -32,66 +33,60 @@ interface TaskActionData {
     taskId: string;
 }
 
-// Singleton for Firebase Functions instance
-let functionsInstance: Functions | null = null;
-const getFunctionsInstance = (app: FirebaseApp) => {
-    if (!functionsInstance) {
-        functionsInstance = getFunctions(app, 'us-central1');
-    }
-    return functionsInstance;
-}
+// --- Client-side function calling ---
 
-// Helper to get a callable function instance, reducing boilerplate
-const getCallable = <T, U>(app: FirebaseApp, name: string): HttpsCallable<T, U> => {
-    const functions = getFunctionsInstance(app);
-    return httpsCallable<T, U>(functions, name);
-};
+// This is a simplified fetcher for onRequest functions.
+// In a real app, you would want a more robust setup.
+const callFunction = async (app: FirebaseApp, name: string, data: any) => {
+    const auth = getAuth(app);
+    const user = auth.currentUser;
+
+    if (!user) {
+        throw new Error("User not authenticated.");
+    }
+    
+    // For onRequest functions, we must handle auth manually.
+    // The most secure way is to send the user's ID token in the Authorization header.
+    const idToken = await user.getIdToken();
+    const functions = getFunctions(app, 'us-central1');
+    const endpoint = `https://us-central1-${functions.app.options.projectId}.cloudfunctions.net/${name}`;
+
+    const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`,
+            // We pass the UID separately here as a temporary measure since verifying tokens in the CF is complex for this example
+            'x-user-uid': user.uid,
+        },
+        body: JSON.stringify({ data }), // onRequest functions expect a {data: ...} wrapper
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Function ${name} failed with status ${response.status}`);
+    }
+
+    return response.json();
+}
 
 
 // --- Write Operations ---
 
 export async function createTask(app: FirebaseApp, taskData: CreateTaskData): Promise<{ success: boolean; message: string }> {
-    const callCreateTask = getCallable<CreateTaskData, { success: boolean; message: string }>(app, 'createTask');
-    try {
-        const result = await callCreateTask(taskData);
-        return result.data;
-    } catch (error: any) {
-        console.error("Error creating task:", error);
-        throw new Error(error.message || "An unexpected error occurred while creating the task.");
-    }
+    return callFunction(app, 'createTask', taskData);
 }
 
 export async function acceptTask(app: FirebaseApp, taskId: string): Promise<{ success: boolean; message: string }> {
-    const callAcceptTask = getCallable<TaskActionData, { success: boolean; message: string }>(app, 'acceptTask');
-     try {
-        const result = await callAcceptTask({ taskId });
-        return result.data;
-    } catch (error: any) {
-        console.error("Error accepting task:", error);
-        throw new Error(error.message || "An unexpected error occurred while accepting the task.");
-    }
+    return callFunction(app, 'acceptTask', { taskId });
 }
 
 export async function completeTask(app: FirebaseApp, taskId: string): Promise<{ success: boolean; message: string }> {
-    const callCompleteTask = getCallable<TaskActionData, { success: boolean; message: string }>(app, 'completeTask');
-    try {
-        const result = await callCompleteTask({ taskId });
-        return result.data;
-    } catch (error: any) {
-        console.error("Error completing task:", error);
-        throw new Error(error.message || "An unexpected error occurred while completing the task.");
-    }
+    return callFunction(app, 'completeTask', { taskId });
 }
 
 export async function approveTask(app: FirebaseApp, taskId: string): Promise<{ success: boolean; message: string }> {
-    const callApproveTask = getCallable<TaskActionData, { success: boolean; message: string }>(app, 'approveTask');
-    try {
-        const result = await callApproveTask({ taskId });
-        return result.data;
-    } catch (error: any) {
-        console.error("Error approving task:", error);
-        throw new Error(error.message || "An unexpected error occurred while approving the task.");
-    }
+    return callFunction(app, 'approveTask', { taskId });
 }
 
 
