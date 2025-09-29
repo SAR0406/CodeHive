@@ -51,22 +51,46 @@ export async function createTask(app: FirebaseApp, taskData: CreateTaskData) {
 
 export async function acceptTask(app: FirebaseApp, taskId: string) {
     const callAcceptTask = getCallable<{ taskId: string }, { success: boolean }>(app, 'acceptTask');
-    await callAcceptTask({ taskId });
+     try {
+        const result = await callAcceptTask({ taskId });
+         if (!result.data.success) {
+            throw new Error('Failed to accept task on the server.');
+        }
+    } catch (error: any) {
+        console.error("Error accepting task:", error);
+        throw new Error(error.message || "An unexpected error occurred while accepting the task.");
+    }
 }
 
 export async function completeTask(app: FirebaseApp, taskId: string) {
     const callCompleteTask = getCallable<{ taskId: string }, { success: boolean }>(app, 'completeTask');
-    await callCompleteTask({ taskId });
+    try {
+        const result = await callCompleteTask({ taskId });
+         if (!result.data.success) {
+            throw new Error('Failed to complete task on the server.');
+        }
+    } catch (error: any) {
+        console.error("Error completing task:", error);
+        throw new Error(error.message || "An unexpected error occurred while completing the task.");
+    }
 }
 
 export async function approveTask(app: FirebaseApp, taskId: string, assigneeId: string, creatorId: string, amount: number) {
     const callCreditTransfer = getCallable<any, any>(app, 'creditTransfer');
-    await callCreditTransfer({
-        taskId: taskId,
-        assigneeId: assigneeId,
-        creatorId: creatorId,
-        amount: amount,
-    });
+    try {
+        const result = await callCreditTransfer({
+            taskId,
+            assigneeId,
+            creatorId,
+            amount,
+        });
+        if (!result.data.success) {
+            throw new Error('Failed to approve task on the server.');
+        }
+    } catch (error: any) {
+        console.error("Error approving task:", error);
+        throw new Error(error.message || "An unexpected error occurred while approving the task.");
+    }
 }
 
 // --- Read Operations ---
