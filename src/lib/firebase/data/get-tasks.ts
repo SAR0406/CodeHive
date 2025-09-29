@@ -28,7 +28,7 @@ interface CreateTaskData {
     tags: string[];
 }
 
-// Helper to get a callable function instance
+// Helper to get a callable function instance, reducing boilerplate
 const getCallable = <T, U>(app: FirebaseApp, name: string): HttpsCallable<T, U> => {
     const functions = getFunctions(app, 'us-central1');
     return httpsCallable<T, U>(functions, name);
