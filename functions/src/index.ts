@@ -155,7 +155,7 @@ export const creditTransfer = functions.https.onCall(async (data, context) => {
             if (!assigneeDoc.exists) {
                 throw new functions.https.HttpsError("not-found", "Assignee profile not found.");
             }
-             if (!taskDoc.exists || taskDoc.data()?.status !== 'COMPLETED') {
+             if (!taskDoc.exists() || taskDoc.data()?.status !== 'COMPLETED') {
                 throw new functions.https.HttpsError("failed-precondition", "Task is not ready for payment.");
             }
             if (taskDoc.data()?.status === 'PAID') {
@@ -303,7 +303,7 @@ export const createTask = functions.https.onCall(async (data, context) => {
     try {
       await db.runTransaction(async (transaction) => {
         const profileDoc = await transaction.get(profileRef);
-        if (!profileDoc.exists) {
+        if (!profileDoc.exists()) {
           throw new functions.https.HttpsError("not-found", "User profile not found.");
         }
 
@@ -429,7 +429,7 @@ export const completeTask = functions.https.onCall(async (data, context) => {
         }
 
         if (taskData.status !== 'ASSIGNED') {
-            throw new functions.https.HttpsError("failed-precondition", "This task is not in an 'ASSIGNED' state.");
+            throw new functions.a("failed-precondition", "This task is not in an 'ASSIGNED' state.");
         }
 
         await taskRef.update({
@@ -446,5 +446,7 @@ export const completeTask = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError("internal", "An unexpected error occurred while completing the task.", error);
     }
 });
+
+    
 
     
