@@ -4,7 +4,7 @@
 import type { FirebaseApp } from "firebase/app";
 import type { Firestore, Timestamp } from "firebase/firestore";
 import { collection, query, onSnapshot, orderBy, where } from "firebase/firestore";
-import { getFunctions, httpsCallable, HttpsCallable, Functions } from "firebase/functions";
+import { getFunctions } from "firebase/functions";
 import { getAuth } from "firebase/auth";
 
 // Main Task interface
@@ -33,10 +33,7 @@ interface TaskActionData {
     taskId: string;
 }
 
-// --- Client-side function calling ---
-
 // This is a simplified fetcher for onRequest functions.
-// In a real app, you would want a more robust setup.
 const callFunction = async (app: FirebaseApp, name: string, data: any) => {
     const auth = getAuth(app);
     const user = auth.currentUser;
@@ -45,8 +42,6 @@ const callFunction = async (app: FirebaseApp, name: string, data: any) => {
         throw new Error("User not authenticated.");
     }
     
-    // For onRequest functions, we must handle auth manually.
-    // The most secure way is to send the user's ID token in the Authorization header.
     const idToken = await user.getIdToken();
     const functions = getFunctions(app, 'us-central1');
     const endpoint = `https://us-central1-${functions.app.options.projectId}.cloudfunctions.net/${name}`;
@@ -56,18 +51,16 @@ const callFunction = async (app: FirebaseApp, name: string, data: any) => {
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${idToken}`,
-            // We pass the UID separately here as a temporary measure since verifying tokens in the CF is complex for this example
-            'x-user-uid': user.uid,
         },
-        body: JSON.stringify({ data }), // onRequest functions expect a {data: ...} wrapper
+        body: JSON.stringify(data), // Send data directly
     });
 
+    const responseData = await response.json();
     if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Function ${name} failed with status ${response.status}`);
+        throw new Error(responseData.message || `Function ${name} failed with status ${response.status}`);
     }
 
-    return response.json();
+    return responseData;
 }
 
 

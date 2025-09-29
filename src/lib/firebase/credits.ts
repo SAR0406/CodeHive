@@ -2,14 +2,37 @@
 'use client'
 import { getFunctions, httpsCallable, HttpsCallable } from "firebase/functions";
 import type { FirebaseApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 
-/**
- * Helper to get a callable function instance, reducing boilerplate.
- */
-const getCallable = <T, U>(app: FirebaseApp, name: string): HttpsCallable<T, U> => {
+
+const callFunction = async (app: FirebaseApp, name: string, data: any) => {
+    const auth = getAuth(app);
+    const user = auth.currentUser;
+
+    if (!user) {
+        throw new Error("User not authenticated.");
+    }
+    
+    const idToken = await user.getIdToken();
     const functions = getFunctions(app, 'us-central1');
-    return httpsCallable<T, U>(functions, name);
-};
+    const endpoint = `https://us-central1-${functions.app.options.projectId}.cloudfunctions.net/${name}`;
+
+    const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`,
+        },
+        body: JSON.stringify(data), // Send data directly
+    });
+
+    const responseData = await response.json();
+    if (!response.ok) {
+        throw new Error(responseData.message || `Function ${name} failed with status ${response.status}`);
+    }
+
+    return responseData;
+}
 
 
 /**
@@ -21,21 +44,8 @@ const getCallable = <T, U>(app: FirebaseApp, name: string): HttpsCallable<T, U> 
  * @returns {Promise<void>} A promise that resolves when the function is successfully called.
  * @throws {Error} Throws a specific 'Insufficient credits' error or a generic error if the Cloud Function call fails.
  */
-export async function spendCredits(app: FirebaseApp, amount: number, description?: string): Promise<void> {
-  const callSpendCredits = getCallable<{ amount: number, description?: string }, { success: boolean, error?: string }>(app, 'spendCredits');
-
-  try {
-    const result = await callSpendCredits({ amount, description });
-    
-    const data = result.data;
-    if (data.success === false) {
-      throw new Error(data.error || 'Failed to deduct credits.');
-    }
-  } catch (error: any) {
-    console.error("Error calling spendCredits function:", error);
-    // Re-throw a more user-friendly error message
-    throw new Error(error.message || 'An unexpected error occurred while processing credits.');
-  }
+export async function spendCredits(app: FirebaseApp, amount: number, description?: string): Promise<{ success: boolean, message: string }> {
+  return callFunction(app, 'spendCredits', { amount, description });
 }
 
 /**
@@ -43,14 +53,7 @@ export async function spendCredits(app: FirebaseApp, amount: number, description
  * @param app The Firebase App instance.
  */
 export async function grantProAccess(app: FirebaseApp): Promise<{ success: boolean; message: string }> {
-    const callGrantPro = getCallable<void, { success: boolean, message: string }>(app, 'grantProAccess');
-    try {
-        const result = await callGrantPro();
-        return result.data;
-    } catch (error: any) {
-        console.error("Error granting pro access:", error);
-        throw new Error(error.message || 'Could not grant Pro access.');
-    }
+    return callFunction(app, 'grantProAccess', {});
 }
 
 /**
@@ -59,14 +62,7 @@ export async function grantProAccess(app: FirebaseApp): Promise<{ success: boole
  * @param profileData The data to update.
  */
 export async function updateUserProfile(app: FirebaseApp, profileData: { displayName?: string, photoURL?: string }): Promise<{ success: boolean; message: string }> {
-    const callUpdate = getCallable<any, { success: boolean, message: string }>(app, 'updateUserProfile');
-    try {
-        const result = await callUpdate(profileData);
-        return result.data;
-    } catch (error: any) {
-        console.error("Error updating profile:", error);
-        throw new Error(error.message || 'Could not update profile.');
-    }
+    return callFunction(app, 'updateUserProfile', profileData);
 }
 
 /**
@@ -74,12 +70,5 @@ export async function updateUserProfile(app: FirebaseApp, profileData: { display
  * @param app The Firebase App instance.
  */
 export async function seedDatabase(app: FirebaseApp): Promise<{ success: boolean; message: string }> {
-    const callSeed = getCallable<void, { success: boolean, message: string }>(app, 'seedDatabase');
-    try {
-        const result = await callSeed();
-        return result.data;
-    } catch (error: any) {
-        console.error("Error seeding database:", error);
-        throw new Error(error.message || 'Could not seed database.');
-    }
+    return callFunction(app, 'seedDatabase', {});
 }

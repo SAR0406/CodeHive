@@ -6,23 +6,21 @@ import * as cors from "cors";
 admin.initializeApp();
 const db = admin.firestore();
 
+// Initialize CORS middleware with a more robust configuration
 const corsHandler = cors({ origin: true });
 
-const getUidFromRequest = (req: functions.https.Request): string => {
+const getUidFromRequest = async (req: functions.https.Request): Promise<string> => {
     if (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')) {
         throw new functions.https.HttpsError('unauthenticated', 'No token provided.');
     }
     const idToken = req.headers.authorization.split('Bearer ')[1];
-    // This is a simplified way to get UID for the purpose of this example.
-    // In a real-world onRequest function, you MUST verify the ID token.
-    // For example: const decodedToken = await admin.auth().verifyIdToken(idToken); return decodedToken.uid;
-    // Since we don't have async here, we'll assume the client sends the UID directly in a custom header for now
-    // THIS IS NOT SECURE FOR PRODUCTION.
-    const uid = req.headers['x-user-uid'] as string;
-    if (!uid) {
-         throw new functions.https.HttpsError('unauthenticated', 'User UID not provided in headers.');
+    try {
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        return decodedToken.uid;
+    } catch (error) {
+        console.error("Error verifying ID token:", error);
+        throw new functions.https.HttpsError('unauthenticated', 'Invalid token.');
     }
-    return uid;
 };
 
 
@@ -38,15 +36,13 @@ const handleError = (res: functions.Response, error: unknown, defaultMsg: string
 export const seedDatabase = functions.https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
         try {
-            // In a real onRequest function, you would get the UID from a verified ID token.
-            // For simplicity, we are checking a custom header. THIS IS NOT SECURE.
-            const uid = req.headers['x-user-uid'] as string | undefined;
+            const uid = await getUidFromRequest(req);
             const ADMIN_UID = functions.config().app?.admin_uid || 'REPLACE_WITH_YOUR_ADMIN_UID';
 
-            if (!uid || uid !== ADMIN_UID) {
+            if (uid !== ADMIN_UID) {
                 throw new functions.https.HttpsError("permission-denied", "You are not authorized to perform this action.");
             }
-
+            
             const seedMetaRef = db.collection("internal").doc("seedStatus");
             const seedMetaDoc = await seedMetaRef.get();
             if (seedMetaDoc.exists && seedMetaDoc.data()?.completed) {
@@ -92,8 +88,8 @@ export const seedDatabase = functions.https.onRequest((req, res) => {
 export const spendCredits = functions.https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
         try {
-            const uid = getUidFromRequest(req);
-            const { amount, description } = req.body.data;
+            const uid = await getUidFromRequest(req);
+            const { amount, description } = req.body;
 
             if (typeof amount !== "number" || amount <= 0) {
                 throw new functions.https.HttpsError("invalid-argument", "Amount must be a positive number.");
@@ -133,8 +129,8 @@ export const spendCredits = functions.https.onRequest((req, res) => {
 export const createTask = functions.https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
         try {
-            const uid = getUidFromRequest(req);
-            const { title, description, credits_reward, tags } = req.body.data;
+            const uid = await getUidFromRequest(req);
+            const { title, description, credits_reward, tags } = req.body;
 
             if (!title || !description || typeof credits_reward !== "number" || credits_reward <= 0) {
                 throw new functions.https.HttpsError("invalid-argument", "Please provide a valid title, description, and credit reward.");
@@ -189,8 +185,8 @@ export const createTask = functions.https.onRequest((req, res) => {
 export const acceptTask = functions.https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
         try {
-            const uid = getUidFromRequest(req);
-            const { taskId } = req.body.data;
+            const uid = await getUidFromRequest(req);
+            const { taskId } = req.body;
 
             if (!taskId) {
                 throw new functions.https.HttpsError("invalid-argument", "Task ID is required.");
@@ -200,7 +196,7 @@ export const acceptTask = functions.https.onRequest((req, res) => {
 
             await db.runTransaction(async (transaction) => {
                 const taskDoc = await transaction.get(taskRef);
-                if (!taskDoc.exists()) {
+                if (!taskDoc.exists) {
                     throw new functions.https.HttpsError("not-found", "Task not found.");
                 }
                 const taskData = taskDoc.data()!;
@@ -227,8 +223,8 @@ export const acceptTask = functions.https.onRequest((req, res) => {
 export const completeTask = functions.https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
         try {
-            const uid = getUidFromRequest(req);
-            const { taskId } = req.body.data;
+            const uid = await getUidFromRequest(req);
+            const { taskId } = req.body;
 
             if (!taskId) {
                 throw new functions.https.HttpsError("invalid-argument", "Task ID is required.");
@@ -264,8 +260,8 @@ export const completeTask = functions.https.onRequest((req, res) => {
 export const approveTask = functions.https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
         try {
-            const creatorId = getUidFromRequest(req);
-            const { taskId } = req.body.data;
+            const creatorId = await getUidFromRequest(req);
+            const { taskId } = req.body;
 
             if (!taskId) {
                 throw new functions.https.HttpsError("invalid-argument", "Missing a valid taskId.");
@@ -346,8 +342,8 @@ export const approveTask = functions.https.onRequest((req, res) => {
 export const updateUserProfile = functions.https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
         try {
-            const uid = getUidFromRequest(req);
-            const { displayName, photoURL } = req.body.data;
+            const uid = await getUidFromRequest(req);
+            const { displayName, photoURL } = req.body;
             const profileRef = db.collection("profiles").doc(uid);
             const updateData: { [key: string]: any } = {};
 
@@ -375,7 +371,7 @@ export const updateUserProfile = functions.https.onRequest((req, res) => {
 export const grantProAccess = functions.https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
         try {
-            const uid = getUidFromRequest(req);
+            const uid = await getUidFromRequest(req);
             const profileRef = db.collection("profiles").doc(uid);
             const proCredits = 5000;
 
