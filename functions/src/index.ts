@@ -6,7 +6,8 @@ import * as cors from "cors";
 admin.initializeApp();
 const db = admin.firestore();
 
-// Initialize CORS middleware with a more robust configuration
+// Initialize CORS middleware.
+// We are allowing all origins for now. In production, you'd want to restrict this.
 const corsHandler = cors({ origin: true });
 
 const getUidFromRequest = async (req: functions.https.Request): Promise<string> => {
@@ -98,7 +99,7 @@ export const spendCredits = functions.https.onRequest((req, res) => {
             const profileRef = db.collection("profiles").doc(uid);
             await db.runTransaction(async (txn) => {
                 const doc = await txn.get(profileRef);
-                if (!doc.exists()) {
+                if (!doc.exists) {
                     throw new functions.https.HttpsError("not-found", "User profile not found.");
                 }
 
