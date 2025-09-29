@@ -106,7 +106,7 @@ export const spendCredits = functions.https.onCall(async (data, context) => {
   try {
     await db.runTransaction(async (txn) => {
       const doc = await txn.get(profileRef);
-      if (!doc.exists) {
+      if (!doc.exists()) {
         throw new functions.https.HttpsError("not-found", "User profile not found.");
       }
 
@@ -153,7 +153,7 @@ export const createTask = functions.https.onCall(async (data, context) => {
   try {
     await db.runTransaction(async (txn) => {
       const profileDoc = await txn.get(profileRef);
-      if (!profileDoc.exists) {
+      if (!profileDoc.exists()) {
         throw new functions.https.HttpsError("not-found", "User profile not found.");
       }
 
@@ -187,7 +187,7 @@ export const createTask = functions.https.onCall(async (data, context) => {
         updated_at: admin.firestore.FieldValue.serverTimestamp(),
       });
     });
-    return { success: true };
+    return { success: true, message: 'Task created and credits escrowed.' };
   } catch (e) {
     return handleError(e, "Error creating task.");
   }
@@ -231,9 +231,9 @@ export const acceptTask = functions.https.onCall(async (data, context) => {
             });
         });
 
-        return { success: true };
+        return { success: true, message: 'Task assigned to you.' };
     } catch (e) {
-        return handleError(e, `Error accepting task ${taskId} for user ${uid}.`);
+        return handleError(e, `Error accepting task ${taskId}.`);
     }
 });
 
@@ -275,9 +275,9 @@ export const completeTask = functions.https.onCall(async (data, context) => {
             updated_at: admin.firestore.FieldValue.serverTimestamp(),
         });
 
-        return { success: true };
+        return { success: true, message: 'Task marked as complete.' };
     } catch (e) {
-        return handleError(e, `Error completing task ${taskId} for user ${uid}.`);
+        return handleError(e, `Error completing task ${taskId}.`);
     }
 });
 
@@ -286,35 +286,48 @@ export const completeTask = functions.https.onCall(async (data, context) => {
  * Credit Transfer (Approve Task)
  * ------------------------
  */
-export const creditTransfer = functions.https.onCall(async (data, context) => {
+export const approveTask = functions.https.onCall(async (data, context) => {
     const creatorId = assertAuth(context);
-    const { taskId, assigneeId, amount } = data;
+    const { taskId } = data;
     
-    if (context.auth?.uid !== creatorId) {
-         throw new functions.https.HttpsError("permission-denied", "Only the task creator can approve payment.");
-    }
-    if (!taskId || !assigneeId || !creatorId || typeof amount !== 'number' || amount <= 0) {
-        throw new functions.https.HttpsError("invalid-argument", "Missing or invalid arguments for credit transfer.");
+    if (!taskId) {
+        throw new functions.https.HttpsError("invalid-argument", "Missing a valid taskId.");
     }
 
-    const assigneeProfileRef = db.collection('profiles').doc(assigneeId);
     const taskRef = db.collection('tasks').doc(taskId);
 
     try {
         await db.runTransaction(async (transaction) => {
-            const assigneeDoc = await transaction.get(assigneeProfileRef);
             const taskDoc = await transaction.get(taskRef);
+
+            if (!taskDoc.exists()) {
+                throw new functions.https.HttpsError("not-found", "Task not found.");
+            }
+            const taskData = taskDoc.data()!;
+            
+            if (taskData.created_by !== creatorId) {
+                throw new functions.https.HttpsError("permission-denied", "Only the task creator can approve payment.");
+            }
+            if (taskData.status === 'PAID') {
+                throw new functions.https.HttpsError("failed-precondition", "This task has already been paid out.");
+            }
+            if (taskData.status !== 'COMPLETED') {
+                throw new functions.https.HttpsError("failed-precondition", "Task is not completed yet.");
+            }
+            if (!taskData.assigned_to) {
+                throw new functions.https.HttpsError("failed-precondition", "Task has no assignee to pay.");
+            }
+            
+            const assigneeId = taskData.assigned_to;
+            const amount = taskData.credits_reward;
+            
+            const assigneeProfileRef = db.collection('profiles').doc(assigneeId);
+            const assigneeDoc = await transaction.get(assigneeProfileRef);
 
             if (!assigneeDoc.exists()) {
                 throw new functions.https.HttpsError("not-found", "Assignee profile not found.");
             }
-             if (!taskDoc.exists() || taskDoc.data()?.status !== 'COMPLETED') {
-                throw new functions.https.HttpsError("failed-precondition", "Task is not ready for payment.");
-            }
-            if (taskDoc.data()?.status === 'PAID') {
-                throw new functions.https.HttpsError("failed-precondition", "This task has already been paid out.");
-            }
-
+            
             const assigneeCredits = assigneeDoc.data()?.credits || 0;
             const newAssigneeBalance = assigneeCredits + amount;
             transaction.update(assigneeProfileRef, { credits: newAssigneeBalance, reputation: admin.firestore.FieldValue.increment(1) });
@@ -323,7 +336,7 @@ export const creditTransfer = functions.https.onCall(async (data, context) => {
             transaction.set(assigneeTransactionRef, {
                 type: 'earn',
                 amount: amount,
-                description: `Reward for task: ${taskDoc.data()?.title}`,
+                description: `Reward for task: ${taskData.title}`,
                 created_at: admin.firestore.FieldValue.serverTimestamp(),
                 balance_after: newAssigneeBalance,
                 meta: { taskId: taskId }
@@ -416,5 +429,7 @@ export const grantProAccess = functions.https.onCall(async (data, context) => {
     return handleError(e, "Error granting Pro access.");
   }
 });
+
+    
 
     

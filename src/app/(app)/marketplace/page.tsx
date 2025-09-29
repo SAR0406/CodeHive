@@ -40,10 +40,13 @@ export default function MarketplacePage() {
   const { user } = useAuth();
   const { db, app } = useFirebase();
   const { toast } = useToast();
-  const [selectedTask, setSelectedTask] = useState<{ task: Task; action: ActionType } | null>(null);
-  const [isActionLoading, setIsActionLoading] = useState(false);
+  
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(true);
+  
+  const [selectedTask, setSelectedTask] = useState<{ task: Task; action: ActionType } | null>(null);
+  const [isActionLoading, setIsActionLoading] = useState(false);
+  
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCreateLoading, setIsCreateLoading] = useState(false);
 
@@ -77,23 +80,20 @@ export default function MarketplacePage() {
     try {
       let resultMessage = '';
       if (action === 'accept') {
-        await acceptTask(app, task.id);
-        resultMessage = 'Task has been assigned to you.';
+        const result = await acceptTask(app, task.id);
+        resultMessage = result.message;
       } else if (action === 'complete') {
-        await completeTask(app, task.id);
-        resultMessage = 'Task marked as complete. Waiting for creator approval.';
+        const result = await completeTask(app, task.id);
+        resultMessage = result.message;
       } else if (action === 'approve') {
-        if (!task.assigned_to) {
-          throw new Error("Task has no assignee.");
-        }
-        await approveTask(app, task.id, task.assigned_to, task.created_by, task.credits_reward);
-        resultMessage = `Task approved! ${task.credits_reward} credits have been transferred.`;
+        const result = await approveTask(app, task.id);
+        resultMessage = result.message;
       }
       
       toast({ title: 'Success!', description: resultMessage });
     } catch (error: any) {
       console.error(`Error performing action: ${action}`, error);
-      toast({ title: 'Error', description: error.message || 'Could not complete the action. Please try again.', variant: 'destructive' });
+      toast({ title: 'Action Failed', description: error.message || 'Could not complete the action. Please try again.', variant: 'destructive' });
     } finally {
       setIsActionLoading(false);
       setSelectedTask(null);
@@ -116,8 +116,7 @@ export default function MarketplacePage() {
     }
 
     const credits_reward = parseInt(creditsRewardStr, 10);
-    const tags = tagsStr ? tagsStr.split(',').map(tag => tag.trim()) : [];
-
+    const tags = tagsStr ? tagsStr.split(',').map(tag => tag.trim().toLowerCase()).filter(Boolean) : [];
 
     if (isNaN(credits_reward) || credits_reward <= 0) {
       toast({ title: 'Invalid Reward', description: 'Credit reward must be a positive number.', variant: 'destructive' });
@@ -126,38 +125,36 @@ export default function MarketplacePage() {
 
     setIsCreateLoading(true);
     try {
-        await createTask(app, { title, description, credits_reward, tags });
-        toast({ title: 'Task Created!', description: 'Your task has been posted and credits are in escrow.' });
+        const result = await createTask(app, { title, description, credits_reward, tags });
+        toast({ title: 'Task Created!', description: result.message });
         setIsCreateDialogOpen(false);
     } catch (error: any) {
-        toast({ title: 'Error Creating Task', description: error.message || 'Something went wrong.', variant: 'destructive' });
+        toast({ title: 'Error Creating Task', description: error.message || 'An unexpected error occurred.', variant: 'destructive' });
     } finally {
         setIsCreateLoading(false);
     }
   }
 
-  const getActionForTask = (task: Task): { label: string; action: ActionType; icon: React.ElementType; disabled: boolean; variant: "default" | "secondary" | "outline" | "destructive" } => {
-    if (!user) return { label: 'Log in to Participate', action: 'accept', icon: Handshake, disabled: true, variant: 'secondary' };
+  const getActionForTask = (task: Task) => {
+    if (!user) return { label: 'Log in to Participate', action: 'accept' as ActionType, icon: Handshake, disabled: true, variant: 'secondary' as const };
 
     switch (task.status) {
       case 'OPEN':
-        return { label: 'Accept Task', action: 'accept', icon: Handshake, disabled: task.created_by === user.uid, variant: 'default' };
+        return { label: 'Accept Task', action: 'accept' as ActionType, icon: Handshake, disabled: task.created_by === user.uid, variant: 'default' as const };
       case 'ASSIGNED':
         if (task.assigned_to === user.uid) {
-          return { label: 'Mark as Complete', action: 'complete', icon: CheckCircle, disabled: false, variant: 'default' };
+          return { label: 'Mark as Complete', action: 'complete' as ActionType, icon: CheckCircle, disabled: false, variant: 'default' as const };
         }
-        return { label: 'Assigned', action: 'accept', icon: Handshake, disabled: true, variant: 'secondary' };
+        return { label: 'Assigned', action: 'accept' as ActionType, icon: Handshake, disabled: true, variant: 'secondary' as const };
       case 'COMPLETED':
         if (task.created_by === user.uid) {
-          return { label: 'Approve & Release Credits', action: 'approve', icon: Star, disabled: false, variant: 'default' };
+          return { label: 'Approve & Pay', action: 'approve' as ActionType, icon: Star, disabled: false, variant: 'default' as const };
         }
-        return { label: 'Pending Approval', action: 'complete', icon: CheckCircle, disabled: true, variant: 'secondary' };
-      case 'CANCELLED':
-        return { label: 'Cancelled', action: 'accept', icon: Handshake, disabled: true, variant: 'destructive'};
+        return { label: 'Pending Approval', action: 'complete' as ActionType, icon: CheckCircle, disabled: true, variant: 'secondary' as const };
       case 'PAID':
-        return { label: 'Completed & Paid', action: 'accept', icon: Star, disabled: true, variant: 'outline' };
+        return { label: 'Completed & Paid', action: 'approve' as ActionType, icon: Star, disabled: true, variant: 'outline' as const };
       default:
-        return { label: 'No Action', action: 'accept', icon: Handshake, disabled: true, variant: 'secondary' };
+        return { label: 'No Action', action: 'accept' as ActionType, icon: Handshake, disabled: true, variant: 'secondary' as const };
     }
   };
 
@@ -170,7 +167,7 @@ export default function MarketplacePage() {
       case 'complete':
         return { title: 'Mark as Complete', description: `Are you ready to mark "${task.title}" as complete? This will notify the creator for approval.` };
       case 'approve':
-        return { title: 'Approve & Release Credits', description: `Are you sure you want to approve this work? This will transfer ${task.credits_reward} credits to the assignee.` };
+        return { title: 'Approve & Release Credits', description: `Are you sure you want to approve this work? This will transfer ${task.credits_reward.toLocaleString()} credits to the assignee.` };
       default:
         return { title: 'Confirm Action', description: 'Are you sure you want to proceed?' };
     }
@@ -225,7 +222,7 @@ export default function MarketplacePage() {
                   <CardContent className="flex-grow">
                     <div className="flex flex-wrap gap-2">
                       {task.tags.map((tag) => (
-                        <Badge key={tag} variant="outline">{tag}</Badge>
+                        <Badge key={tag} variant="outline" className="capitalize">{tag}</Badge>
                       ))}
                     </div>
                   </CardContent>
@@ -269,8 +266,8 @@ export default function MarketplacePage() {
       </AlertDialog>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
-          <form onSubmit={handleCreateTask}>
+        <form onSubmit={handleCreateTask}>
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Create a New Task</DialogTitle>
               <DialogDescription>Post a job to the marketplace. Credits will be held in escrow until you approve the work.</DialogDescription>
@@ -282,7 +279,7 @@ export default function MarketplacePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
-                <Textarea id="description" name="description" placeholder="Provide a detailed description of the task..." required />
+                <Textarea id="description" name="description" placeholder="Provide a detailed description of the task..." required rows={4} />
               </div>
                <div className="space-y-2">
                 <Label htmlFor="tags">Tags (comma-separated)</Label>
@@ -296,12 +293,14 @@ export default function MarketplacePage() {
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isCreateLoading}>Cancel</Button>
               <Button type="submit" disabled={isCreateLoading}>
-                {isCreateLoading ? <><Loader2 className="mr-2" /> Posting...</> : 'Post Task & Reserve Credits'}
+                {isCreateLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Posting...</> : 'Post Task & Reserve Credits'}
               </Button>
             </DialogFooter>
-          </form>
-        </DialogContent>
+          </DialogContent>
+        </form>
       </Dialog>
     </>
   );
 }
+
+    
