@@ -429,7 +429,7 @@ export const completeTask = functions.https.onCall(async (data, context) => {
         }
 
         if (taskData.status !== 'ASSIGNED') {
-            throw new functions.a("failed-precondition", "This task is not in an 'ASSIGNED' state.");
+            throw new functions.https.HttpsError("failed-precondition", "This task is not in an 'ASSIGNED' state.");
         }
 
         await taskRef.update({
@@ -446,7 +446,5 @@ export const completeTask = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError("internal", "An unexpected error occurred while completing the task.", error);
     }
 });
-
-    
 
     
