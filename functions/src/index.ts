@@ -106,7 +106,7 @@ export const spendCredits = functions.https.onCall(async (data, context) => {
   try {
     await db.runTransaction(async (txn) => {
       const doc = await txn.get(profileRef);
-      if (!doc.exists) {
+      if (!doc.exists()) {
         throw new functions.https.HttpsError("not-found", "User profile not found.");
       }
 
@@ -153,7 +153,7 @@ export const createTask = functions.https.onCall(async (data, context) => {
   try {
     await db.runTransaction(async (txn) => {
       const profileDoc = await txn.get(profileRef);
-      if (!profileDoc.exists) {
+      if (!profileDoc.exists()) {
         throw new functions.https.HttpsError("not-found", "User profile not found.");
       }
 
@@ -212,7 +212,7 @@ export const acceptTask = functions.https.onCall(async (data, context) => {
         await db.runTransaction(async (transaction) => {
             const taskDoc = await transaction.get(taskRef);
 
-            if (!taskDoc.exists) {
+            if (!taskDoc.exists()) {
                 throw new functions.https.HttpsError("not-found", "Task not found.");
             }
             const taskData = taskDoc.data()!;
@@ -256,7 +256,7 @@ export const completeTask = functions.https.onCall(async (data, context) => {
     try {
         const taskDoc = await taskRef.get();
 
-        if (!taskDoc.exists) {
+        if (!taskDoc.exists()) {
             throw new functions.https.HttpsError("not-found", "Task not found.");
         }
 
@@ -300,7 +300,7 @@ export const approveTask = functions.https.onCall(async (data, context) => {
         await db.runTransaction(async (transaction) => {
             const taskDoc = await transaction.get(taskRef);
 
-            if (!taskDoc.exists) {
+            if (!taskDoc.exists()) {
                 throw new functions.https.HttpsError("not-found", "Task not found.");
             }
             const taskData = taskDoc.data()!;
@@ -324,12 +324,12 @@ export const approveTask = functions.https.onCall(async (data, context) => {
             const assigneeProfileRef = db.collection('profiles').doc(assigneeId);
             const assigneeDoc = await transaction.get(assigneeProfileRef);
 
-            if (!assigneeDoc.exists) {
+            if (!assigneeDoc.exists()) {
                 // If the assignee profile doesn't exist, we can't pay them.
                 // The credits should be returned to the creator.
                 const creatorProfileRef = db.collection('profiles').doc(creatorId);
                  const creatorDoc = await transaction.get(creatorProfileRef);
-                 if(creatorDoc.exists) {
+                 if(creatorDoc.exists()) {
                     const creatorBalance = creatorDoc.data()?.credits || 0;
                     const newCreatorBalance = creatorBalance + amount;
                     transaction.update(creatorProfileRef, { credits: newCreatorBalance });
@@ -432,7 +432,7 @@ export const grantProAccess = functions.https.onCall(async (data, context) => {
   try {
     await db.runTransaction(async (transaction) => {
         const profileDoc = await transaction.get(profileRef);
-        if (!profileDoc.exists) {
+        if (!profileDoc.exists()) {
              throw new functions.https.HttpsError("not-found", "User profile not found.");
         }
 
@@ -456,3 +456,5 @@ export const grantProAccess = functions.https.onCall(async (data, context) => {
     return handleError(e, "Error granting Pro access.");
   }
 });
+
+    
