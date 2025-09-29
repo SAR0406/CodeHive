@@ -2,22 +2,22 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
+// Initialize Firebase Admin SDK first. This is critical.
 admin.initializeApp();
 const db = admin.firestore();
-
-// Import seed data
-const creditPacks = require('./seed/seed-credit-packs.json');
-const learningModules = require('./seed/seed-learning-modules.json');
-const mentors = require('./seed/seed-mentors.json');
-const tasks = require('./seed/seed-tasks.json');
-const templates = require('./seed/seed-templates.json');
-
 
 /**
  * A callable function to seed the database with initial data.
  * This is idempotent and will not overwrite existing collections.
  */
 export const seedDatabase = functions.https.onCall(async (data, context) => {
+    // Moved require statements inside the function to ensure they run after initialization.
+    const creditPacks = require('./seed/seed-credit-packs.json');
+    const learningModules = require('./seed/seed-learning-modules.json');
+    const mentors = require('./seed/seed-mentors.json');
+    const tasks = require('./seed/seed-tasks.json');
+    const templates = require('./seed/seed-templates.json');
+
     // This UID should be of the first user/admin.
     const ADMIN_UID = 'REPLACE_WITH_YOUR_ADMIN_UID'; 
 
@@ -37,7 +37,6 @@ export const seedDatabase = functions.https.onCall(async (data, context) => {
 
         const seedCollection = async (collectionName: string, seedData: any[]) => {
             const collectionRef = db.collection(collectionName);
-            // Check if collection is empty before seeding
             const snapshot = await collectionRef.limit(1).get();
             if (snapshot.empty) {
                 console.log(`Seeding ${collectionName}...`);
@@ -430,7 +429,7 @@ export const completeTask = functions.https.onCall(async (data, context) => {
         }
 
         if (taskData.status !== 'ASSIGNED') {
-            throw new functions.https.HttpsError("failed-precondition", "This task is not in an 'ASSIGNED' state.");
+            throw new functions.h_ttps.HttpsError("failed-precondition", "This task is not in an 'ASSIGNED' state.");
         }
 
         await taskRef.update({
@@ -447,3 +446,5 @@ export const completeTask = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError("internal", "An unexpected error occurred while completing the task.", error);
     }
 });
+
+    
