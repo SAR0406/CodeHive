@@ -10,8 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Mail, Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase } from '@/lib/firebase/client-provider';
-import { getFunctions, httpsCallable } from 'firebase/functions';
 import React, { useState } from 'react';
+import { updateUserProfile } from '@/lib/firebase/credits';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -32,21 +32,17 @@ export default function ProfilePage() {
     setIsLoading(true);
 
     try {
-        const functions = getFunctions(app, 'us-central1');
-        const updateUserProfile = httpsCallable(functions, 'updateUserProfile');
-        
         // In a real app, you would handle photoURL uploads to Cloud Storage first,
         // then pass the URL to the function. For now, we only update the display name.
-        const result = await updateUserProfile({ displayName });
+        const result = await updateUserProfile(app, { displayName });
 
-        const data = result.data as { success: boolean, message: string };
-        if (data.success) {
+        if (result.success) {
             toast({
               title: 'Profile Saved!',
-              description: data.message,
+              description: result.message,
             });
         } else {
-            throw new Error(data.message);
+            throw new Error(result.message);
         }
     } catch (error: any) {
         console.error("Error saving profile:", error);
@@ -130,5 +126,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    

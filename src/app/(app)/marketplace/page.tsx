@@ -83,7 +83,10 @@ export default function MarketplacePage() {
         await completeTask(app, task.id);
         resultMessage = 'Task marked as complete. Waiting for creator approval.';
       } else if (action === 'approve') {
-        await approveTask(app, task.id, task.assigned_to!, task.created_by, task.credits_reward);
+        if (!task.assigned_to) {
+          throw new Error("Task has no assignee.");
+        }
+        await approveTask(app, task.id, task.assigned_to, task.created_by, task.credits_reward);
         resultMessage = `Task approved! ${task.credits_reward} credits have been transferred.`;
       }
       

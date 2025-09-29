@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import LivePreview from '@/components/live-preview';
 import { useAuth } from '@/hooks/use-auth';
 import { generateCode } from '@/ai/flows/generate-code-flow';
-import { deductCredits } from '@/lib/firebase/credits';
+import { spendCredits } from '@/lib/firebase/credits';
 import { useFirebase } from '@/lib/firebase/client-provider';
 
 export default function AIBuilderPage() {
@@ -46,7 +46,7 @@ export default function AIBuilderPage() {
     const cost = 25; // Cost for generating a component
 
     try {
-      await deductCredits(app, user.uid, cost, 'Generated a component with AI Builder');
+      await spendCredits(app, cost, 'Generated a component with AI Builder');
       const result = await generateCode({ prompt });
       setGeneratedCode(result.code);
        toast({

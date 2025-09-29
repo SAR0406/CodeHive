@@ -15,7 +15,7 @@ import { useAuth } from "@/hooks/use-auth"
 import { explainCode, ExplainCodeInput } from "@/ai/flows/explain-code-flow"
 import { fixCode, FixCodeInput } from "@/ai/flows/fix-code-flow"
 import { generateTests, GenerateTestsInput } from "@/ai/flows/generate-tests-flow"
-import { deductCredits } from "@/lib/firebase/credits"
+import { spendCredits } from "@/lib/firebase/credits"
 import Editor from "@monaco-editor/react";
 import { useFirebase } from "@/lib/firebase/client-provider";
 
@@ -53,7 +53,7 @@ export default function AIBotClient() {
       const cost = 5;
 
       try {
-        await deductCredits(app, user.uid, cost, `Used AI Bot for: ${action}`);
+        await spendCredits(app, cost, `Used AI Bot for: ${action}`);
 
         if (action === 'explain') {
             const input: ExplainCodeInput = { code: explainState.code, language: explainState.language };

@@ -9,8 +9,8 @@ import { Check, Loader2, Star } from "lucide-react";
 import Link from "next/link";
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase } from '@/lib/firebase/client-provider';
-import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
+import { grantProAccess } from '@/lib/firebase/credits';
 
 const plans = [
     {
@@ -69,10 +69,7 @@ export default function SubscribePage() {
             if (plan.name === 'Pro') {
                 setIsLoading(true);
                 try {
-                    const functions = getFunctions(app, 'us-central1');
-                    const grantProAccess = httpsCallable(functions, 'grantProAccess');
-                    const result = await grantProAccess();
-                    const data = result.data as { success: boolean, message: string };
+                    const data = await grantProAccess(app);
 
                     if (data.success) {
                         toast({

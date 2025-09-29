@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Library, GitFork, Loader2 } from 'lucide-react';
 import type { Template } from '@/lib/firebase/data/get-templates';
-import { deductCredits } from '@/lib/firebase/credits';
+import { spendCredits } from '@/lib/firebase/credits';
 import { useFirebase } from '@/lib/firebase/client-provider';
 import { onSnapshot, collection, query } from 'firebase/firestore';
 
@@ -77,7 +77,7 @@ export default function TemplatesPage() {
 
     setIsLoading(true);
     try {
-      await deductCredits(app, user.uid, selectedTemplate.cost, `Forked template: ${selectedTemplate.title}`);
+      await spendCredits(app, selectedTemplate.cost, `Forked template: ${selectedTemplate.title}`);
       toast({
         title: 'Template Forked!',
         description: `You have successfully forked "${selectedTemplate.title}". ${selectedTemplate.cost} credits have been deducted.`,

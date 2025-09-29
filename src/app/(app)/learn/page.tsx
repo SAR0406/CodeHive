@@ -29,7 +29,7 @@ import {
 import { GraduationCap, Star, BookOpen, UserCheck, Loader2 } from 'lucide-react';
 import type { Mentor } from '@/lib/firebase/data/get-mentors';
 import type { LearningModule } from '@/lib/firebase/data/get-modules';
-import { deductCredits } from '@/lib/firebase/credits';
+import { spendCredits } from '@/lib/firebase/credits';
 import { useFirebase } from '@/lib/firebase/client-provider';
 import { onSnapshot, collection, query } from 'firebase/firestore';
 
@@ -105,7 +105,7 @@ export default function LearnPage() {
       : `Booked session with: ${(item as Mentor).name}`;
     
     try {
-      await deductCredits(app, user.uid, item.cost, description)
+      await spendCredits(app, item.cost, description)
       toast({
         title: 'Purchase Successful!',
         description: `${item.cost} credits have been deducted from your account.`,

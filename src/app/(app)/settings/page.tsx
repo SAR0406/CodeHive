@@ -11,8 +11,8 @@ import Link from "next/link";
 import { useTheme } from 'next-themes';
 import { useAuth } from "@/hooks/use-auth";
 import { useFirebase } from "@/lib/firebase/client-provider";
-import { getFunctions, httpsCallable } from "firebase/functions";
 import React, { useState } from 'react';
+import { seedDatabase } from "@/lib/firebase/credits";
 
 
 export default function SettingsPage() {
@@ -46,14 +46,11 @@ export default function SettingsPage() {
 
         setIsSeeding(true);
         try {
-            const functions = getFunctions(app, 'us-central1');
-            const seedDatabase = httpsCallable(functions, 'seedDatabase');
-            const result = await seedDatabase();
-            const data = result.data as { success: boolean, message: string };
-            if (data.success) {
-                toast({ title: 'Database Seeded!', description: data.message });
+            const result = await seedDatabase(app);
+            if (result.success) {
+                toast({ title: 'Database Seeded!', description: result.message });
             } else {
-                throw new Error(data.message);
+                throw new Error(result.message);
             }
         } catch (error: any) {
             toast({ title: 'Error Seeding Database', description: error.message || 'An unknown error occurred.', variant: 'destructive' });
@@ -170,5 +167,3 @@ export default function SettingsPage() {
         </div>
     );
 }
-
-    
