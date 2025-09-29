@@ -266,8 +266,8 @@ export default function MarketplacePage() {
       </AlertDialog>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <form onSubmit={handleCreateTask}>
-          <DialogContent>
+        <DialogContent>
+          <form onSubmit={handleCreateTask}>
             <DialogHeader>
               <DialogTitle>Create a New Task</DialogTitle>
               <DialogDescription>Post a job to the marketplace. Credits will be held in escrow until you approve the work.</DialogDescription>
@@ -296,11 +296,9 @@ export default function MarketplacePage() {
                 {isCreateLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Posting...</> : 'Post Task & Reserve Credits'}
               </Button>
             </DialogFooter>
-          </DialogContent>
-        </form>
+          </form>
+        </DialogContent>
       </Dialog>
     </>
   );
 }
-
-    
