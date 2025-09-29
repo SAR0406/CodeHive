@@ -3,7 +3,7 @@
 
 import type { FirebaseApp } from "firebase/app";
 import type { Firestore, Timestamp } from "firebase/firestore";
-import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
+import { collection, query, onSnapshot, orderBy, where } from "firebase/firestore";
 import { getFunctions, httpsCallable, HttpsCallable, Functions } from "firebase/functions";
 
 // Main Task interface
@@ -13,7 +13,7 @@ export interface Task {
   description: string;
   tags: string[];
   credits_reward: number;
-  status: 'OPEN' | 'ASSIGNED' | 'COMPLETED' | 'CANCELLED' | 'PAID';
+  status: 'OPEN' | 'ASSIGNED' | 'COMPLETED' | 'PAID';
   created_by: string; // userId
   assigned_to?: string; // userId
   created_at: Timestamp;
@@ -54,9 +54,6 @@ export async function createTask(app: FirebaseApp, taskData: CreateTaskData): Pr
     const callCreateTask = getCallable<CreateTaskData, { success: boolean; message: string }>(app, 'createTask');
     try {
         const result = await callCreateTask(taskData);
-        if (result.data.success === false) {
-            throw new Error('Server indicated failure.');
-        }
         return result.data;
     } catch (error: any) {
         console.error("Error creating task:", error);
@@ -68,9 +65,6 @@ export async function acceptTask(app: FirebaseApp, taskId: string): Promise<{ su
     const callAcceptTask = getCallable<TaskActionData, { success: boolean; message: string }>(app, 'acceptTask');
      try {
         const result = await callAcceptTask({ taskId });
-        if (result.data.success === false) {
-            throw new Error('Server indicated failure.');
-        }
         return result.data;
     } catch (error: any) {
         console.error("Error accepting task:", error);
@@ -82,9 +76,6 @@ export async function completeTask(app: FirebaseApp, taskId: string): Promise<{ 
     const callCompleteTask = getCallable<TaskActionData, { success: boolean; message: string }>(app, 'completeTask');
     try {
         const result = await callCompleteTask({ taskId });
-        if (result.data.success === false) {
-            throw new Error('Server indicated failure.');
-        }
         return result.data;
     } catch (error: any) {
         console.error("Error completing task:", error);
@@ -96,9 +87,6 @@ export async function approveTask(app: FirebaseApp, taskId: string): Promise<{ s
     const callApproveTask = getCallable<TaskActionData, { success: boolean; message: string }>(app, 'approveTask');
     try {
         const result = await callApproveTask({ taskId });
-        if (result.data.success === false) {
-            throw new Error('Server indicated failure.');
-        }
         return result.data;
     } catch (error: any) {
         console.error("Error approving task:", error);
@@ -127,4 +115,20 @@ export function onTasksUpdate(db: Firestore, callback: (tasks: Task[]) => void):
     return unsubscribe;
 }
 
-    
+export function onTasksUpdateForUser(db: Firestore, userId: string, callback: (tasks: Task[]) => void): () => void {
+    const tasksCollection = collection(db, 'tasks');
+    const q = query(tasksCollection, where('created_by', '==', userId), orderBy('created_at', 'desc'));
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const fetchedTasks = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+        } as Task));
+        callback(fetchedTasks);
+    }, (error) => {
+        console.error("Error fetching real-time user tasks:", error);
+        callback([]);
+    });
+
+    return unsubscribe;
+}
