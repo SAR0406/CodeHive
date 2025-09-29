@@ -429,7 +429,7 @@ export const completeTask = functions.https.onCall(async (data, context) => {
         }
 
         if (taskData.status !== 'ASSIGNED') {
-            throw new functions.h_ttps.HttpsError("failed-precondition", "This task is not in an 'ASSIGNED' state.");
+            throw new functions.https.HttpsError("failed-precondition", "This task is not in an 'ASSIGNED' state.");
         }
 
         await taskRef.update({
