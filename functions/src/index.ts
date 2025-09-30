@@ -100,7 +100,7 @@ export const spendCredits = functions.https.onCall(async (data, context) => {
         await db.runTransaction(async (transaction) => {
             const profileDoc = await transaction.get(profileRef);
             if (!profileDoc.exists) {
-                throw new functions.https.HttpsError("not-found", "User profile not found.");
+                throw new functions.httpsHttpsError("not-found", "User profile not found.");
             }
             const currentCredits = profileDoc.data()?.credits ?? 0;
             if (currentCredits < amount) {
@@ -173,51 +173,31 @@ export const createTask = functions.https.onCall(async (data, context) => {
   }
 
   const profileRef = db.collection('profiles').doc(uid);
-  const marketplaceRef = db.collection('marketplace');
   
   try {
-    await db.runTransaction(async (transaction) => {
-        const profileDoc = await transaction.get(profileRef);
-        if (!profileDoc.exists()) {
-            throw new functions.https.HttpsError("not-found", "User profile not found.");
-        }
-        const currentCredits = profileDoc.data()?.credits ?? 0;
-        if (currentCredits < credit_reward) {
-            throw new functions.https.HttpsError("failed-precondition", "Insufficient credits to create this task.");
-        }
+    const profileDoc = await profileRef.get();
+    if (!profileDoc.exists()) {
+        throw new functions.https.HttpsError("not-found", "User profile not found.");
+    }
+    const currentCredits = profileDoc.data()?.credits ?? 0;
+    if (currentCredits < credit_reward) {
+        throw new functions.https.HttpsError("failed-precondition", "Insufficient credits to post this task.");
+    }
 
-        const newBalance = currentCredits - credit_reward;
-        transaction.update(profileRef, { credits: newBalance });
-
-        const newTaskRef = marketplaceRef.doc();
-        transaction.set(newTaskRef, {
-            id: newTaskRef.id,
-            task_title,
-            description,
-            credit_reward,
-            tags: tags || [],
-            created_by: uid,
-            status: 'OPEN',
-            created_at: admin.firestore.FieldValue.serverTimestamp(),
-            updated_at: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        
-        const txRef = db.collection('transactions').doc(uid).collection('history').doc();
-        transaction.set(txRef, {
-            type: 'spend',
-            amount: credit_reward,
-            description: `Escrow for task: ${task_title}`,
-            created_at: admin.firestore.FieldValue.serverTimestamp(),
-            balance_after: newBalance,
-            meta: { 
-                escrow: true, 
-                taskId: newTaskRef.id,
-                notes: `Escrow for task: ${task_title}`
-            }
-        });
+    const marketplaceRef = db.collection('marketplace').doc();
+    await marketplaceRef.set({
+        id: marketplaceRef.id,
+        task_title,
+        description,
+        credit_reward,
+        tags: tags || [],
+        created_by: uid,
+        status: 'OPEN',
+        created_at: admin.firestore.FieldValue.serverTimestamp(),
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    return { success: true, message: 'Task created and credits escrowed.' };
+    return { success: true, message: 'Task created successfully.' };
   } catch (e) {
     handleError(e, "Error creating task.");
     return { success: false, message: "Error creating task" };
@@ -226,7 +206,7 @@ export const createTask = functions.https.onCall(async (data, context) => {
 
 
 export const acceptTask = functions.https.onCall(async (data, context) => {
-  const uid = assertAuth(context);
+  const assigneeId = assertAuth(context);
   const { taskId } = data;
 
   if (!taskId) {
@@ -243,19 +223,56 @@ export const acceptTask = functions.https.onCall(async (data, context) => {
         }
         const taskData = taskDoc.data();
         if (taskData?.status !== 'OPEN') {
-            throw new functions.https HttpsError("failed-precondition", "This task is not open for assignment.");
+            throw new functions.https.HttpsError("failed-precondition", "This task is not open for assignment.");
         }
-        if (taskData?.created_by === uid) {
+        if (taskData?.created_by === assigneeId) {
             throw new functions.https.HttpsError("failed-precondition", "You cannot accept your own task.");
         }
+
+        const creatorId = taskData.created_by;
+        const creditReward = taskData.credit_reward;
+        const creatorProfileRef = db.collection('profiles').doc(creatorId);
+        
+        const creatorDoc = await transaction.get(creatorProfileRef);
+        if(!creatorDoc.exists) {
+            throw new functions.https.HttpsError("not-found", "Task creator's profile not found.");
+        }
+        
+        const creatorCredits = creatorDoc.data()?.credits ?? 0;
+        if(creatorCredits < creditReward) {
+            transaction.update(taskRef, {
+                status: 'CANCELLED',
+                notes: 'Creator has insufficient funds. Task cancelled.',
+                updated_at: admin.firestore.FieldValue.serverTimestamp()
+            });
+            throw new functions.https.HttpsError("failed-precondition", "Creator has insufficient funds to escrow for this task.");
+        }
+        
+        const newBalance = creatorCredits - creditReward;
+        transaction.update(creatorProfileRef, { credits: newBalance });
+        
+        const txRef = db.collection('transactions').doc(creatorId).collection('history').doc();
+        transaction.set(txRef, {
+            type: 'spend',
+            amount: creditReward,
+            description: `Escrow for task: ${taskData.task_title}`,
+            created_at: admin.firestore.FieldValue.serverTimestamp(),
+            balance_after: newBalance,
+            meta: {
+                escrow: true,
+                taskId: taskRef.id,
+                notes: `Escrow for task: ${taskData.task_title}`
+            }
+        });
+        
         transaction.update(taskRef, {
-            assigned_to: uid,
+            assigned_to: assigneeId,
             status: 'ASSIGNED',
             updated_at: admin.firestore.FieldValue.serverTimestamp()
         });
     });
     
-    return { success: true, message: 'Task assigned to you.' };
+    return { success: true, message: 'Task assigned and credits placed in escrow.' };
   } catch (e) {
     handleError(e, "Error accepting task.");
     return { success: false, message: "Error accepting task" };
