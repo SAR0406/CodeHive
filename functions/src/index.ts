@@ -178,7 +178,7 @@ export const createTask = functions.https.onCall(async (data, context) => {
   try {
     await db.runTransaction(async (transaction) => {
         const creatorDoc = await transaction.get(creatorProfileRef);
-        if (!creatorDoc.exists) {
+        if (!creatorDoc.exists()) {
             throw new functions.https.HttpsError("not-found", "User profile not found.");
         }
         
@@ -199,7 +199,11 @@ export const createTask = functions.https.onCall(async (data, context) => {
             description: `Held for task: ${task_title}`,
             created_at: admin.firestore.FieldValue.serverTimestamp(),
             balance_after: newBalance,
-            meta: { escrow: true, taskId: marketplaceRef.id }
+            meta: { 
+                escrow: true, 
+                taskId: marketplaceRef.id,
+                notes: `Credits held for task: ${task_title}`
+            }
         });
 
         // Create task
@@ -424,3 +428,5 @@ export const updateUserProfile = functions.https.onCall(async (data, context) =>
         return { success: false, message: "Error updating user profile." };
     }
 });
+
+    
