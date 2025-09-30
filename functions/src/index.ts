@@ -97,7 +97,7 @@ export const spendCredits = functions.https.onCall(async (data, context) => {
 
     const profileRef = db.collection('profiles').doc(uid);
     try {
-        const newBalance = await db.runTransaction(async (transaction) => {
+        await db.runTransaction(async (transaction) => {
             const profileDoc = await transaction.get(profileRef);
             if (!profileDoc.exists) {
                 throw new functions.https.HttpsError("not-found", "User profile not found.");
@@ -117,7 +117,6 @@ export const spendCredits = functions.https.onCall(async (data, context) => {
                 created_at: admin.firestore.FieldValue.serverTimestamp(),
                 balance_after: newBalance,
             });
-            return newBalance;
         });
 
         return { success: true, message: "Credits deducted successfully." };
@@ -134,7 +133,7 @@ export const grantProAccess = functions.https.onCall(async (data, context) => {
     const proCredits = 5000;
 
     try {
-        const newBalance = await db.runTransaction(async (transaction) => {
+        await db.runTransaction(async (transaction) => {
             const profileDoc = await transaction.get(profileRef);
             if (!profileDoc.exists) {
                 throw new functions.https.HttpsError("not-found", "User profile not found.");
@@ -151,7 +150,6 @@ export const grantProAccess = functions.https.onCall(async (data, context) => {
                 created_at: admin.firestore.FieldValue.serverTimestamp(),
                 balance_after: newBalance,
             });
-            return newBalance;
         });
 
       return { success: true, message: `Pro access granted. ${proCredits} credits added.` };
@@ -211,7 +209,11 @@ export const createTask = functions.https.onCall(async (data, context) => {
             description: `Escrow for task: ${task_title}`,
             created_at: admin.firestore.FieldValue.serverTimestamp(),
             balance_after: newBalance,
-            meta: { escrow: true, taskId: newTaskRef.id }
+            meta: { 
+                escrow: true, 
+                taskId: newTaskRef.id,
+                notes: `Escrow for task: ${task_title}`
+            }
         });
     });
 
@@ -241,7 +243,7 @@ export const acceptTask = functions.https.onCall(async (data, context) => {
         }
         const taskData = taskDoc.data();
         if (taskData?.status !== 'OPEN') {
-            throw new functions.https.HttpsError("failed-precondition", "This task is not open for assignment.");
+            throw new functions.https HttpsError("failed-precondition", "This task is not open for assignment.");
         }
         if (taskData?.created_by === uid) {
             throw new functions.https.HttpsError("failed-precondition", "You cannot accept your own task.");
@@ -307,10 +309,13 @@ export const approveTask = functions.https.onCall(async (data, context) => {
     try {
         await db.runTransaction(async (transaction) => {
             const taskDoc = await transaction.get(taskRef);
+            if (!taskDoc.exists) {
+              throw new functions.https.HttpsError("not-found", "Task not found.");
+            }
             const taskData = taskDoc.data();
 
             if (!taskData) {
-                throw new functions.https.HttpsError("not-found", "Task not found.");
+                throw new functions.https.HttpsError("not-found", "Task data not found.");
             }
             if (taskData.created_by !== creatorId) {
                 throw new functions.https.HttpsError("permission-denied", "Only the task creator can approve payment.");
@@ -335,7 +340,7 @@ export const approveTask = functions.https.onCall(async (data, context) => {
                 transaction.update(creatorProfileRef, { credits: admin.firestore.FieldValue.increment(amount) });
                 transaction.update(taskRef, { 
                     status: 'CANCELLED',
-                    notes: 'Assignee profile not found.',
+                    notes: 'Assignee profile not found. Credits refunded to creator.',
                     updated_at: admin.firestore.FieldValue.serverTimestamp()
                 });
                 
@@ -343,8 +348,11 @@ export const approveTask = functions.https.onCall(async (data, context) => {
                 transaction.set(creatorTxRef, {
                     type: 'earn',
                     amount: amount,
-                    description: `Refund for task: ${taskData.task_title} (assignee not found)`,
+                    description: `Refund for task: ${taskData.task_title}`,
                     created_at: admin.firestore.FieldValue.serverTimestamp(),
+                     meta: {
+                        notes: `Refund for task: ${taskData.task_title} (assignee not found)`
+                    }
                 });
                 return;
             }
