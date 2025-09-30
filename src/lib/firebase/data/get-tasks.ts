@@ -1,11 +1,11 @@
 
+
 'use client'
 
 import type { FirebaseApp } from "firebase/app";
 import type { Firestore, Timestamp } from "firebase/firestore";
 import { collection, query, onSnapshot, orderBy, where } from "firebase/firestore";
-import { getFunctions, httpsCallable, type HttpsCallable } from "firebase/functions";
-import { useFirebase } from '../client-provider';
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 // Main Task interface
 export interface Task {
@@ -41,7 +41,6 @@ interface FunctionResult {
 
 // --- Callable Function Setup ---
 
-// This helper is now internal to this module
 const getCallable = <RequestData, ResponseData>(app: FirebaseApp, functionName: string) => {
   const functions = getFunctions(app);
   return httpsCallable<RequestData, ResponseData>(functions, functionName);
@@ -97,7 +96,7 @@ export async function approveTask(app: FirebaseApp, taskId: string): Promise<Fun
 // --- Real-time Read Operations ---
 
 export function onTasksUpdate(db: Firestore, callback: (tasks: Task[]) => void): () => void {
-    const tasksCollection = collection(db, 'tasks');
+    const tasksCollection = collection(db, 'marketplace');
     const q = query(tasksCollection, orderBy('created_at', 'desc'));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -115,7 +114,7 @@ export function onTasksUpdate(db: Firestore, callback: (tasks: Task[]) => void):
 }
 
 export function onTasksUpdateForUser(db: Firestore, userId: string, callback: (tasks: Task[]) => void): () => void {
-    const tasksCollection = collection(db, 'tasks');
+    const tasksCollection = collection(db, 'marketplace');
     const q = query(tasksCollection, where('created_by', '==', userId), orderBy('created_at', 'desc'));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {

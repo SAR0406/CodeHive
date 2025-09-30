@@ -1,59 +1,44 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Deny all reads and writes by default.
+
+    // Deny all reads and writes by default
     match /{document=**} {
       allow read, write: if false;
     }
-
-    // Profiles: Users can read/update their own profile.
-    // They can also create transactions in their own subcollection.
+    
+    // Profiles: Users can manage their own profile
     match /profiles/{userId} {
-      allow read, update: if request.auth != null && request.auth.uid == userId;
-
-      match /transactions/{transactionId} {
-        allow create: if request.auth != null && request.auth.uid == userId;
-        // Reads/updates/deletes on transactions should be handled by server-side logic if needed.
-        allow read, update, delete: if false; 
-      }
-    }
-    
-    // Tasks: Authenticated users can read all tasks to browse the marketplace.
-    // Writes are restricted to prevent clients from changing task state directly.
-    // All write operations (create, accept, complete, approve) must go through Cloud Functions.
-    match /tasks/{taskId} {
-        allow read: if request.auth != null;
-        allow create, update, delete: if false;
+      allow read, update: if request.auth.uid == userId;
     }
 
-    // Read-only collections for clients (seeded data).
+    // Transactions: Users can create transactions for themselves
+    match /profiles/{userId}/transactions/{transactionId} {
+      allow create: if request.auth.uid == userId;
+    }
+
+    // Marketplace (Tasks): Any authenticated user can read tasks
+    match /marketplace/{taskId} {
+      allow read: if request.auth != null;
+    }
+
+    // Read-only collections
     match /credit_packs/{packId} {
-        allow read: if request.auth != null;
-        allow write: if false;
+      allow read: if request.auth != null;
     }
-    
     match /learning_modules/{moduleId} {
-        allow read: if request.auth != null;
-        allow write: if false;
+      allow read: if request.auth != null;
     }
-
     match /mentors/{mentorId} {
-        allow read: if request.auth != null;
-        allow write: if false;
+      allow read: if request.auth != null;
     }
-
     match /templates/{templateId} {
-        allow read: if request.auth != null;
-        allow write: if false;
+      allow read: if request.auth != null;
     }
-
-    // Internal collection for admin operations like seeding.
-    // Should only be accessible by backend admin processes.
+     // Internal collections should not be client-accessible
     match /internal/{docId} {
-        allow read, write: if false;
+      allow read, write: if false;
     }
   }
 }

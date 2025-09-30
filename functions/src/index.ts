@@ -52,7 +52,7 @@ export const seedDatabase = functions.https.onCall(async (_data, context) => {
         credit_packs: require("./seed/seed-credit-packs.json"),
         learning_modules: require("./seed/seed-learning-modules.json"),
         mentors: require("./seed/seed-mentors.json"),
-        tasks: require("./seed/seed-tasks.json"),
+        marketplace: require("./seed/seed-marketplace.json"),
         templates: require("./seed/seed-templates.json"),
     };
 
@@ -63,7 +63,7 @@ export const seedDatabase = functions.https.onCall(async (_data, context) => {
             console.log(`Seeding ${collectionName}...`);
             data.forEach((item) => {
                 const docRef = ref.doc();
-                if (collectionName === 'tasks') {
+                if (collectionName === 'marketplace') {
                     item.created_by = ADMIN_UID;
                 }
                 batch.set(docRef, { ...item, created_at: admin.firestore.FieldValue.serverTimestamp() });
@@ -163,7 +163,7 @@ export const grantProAccess = functions.https.onCall(async (data, context) => {
 
 /**
  * ------------------------
- * Tasks
+ * Tasks / Marketplace
  * ------------------------
  */
 export const createTask = functions.https.onCall(async (data, context) => {
@@ -175,7 +175,7 @@ export const createTask = functions.https.onCall(async (data, context) => {
   }
 
   const profileRef = db.collection("profiles").doc(uid);
-  const tasksRef = db.collection("tasks");
+  const tasksRef = db.collection("marketplace");
 
   try {
     await db.runTransaction(async (txn) => {
@@ -230,7 +230,7 @@ export const acceptTask = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError("invalid-argument", "Task ID is required.");
   }
 
-  const taskRef = db.collection('tasks').doc(taskId);
+  const taskRef = db.collection('marketplace').doc(taskId);
 
   try {
     await db.runTransaction(async (transaction) => {
@@ -266,7 +266,7 @@ export const completeTask = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError("invalid-argument", "Task ID is required.");
   }
 
-  const taskRef = db.collection('tasks').doc(taskId);
+  const taskRef = db.collection('marketplace').doc(taskId);
 
   try {
     const taskDoc = await taskRef.get();
@@ -303,7 +303,7 @@ export const approveTask = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError("invalid-argument", "Missing a valid taskId.");
     }
 
-    const taskRef = db.collection('tasks').doc(taskId);
+    const taskRef = db.collection('marketplace').doc(taskId);
 
     try {
         await db.runTransaction(async (transaction) => {
