@@ -119,6 +119,9 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
       // Cleanup the channel when the component unmounts or the user changes.
       return () => unsubscribe();
+    } else if (!user) {
+        // If there's no user, we are not loading their profile.
+        setLoading(false);
     }
   }, [user, db]);
 
