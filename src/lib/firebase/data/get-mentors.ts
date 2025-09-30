@@ -1,30 +1,35 @@
 
 'use client'
 
-import type { Firestore } from "firebase/firestore";
-import { collection, getDocs, query } from "firebase/firestore";
+import type { Database } from "firebase/database";
+import { ref, onValue } from "firebase/database";
 
 export interface Mentor {
-  id: string; // Firestore ID
+  id: string;
   name: string;
   specialties: string[];
   reputation: number;
   cost: number;
 }
 
-export async function getMentors(db: Firestore): Promise<Mentor[]> {
-    const mentorsCollection = collection(db, 'mentors');
-    const q = query(mentorsCollection);
-    const querySnapshot = await getDocs(q);
-    
-    if (querySnapshot.empty) {
-        return [];
-    }
+export function onMentorsUpdate(db: Database, callback: (mentors: Mentor[]) => void): () => void {
+    const mentorsRef = ref(db, 'mentors');
 
-    const mentors = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-    } as Mentor));
+    const unsubscribe = onValue(mentorsRef, (snapshot) => {
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            const mentorsArray = Object.keys(data).map(key => ({
+                id: key,
+                ...data[key]
+            }));
+            callback(mentorsArray);
+        } else {
+            callback([]);
+        }
+    }, (error) => {
+        console.error("Error fetching mentors:", error);
+        callback([]);
+    });
 
-    return mentors;
+    return unsubscribe;
 }

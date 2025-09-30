@@ -8,7 +8,7 @@ import { CreditCard, Loader2, Star, ArrowRight, TrendingUp, TrendingDown } from 
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import { CreditPack, getCreditPacks } from '@/lib/firebase/data/get-credit-packs';
+import { CreditPack, onCreditPacksUpdate } from '@/lib/firebase/data/get-credit-packs';
 import { useFirebase } from '@/lib/firebase/client-provider';
 import { onTasksUpdateForUser, type Task } from '@/lib/firebase/data/get-tasks';
 import { onTransactionsUpdate, Transaction } from '@/lib/firebase/data/get-transactions';
@@ -26,19 +26,14 @@ export default function BillingPage() {
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(true);
 
   useEffect(() => {
-    async function fetchCreditPacksData() {
-      if (!db) return;
-      
-      try {
-        const packs = await getCreditPacks(db);
-        setCreditPacks(packs);
-      } catch (error) {
-        toast({ title: 'Error', description: 'Could not load credit packs.', variant: 'destructive' });
-      } finally {
-        setIsLoadingPacks(false);
-      }
-    }
-    fetchCreditPacksData();
+    if (!db) return;
+
+    const unsubscribePacks = onCreditPacksUpdate(db, (packs) => {
+      setCreditPacks(packs);
+      setIsLoadingPacks(false);
+    });
+
+    return () => unsubscribePacks();
   }, [db, toast]);
   
   useEffect(() => {
@@ -47,7 +42,7 @@ export default function BillingPage() {
     // Listen for user's tasks to calculate escrow
     const unsubscribeTasks = onTasksUpdateForUser(db, user.uid, (userTasks) => {
         const openTasks = userTasks.filter(task => task.status === 'OPEN' || task.status === 'ASSIGNED' || task.status === 'COMPLETED');
-        const totalEscrow = openTasks.reduce((acc, task) => acc + task.credits_reward, 0);
+        const totalEscrow = openTasks.reduce((acc, task) => acc + task.credit_reward, 0);
         setEscrowedCredits(totalEscrow);
     });
 
@@ -177,7 +172,7 @@ export default function BillingPage() {
                            {tx.type === 'spend' ? <TrendingDown className="size-5 text-destructive" /> : <TrendingUp className="size-5 text-green-500" />}
                            <div>
                             <p className="font-medium line-clamp-1">{tx.description}</p>
-                            <p className="text-xs text-muted-foreground">{formatDistanceToNow(tx.created_at.toDate(), { addSuffix: true })}</p>
+                            <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}</p>
                            </div>
                         </div>
                         <div className={`font-semibold ${tx.type === 'spend' ? 'text-destructive' : 'text-green-500'}`}>

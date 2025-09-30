@@ -9,7 +9,7 @@ import {
 } from 'react';
 import type { User } from 'firebase/auth';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { ref, get, set, onValue, serverTimestamp } from 'firebase/database';
 import { useFirebase } from '@/lib/firebase/client-provider';
 import { useRouter } from 'next/navigation';
 
@@ -50,20 +50,20 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   // Function to create a user profile if it doesn't exist
   const createUserProfile = async (user: User) => {
     if (!db) return;
-    const profileRef = doc(db, 'profiles', user.uid);
-    const profileSnap = await getDoc(profileRef);
+    const profileRef = ref(db, 'profiles/' + user.uid);
+    const profileSnap = await get(profileRef);
 
     if (!profileSnap.exists()) {
       // User is new, create a profile with default values
       try {
-        await setDoc(profileRef, {
+        await set(profileRef, {
           id: user.uid,
           email: user.email,
           display_name: user.displayName,
           photo_url: user.photoURL,
           credits: 100, // Starting credits for new users
           reputation: 0,
-          created_at: serverTimestamp() // Use server timestamp for consistency
+          created_at: serverTimestamp()
         });
       } catch (error) {
         console.error("Error creating user profile:", error);
@@ -100,11 +100,11 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     // This effect listens for changes to the user's profile in the database.
     if (user && db) {
-      const profileRef = doc(db, 'profiles', user.uid);
+      const profileRef = ref(db, 'profiles/' + user.uid);
       
-      const unsubscribe = onSnapshot(profileRef, (doc) => {
-        if (doc.exists()) {
-            setCredits(doc.data() as ProfileData);
+      const unsubscribe = onValue(profileRef, (snapshot) => {
+        if (snapshot.exists()) {
+            setCredits(snapshot.val() as ProfileData);
         } else {
             // This case might happen if the profile is deleted manually.
             setCredits(null);

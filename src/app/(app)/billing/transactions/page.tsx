@@ -79,7 +79,7 @@ export default function TransactionsPage() {
                 transactions.map((tx) => (
                   <TableRow key={tx.id}>
                     <TableCell className="font-medium">{tx.description}</TableCell>
-                    <TableCell>{format(tx.created_at.toDate(), 'PPp')}</TableCell>
+                    <TableCell>{format(new Date(tx.created_at), 'PPp')}</TableCell>
                     <TableCell className="text-center">
                       <Badge variant={tx.type === 'spend' ? 'destructive' : 'secondary'} className="capitalize gap-1">
                         {tx.type === 'spend' ? 

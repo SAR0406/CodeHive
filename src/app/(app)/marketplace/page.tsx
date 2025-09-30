@@ -166,11 +166,11 @@ export default function MarketplacePage() {
     const { task, action } = selectedTask;
     switch (action) {
       case 'accept':
-        return { title: 'Accept Task', description: `Are you sure you want to accept the task "${task['Task title']}"?` };
+        return { title: 'Accept Task', description: `Are you sure you want to accept the task "${task.task_title}"?` };
       case 'complete':
-        return { title: 'Mark as Complete', description: `Are you ready to mark "${task['Task title']}" as complete? This will notify the creator for approval.` };
+        return { title: 'Mark as Complete', description: `Are you ready to mark "${task.task_title}" as complete? This will notify the creator for approval.` };
       case 'approve':
-        return { title: 'Approve & Release Credits', description: `Are you sure you want to approve this work? This will transfer ${task['Credit Reward'].toLocaleString()} credits to the assignee.` };
+        return { title: 'Approve & Release Credits', description: `Are you sure you want to approve this work? This will transfer ${task.credit_reward.toLocaleString()} credits to the assignee.` };
       default:
         return { title: 'Confirm Action', description: 'Are you sure you want to proceed?' };
     }
@@ -217,14 +217,14 @@ export default function MarketplacePage() {
                 <Card key={task.id} className="flex flex-col transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1">
                   <CardHeader>
                     <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg">{task['Task title']}</CardTitle>
+                      <CardTitle className="text-lg">{task.task_title}</CardTitle>
                       <Badge variant={task.status === 'OPEN' ? 'default' : 'secondary'}>{task.status}</Badge>
                     </div>
-                    <CardDescription className="line-clamp-3 pt-2">{task.Description}</CardDescription>
+                    <CardDescription className="line-clamp-3 pt-2">{task.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="flex-grow">
                     <div className="flex flex-wrap gap-2">
-                      {task.Tags.map((tag: string) => (
+                      {task.tags && task.tags.map((tag: string) => (
                         <Badge key={tag} variant="outline" className="capitalize">{tag}</Badge>
                       ))}
                     </div>
@@ -232,7 +232,7 @@ export default function MarketplacePage() {
                   <CardFooter className="flex justify-between items-center">
                     <div className="flex items-center gap-2 font-bold text-lg text-primary">
                       <Star className="w-5 h-5 fill-current" />
-                      <span>{task['Credit Reward'].toLocaleString()}</span>
+                      <span>{task.credit_reward.toLocaleString()}</span>
                     </div>
                     <Button onClick={() => handleTaskAction(task, action)} disabled={disabled} variant={variant}>
                       <Icon className="mr-2 h-4 w-4" />
@@ -305,5 +305,3 @@ export default function MarketplacePage() {
     </>
   );
 }
-
-    

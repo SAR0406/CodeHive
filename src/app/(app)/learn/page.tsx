@@ -31,7 +31,8 @@ import type { Mentor } from '@/lib/firebase/data/get-mentors';
 import type { LearningModule } from '@/lib/firebase/data/get-modules';
 import { spendCredits } from '@/lib/firebase/credits';
 import { useFirebase } from '@/lib/firebase/client-provider';
-import { onSnapshot, collection, query } from 'firebase/firestore';
+import { onMentorsUpdate } from '@/lib/firebase/data/get-mentors';
+import { onModulesUpdate } from '@/lib/firebase/data/get-modules';
 
 type ActionType = 'module' | 'session';
 type Item = LearningModule | Mentor;
@@ -52,26 +53,14 @@ export default function LearnPage() {
     if (!db) return;
 
     // Listen for mentors
-    const mentorsQuery = query(collection(db, 'mentors'));
-    const unsubscribeMentors = onSnapshot(mentorsQuery, (snapshot) => {
-      const fetchedMentors = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Mentor));
+    const unsubscribeMentors = onMentorsUpdate(db, (fetchedMentors) => {
       setMentors(fetchedMentors);
-      setIsLoadingMentors(false);
-    }, (error) => {
-      console.error(error);
-      toast({ title: 'Error', description: 'Could not load mentors.', variant: 'destructive' });
       setIsLoadingMentors(false);
     });
 
     // Listen for modules
-    const modulesQuery = query(collection(db, 'learning_modules'));
-    const unsubscribeModules = onSnapshot(modulesQuery, (snapshot) => {
-      const fetchedModules = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LearningModule));
+    const unsubscribeModules = onModulesUpdate(db, (fetchedModules) => {
       setModules(fetchedModules);
-      setIsLoadingModules(false);
-    }, (error) => {
-      console.error(error);
-      toast({ title: 'Error', description: 'Could not load learning modules.', variant: 'destructive' });
       setIsLoadingModules(false);
     });
 

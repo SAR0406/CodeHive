@@ -1,28 +1,33 @@
 
 'use client'
-import type { Firestore } from "firebase/firestore";
-import { collection, getDocs, query } from "firebase/firestore";
+import type { Database } from "firebase/database";
+import { ref, onValue } from "firebase/database";
 
 export interface Template {
-  id: string; // Firestore ID
+  id: string;
   title: string;
   description: string;
   cost: number;
 }
 
-export async function getTemplates(db: Firestore): Promise<Template[]> {
-    const templatesCollection = collection(db, 'templates');
-    const q = query(templatesCollection);
-    const querySnapshot = await getDocs(q);
+export function onTemplatesUpdate(db: Database, callback: (templates: Template[]) => void): () => void {
+    const templatesRef = ref(db, 'templates');
     
-    if (querySnapshot.empty) {
-        return [];
-    }
+    const unsubscribe = onValue(templatesRef, (snapshot) => {
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            const templatesArray = Object.keys(data).map(key => ({
+                id: key,
+                ...data[key]
+            }));
+            callback(templatesArray);
+        } else {
+            callback([]);
+        }
+    }, (error) => {
+        console.error("Error fetching templates:", error);
+        callback([]);
+    });
 
-    const templates = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-    } as Template));
-
-    return templates;
+    return unsubscribe;
 }

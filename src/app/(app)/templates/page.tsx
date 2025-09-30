@@ -30,7 +30,7 @@ import { Library, GitFork, Loader2 } from 'lucide-react';
 import type { Template } from '@/lib/firebase/data/get-templates';
 import { spendCredits } from '@/lib/firebase/credits';
 import { useFirebase } from '@/lib/firebase/client-provider';
-import { onSnapshot, collection, query } from 'firebase/firestore';
+import { onTemplatesUpdate } from '@/lib/firebase/data/get-templates';
 
 
 export default function TemplatesPage() {
@@ -45,14 +45,8 @@ export default function TemplatesPage() {
   useEffect(() => {
     if (!db) return;
     setIsLoadingTemplates(true);
-    const templatesQuery = query(collection(db, 'templates'));
-    const unsubscribe = onSnapshot(templatesQuery, (snapshot) => {
-      const fetchedTemplates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Template));
+    const unsubscribe = onTemplatesUpdate(db, (fetchedTemplates) => {
       setTemplates(fetchedTemplates);
-      setIsLoadingTemplates(false);
-    }, (error) => {
-      console.error(error);
-      toast({ title: 'Error', description: 'Could not load templates.', variant: 'destructive' });
       setIsLoadingTemplates(false);
     });
 

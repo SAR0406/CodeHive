@@ -1,29 +1,34 @@
 
 'use client'
 
-import type { Firestore } from "firebase/firestore";
-import { collection, getDocs, query } from "firebase/firestore";
+import type { Database } from "firebase/database";
+import { ref, onValue } from "firebase/database";
 
 export interface LearningModule {
-  id: string; // Firestore ID
+  id: string;
   title: string;
   description: string;
   cost: number;
 }
 
-export async function getModules(db: Firestore): Promise<LearningModule[]> {
-    const modulesCollection = collection(db, 'learning_modules');
-    const q = query(modulesCollection);
-    const querySnapshot = await getDocs(q);
+export function onModulesUpdate(db: Database, callback: (modules: LearningModule[]) => void): () => void {
+    const modulesRef = ref(db, 'learning_modules');
 
-    if (querySnapshot.empty) {
-        return [];
-    }
+    const unsubscribe = onValue(modulesRef, (snapshot) => {
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            const modulesArray = Object.keys(data).map(key => ({
+                id: key,
+                ...data[key]
+            }));
+            callback(modulesArray);
+        } else {
+            callback([]);
+        }
+    }, (error) => {
+        console.error("Error fetching learning modules:", error);
+        callback([]);
+    });
 
-    const modules = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-    } as LearningModule));
-
-    return modules;
+    return unsubscribe;
 }

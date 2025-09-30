@@ -2,22 +2,21 @@
 'use client'
 
 import type { FirebaseApp } from "firebase/app";
-import type { Firestore, Timestamp } from "firebase/firestore";
-import { collection, query, onSnapshot, orderBy, where } from "firebase/firestore";
+import type { Database } from "firebase/database";
+import { ref, onValue, query, orderByChild, equalTo } from "firebase/database";
 import { getFunctions, httpsCallable } from "firebase/functions";
 
-// Main Task interface aligned with Firestore screenshot
 export interface Task {
   id: string;
-  'Task title': string;
-  Description: string;
-  Tags: string[];
-  'Credit Reward': number;
+  task_title: string;
+  description: string;
+  tags: string[];
+  credit_reward: number;
   status: 'OPEN' | 'ASSIGNED' | 'COMPLETED' | 'PAID' | 'CANCELLED';
   created_by: string; // userId
   assigned_to?: string; // userId
-  created_at: Timestamp;
-  updated_at: Timestamp;
+  created_at: number; // timestamp
+  updated_at: number; // timestamp
 }
 
 // --- Types for callable functions ---
@@ -94,16 +93,17 @@ export async function approveTask(app: FirebaseApp, taskId: string): Promise<Fun
 
 // --- Real-time Read Operations ---
 
-export function onTasksUpdate(db: Firestore, callback: (tasks: Task[]) => void): () => void {
-    const tasksCollection = collection(db, 'Marketplace');
-    const q = query(tasksCollection, orderBy('created_at', 'desc'));
+const snapshotToarray = (snapshot: any) => {
+    const data = snapshot.val();
+    if (!data) return [];
+    return Object.keys(data).map(key => ({ id: key, ...data[key] })).reverse();
+}
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const fetchedTasks = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      } as Task));
-      callback(fetchedTasks);
+export function onTasksUpdate(db: Database, callback: (tasks: Task[]) => void): () => void {
+    const tasksRef = query(ref(db, 'marketplace'), orderByChild('created_at'));
+
+    const unsubscribe = onValue(tasksRef, (snapshot) => {
+        callback(snapshotToarray(snapshot));
     }, (error) => {
       console.error("Error fetching real-time tasks:", error);
       callback([]); // Send empty array on error
@@ -112,16 +112,11 @@ export function onTasksUpdate(db: Firestore, callback: (tasks: Task[]) => void):
     return unsubscribe;
 }
 
-export function onTasksUpdateForUser(db: Firestore, userId: string, callback: (tasks: Task[]) => void): () => void {
-    const tasksCollection = collection(db, 'Marketplace');
-    const q = query(tasksCollection, where('created_by', '==', userId), orderBy('created_at', 'desc'));
+export function onTasksUpdateForUser(db: Database, userId: string, callback: (tasks: Task[]) => void): () => void {
+    const tasksRef = query(ref(db, 'marketplace'), orderByChild('created_by'), equalTo(userId));
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const fetchedTasks = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-        } as Task));
-        callback(fetchedTasks);
+    const unsubscribe = onValue(tasksRef, (snapshot) => {
+        callback(snapshotToarray(snapshot));
     }, (error) => {
         console.error("Error fetching real-time user tasks:", error);
         callback([]);
@@ -129,5 +124,3 @@ export function onTasksUpdateForUser(db: Firestore, userId: string, callback: (t
 
     return unsubscribe;
 }
-
-    
