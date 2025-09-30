@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -109,27 +108,27 @@ export default function MarketplacePage() {
     };
 
     const formData = new FormData(e.currentTarget);
-    const title = formData.get('title') as string;
+    const task_title = formData.get('task_title') as string;
     const description = formData.get('description') as string;
-    const creditsRewardStr = formData.get('creditsReward') as string;
+    const creditRewardStr = formData.get('credit_reward') as string;
     const tagsStr = formData.get('tags') as string;
 
-    if (!title || !description || !creditsRewardStr) {
+    if (!task_title || !description || !creditRewardStr) {
       toast({ title: 'Missing Fields', description: 'Please fill out all required fields.', variant: 'destructive' });
       return;
     }
 
-    const credits_reward = parseInt(creditsRewardStr, 10);
+    const credit_reward = parseInt(creditRewardStr, 10);
     const tags = tagsStr ? tagsStr.split(',').map(tag => tag.trim().toLowerCase()).filter(Boolean) : [];
 
-    if (isNaN(credits_reward) || credits_reward <= 0) {
+    if (isNaN(credit_reward) || credit_reward <= 0) {
       toast({ title: 'Invalid Reward', description: 'Credit reward must be a positive number.', variant: 'destructive' });
       return;
     }
 
     setIsCreateLoading(true);
     try {
-        const result = await createTask(app, { title, description, credits_reward, tags });
+        const result = await createTask(app, { task_title, description, credit_reward, tags });
         toast({ title: 'Task Created!', description: result.message });
         setIsCreateDialogOpen(false);
     } catch (error: any) {
@@ -167,11 +166,11 @@ export default function MarketplacePage() {
     const { task, action } = selectedTask;
     switch (action) {
       case 'accept':
-        return { title: 'Accept Task', description: `Are you sure you want to accept the task "${task.title}"?` };
+        return { title: 'Accept Task', description: `Are you sure you want to accept the task "${task['Task title']}"?` };
       case 'complete':
-        return { title: 'Mark as Complete', description: `Are you ready to mark "${task.title}" as complete? This will notify the creator for approval.` };
+        return { title: 'Mark as Complete', description: `Are you ready to mark "${task['Task title']}" as complete? This will notify the creator for approval.` };
       case 'approve':
-        return { title: 'Approve & Release Credits', description: `Are you sure you want to approve this work? This will transfer ${task.credits_reward.toLocaleString()} credits to the assignee.` };
+        return { title: 'Approve & Release Credits', description: `Are you sure you want to approve this work? This will transfer ${task['Credit Reward'].toLocaleString()} credits to the assignee.` };
       default:
         return { title: 'Confirm Action', description: 'Are you sure you want to proceed?' };
     }
@@ -218,14 +217,14 @@ export default function MarketplacePage() {
                 <Card key={task.id} className="flex flex-col transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1">
                   <CardHeader>
                     <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg">{task.title}</CardTitle>
+                      <CardTitle className="text-lg">{task['Task title']}</CardTitle>
                       <Badge variant={task.status === 'OPEN' ? 'default' : 'secondary'}>{task.status}</Badge>
                     </div>
-                    <CardDescription className="line-clamp-3 pt-2">{task.description}</CardDescription>
+                    <CardDescription className="line-clamp-3 pt-2">{task.Description}</CardDescription>
                   </CardHeader>
                   <CardContent className="flex-grow">
                     <div className="flex flex-wrap gap-2">
-                      {task.tags.map((tag) => (
+                      {task.Tags.map((tag: string) => (
                         <Badge key={tag} variant="outline" className="capitalize">{tag}</Badge>
                       ))}
                     </div>
@@ -233,7 +232,7 @@ export default function MarketplacePage() {
                   <CardFooter className="flex justify-between items-center">
                     <div className="flex items-center gap-2 font-bold text-lg text-primary">
                       <Star className="w-5 h-5 fill-current" />
-                      <span>{task.credits_reward.toLocaleString()}</span>
+                      <span>{task['Credit Reward'].toLocaleString()}</span>
                     </div>
                     <Button onClick={() => handleTaskAction(task, action)} disabled={disabled} variant={variant}>
                       <Icon className="mr-2 h-4 w-4" />
@@ -278,8 +277,8 @@ export default function MarketplacePage() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Task Title</Label>
-                <Input id="title" name="title" placeholder="e.g., Design a new logo" required />
+                <Label htmlFor="task_title">Task Title</Label>
+                <Input id="task_title" name="task_title" placeholder="e.g., Design a new logo" required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
@@ -290,8 +289,8 @@ export default function MarketplacePage() {
                 <Input id="tags" name="tags" placeholder="e.g., react, ui, design" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="creditsReward">Credit Reward</Label>
-                <Input id="creditsReward" name="creditsReward" type="number" placeholder="e.g., 500" required min="1" />
+                <Label htmlFor="credit_reward">Credit Reward</Label>
+                <Input id="credit_reward" name="credit_reward" type="number" placeholder="e.g., 500" required min="1" />
               </div>
             </div>
             <DialogFooter>
@@ -306,3 +305,5 @@ export default function MarketplacePage() {
     </>
   );
 }
+
+    

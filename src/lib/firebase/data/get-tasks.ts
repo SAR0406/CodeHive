@@ -1,5 +1,4 @@
 
-
 'use client'
 
 import type { FirebaseApp } from "firebase/app";
@@ -7,13 +6,13 @@ import type { Firestore, Timestamp } from "firebase/firestore";
 import { collection, query, onSnapshot, orderBy, where } from "firebase/firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
 
-// Main Task interface
+// Main Task interface aligned with Firestore screenshot
 export interface Task {
   id: string;
-  title: string;
-  description: string;
-  tags: string[];
-  credits_reward: number;
+  'Task title': string;
+  Description: string;
+  Tags: string[];
+  'Credit Reward': number;
   status: 'OPEN' | 'ASSIGNED' | 'COMPLETED' | 'PAID' | 'CANCELLED';
   created_by: string; // userId
   assigned_to?: string; // userId
@@ -24,9 +23,9 @@ export interface Task {
 // --- Types for callable functions ---
 
 interface CreateTaskData {
-    title: string;
+    task_title: string;
     description: string;
-    credits_reward: number;
+    credit_reward: number;
     tags: string[];
 }
 
@@ -96,7 +95,7 @@ export async function approveTask(app: FirebaseApp, taskId: string): Promise<Fun
 // --- Real-time Read Operations ---
 
 export function onTasksUpdate(db: Firestore, callback: (tasks: Task[]) => void): () => void {
-    const tasksCollection = collection(db, 'marketplace');
+    const tasksCollection = collection(db, 'Marketplace');
     const q = query(tasksCollection, orderBy('created_at', 'desc'));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -114,7 +113,7 @@ export function onTasksUpdate(db: Firestore, callback: (tasks: Task[]) => void):
 }
 
 export function onTasksUpdateForUser(db: Firestore, userId: string, callback: (tasks: Task[]) => void): () => void {
-    const tasksCollection = collection(db, 'marketplace');
+    const tasksCollection = collection(db, 'Marketplace');
     const q = query(tasksCollection, where('created_by', '==', userId), orderBy('created_at', 'desc'));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -130,3 +129,5 @@ export function onTasksUpdateForUser(db: Firestore, userId: string, callback: (t
 
     return unsubscribe;
 }
+
+    

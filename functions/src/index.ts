@@ -52,7 +52,7 @@ export const seedDatabase = functions.https.onCall(async (_data, context) => {
         credit_packs: require("./seed/seed-credit-packs.json"),
         learning_modules: require("./seed/seed-learning-modules.json"),
         mentors: require("./seed/seed-mentors.json"),
-        marketplace: require("./seed/seed-marketplace.json"),
+        Marketplace: require("./seed/seed-marketplace.json"),
         templates: require("./seed/seed-templates.json"),
     };
 
@@ -63,7 +63,7 @@ export const seedDatabase = functions.https.onCall(async (_data, context) => {
             console.log(`Seeding ${collectionName}...`);
             data.forEach((item) => {
                 const docRef = ref.doc();
-                if (collectionName === 'marketplace') {
+                if (collectionName === 'Marketplace') {
                     item.created_by = ADMIN_UID;
                 }
                 batch.set(docRef, { ...item, created_at: admin.firestore.FieldValue.serverTimestamp() });
@@ -168,14 +168,14 @@ export const grantProAccess = functions.https.onCall(async (data, context) => {
  */
 export const createTask = functions.https.onCall(async (data, context) => {
   const uid = assertAuth(context);
-  const { title, description, credits_reward, tags } = data;
+  const { task_title, description, credit_reward, tags } = data;
 
-  if (!title || !description || typeof credits_reward !== "number" || credits_reward <= 0) {
+  if (!task_title || !description || typeof credit_reward !== "number" || credit_reward <= 0) {
       throw new functions.https.HttpsError("invalid-argument", "Please provide a valid title, description, and credit reward.");
   }
 
   const profileRef = db.collection("profiles").doc(uid);
-  const tasksRef = db.collection("marketplace");
+  const tasksRef = db.collection("Marketplace");
 
   try {
     await db.runTransaction(async (txn) => {
@@ -185,18 +185,18 @@ export const createTask = functions.https.onCall(async (data, context) => {
         }
 
         const currentCredits = profileDoc.data()?.credits ?? 0;
-        if (currentCredits < credits_reward) {
+        if (currentCredits < credit_reward) {
             throw new functions.https.HttpsError("failed-precondition", "Insufficient credits to create this task.");
         }
 
-        const newBalance = currentCredits - credits_reward;
+        const newBalance = currentCredits - credit_reward;
         txn.update(profileRef, { credits: newBalance });
 
         const userTransactionsRef = profileRef.collection('transactions').doc();
         txn.set(userTransactionsRef, {
             type: 'spend',
-            amount: credits_reward,
-            description: `Escrow for task: ${title}`,
+            amount: credit_reward,
+            description: `Escrow for task: ${task_title}`,
             created_at: admin.firestore.FieldValue.serverTimestamp(),
             balance_after: newBalance,
             meta: { escrow: true }
@@ -204,10 +204,10 @@ export const createTask = functions.https.onCall(async (data, context) => {
 
         const newTaskRef = tasksRef.doc();
         txn.set(newTaskRef, {
-            title,
-            description,
-            credits_reward,
-            tags: tags || [],
+            'Task title': task_title,
+            Description: description,
+            'Credit Reward': credit_reward,
+            Tags: tags || [],
             created_by: uid,
             status: 'OPEN',
             created_at: admin.firestore.FieldValue.serverTimestamp(),
@@ -230,7 +230,7 @@ export const acceptTask = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError("invalid-argument", "Task ID is required.");
   }
 
-  const taskRef = db.collection('marketplace').doc(taskId);
+  const taskRef = db.collection('Marketplace').doc(taskId);
 
   try {
     await db.runTransaction(async (transaction) => {
@@ -266,7 +266,7 @@ export const completeTask = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError("invalid-argument", "Task ID is required.");
   }
 
-  const taskRef = db.collection('marketplace').doc(taskId);
+  const taskRef = db.collection('Marketplace').doc(taskId);
 
   try {
     const taskDoc = await taskRef.get();
@@ -303,7 +303,7 @@ export const approveTask = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError("invalid-argument", "Missing a valid taskId.");
     }
 
-    const taskRef = db.collection('marketplace').doc(taskId);
+    const taskRef = db.collection('Marketplace').doc(taskId);
 
     try {
         await db.runTransaction(async (transaction) => {
@@ -326,7 +326,7 @@ export const approveTask = functions.https.onCall(async (data, context) => {
             }
 
             const assigneeId = taskData.assigned_to;
-            const amount = taskData.credits_reward;
+            const amount = taskData['Credit Reward'];
             const assigneeProfileRef = db.collection('profiles').doc(assigneeId);
             const assigneeDoc = await transaction.get(assigneeProfileRef);
 
@@ -343,7 +343,7 @@ export const approveTask = functions.https.onCall(async (data, context) => {
                     transaction.set(creatorTransactionRef, {
                         type: 'earn',
                         amount: amount,
-                        description: `Refund for task: ${taskData.title} (assignee not found)`,
+                        description: `Refund for task: ${taskData['Task title']} (assignee not found)`,
                         created_at: admin.firestore.FieldValue.serverTimestamp(),
                         balance_after: newCreatorBalance,
                     });
@@ -360,7 +360,7 @@ export const approveTask = functions.https.onCall(async (data, context) => {
             transaction.set(assigneeTransactionRef, {
                 type: 'earn',
                 amount: amount,
-                description: `Reward for task: ${taskData.title}`,
+                description: `Reward for task: ${taskData['Task title']}`,
                 created_at: admin.firestore.FieldValue.serverTimestamp(),
                 balance_after: newAssigneeBalance,
                 meta: { taskId: taskId }
@@ -409,3 +409,5 @@ export const updateUserProfile = functions.https.onCall(async (data, context) =>
         return { success: false, message: "Error updating user profile." };
     }
 });
+
+    
