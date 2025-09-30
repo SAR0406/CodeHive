@@ -102,7 +102,10 @@ export default function MarketplacePage() {
   
   const handleCreateTask = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user || !app) return;
+    if (!user || !app) {
+        toast({ title: 'Not Authenticated', description: 'Please log in to create a task.', variant: 'destructive' });
+        return;
+    };
 
     const formData = new FormData(e.currentTarget);
     const title = formData.get('title') as string;

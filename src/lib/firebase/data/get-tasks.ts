@@ -5,6 +5,7 @@ import type { FirebaseApp } from "firebase/app";
 import type { Firestore, Timestamp } from "firebase/firestore";
 import { collection, query, onSnapshot, orderBy, where } from "firebase/firestore";
 import { getFunctions, httpsCallable, type HttpsCallable } from "firebase/functions";
+import { useFirebase } from '../client-provider';
 
 // Main Task interface
 export interface Task {
@@ -38,25 +39,21 @@ interface FunctionResult {
     message: string;
 }
 
-// --- Callable Function References ---
+// --- Callable Function Setup ---
 
-const getCallable = <RequestData, ResponseData>(functionName: string): HttpsCallable<RequestData, ResponseData> => {
-  const functions = getFunctions();
+// This helper is now internal to this module
+const getCallable = <RequestData, ResponseData>(app: FirebaseApp, functionName: string) => {
+  const functions = getFunctions(app);
   return httpsCallable<RequestData, ResponseData>(functions, functionName);
 };
-
-const createTaskFn = getCallable<CreateTaskData, FunctionResult>('createTask');
-const acceptTaskFn = getCallable<TaskActionData, FunctionResult>('acceptTask');
-const completeTaskFn = getCallable<TaskActionData, FunctionResult>('completeTask');
-const approveTaskFn = getCallable<TaskActionData, FunctionResult>('approveTask');
-
 
 // --- Write Operations (using httpsCallable) ---
 
 export async function createTask(app: FirebaseApp, taskData: CreateTaskData): Promise<FunctionResult> {
+    const createTaskFn = getCallable<CreateTaskData, FunctionResult>(app, 'createTask');
     try {
         const result = await createTaskFn(taskData);
-        return result.data;
+        return result.data as FunctionResult;
     } catch (error: any) {
         console.error("Error calling createTask:", error);
         throw new Error(error.message || 'Failed to create task.');
@@ -64,9 +61,10 @@ export async function createTask(app: FirebaseApp, taskData: CreateTaskData): Pr
 }
 
 export async function acceptTask(app: FirebaseApp, taskId: string): Promise<FunctionResult> {
+    const acceptTaskFn = getCallable<TaskActionData, FunctionResult>(app, 'acceptTask');
     try {
         const result = await acceptTaskFn({ taskId });
-        return result.data;
+        return result.data as FunctionResult;
     } catch (error: any) {
         console.error("Error calling acceptTask:", error);
         throw new Error(error.message || 'Failed to accept task.');
@@ -74,9 +72,10 @@ export async function acceptTask(app: FirebaseApp, taskId: string): Promise<Func
 }
 
 export async function completeTask(app: FirebaseApp, taskId: string): Promise<FunctionResult> {
+    const completeTaskFn = getCallable<TaskActionData, FunctionResult>(app, 'completeTask');
     try {
         const result = await completeTaskFn({ taskId });
-        return result.data;
+        return result.data as FunctionResult;
     } catch (error: any) {
         console.error("Error calling completeTask:", error);
         throw new Error(error.message || 'Failed to complete task.');
@@ -84,9 +83,10 @@ export async function completeTask(app: FirebaseApp, taskId: string): Promise<Fu
 }
 
 export async function approveTask(app: FirebaseApp, taskId: string): Promise<FunctionResult> {
+    const approveTaskFn = getCallable<TaskActionData, FunctionResult>(app, 'approveTask');
     try {
         const result = await approveTaskFn({ taskId });
-        return result.data;
+        return result.data as FunctionResult;
     } catch (error: any) {
         console.error("Error calling approveTask:", error);
         throw new Error(error.message || 'Failed to approve task.');
