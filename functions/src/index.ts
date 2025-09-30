@@ -100,7 +100,7 @@ export const spendCredits = functions.https.onCall(async (data, context) => {
         await db.runTransaction(async (transaction) => {
             const profileDoc = await transaction.get(profileRef);
             if (!profileDoc.exists) {
-                throw new functions.httpsHttpsError("not-found", "User profile not found.");
+                throw new functions.https.HttpsError("not-found", "User profile not found.");
             }
             const currentCredits = profileDoc.data()?.credits ?? 0;
             if (currentCredits < amount) {
@@ -176,7 +176,7 @@ export const createTask = functions.https.onCall(async (data, context) => {
   
   try {
     const profileDoc = await profileRef.get();
-    if (!profileDoc.exists()) {
+    if (!profileDoc.exists) {
         throw new functions.https.HttpsError("not-found", "User profile not found.");
     }
     const currentCredits = profileDoc.data()?.credits ?? 0;
