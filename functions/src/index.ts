@@ -96,6 +96,8 @@ export const spendCredits = functions.https.onCall(async (data, context) => {
     }
 
     const profileRef = db.collection('profiles').doc(uid);
+    const txRef = db.collection('transactions').doc(uid).collection('history').doc();
+
     try {
         await db.runTransaction(async (transaction) => {
             const profileDoc = await transaction.get(profileRef);
@@ -108,9 +110,8 @@ export const spendCredits = functions.https.onCall(async (data, context) => {
             }
             const newBalance = currentCredits - amount;
             transaction.update(profileRef, { credits: newBalance });
-
-            const userTransactionsRef = db.collection('transactions').doc(uid).collection('history').doc();
-            transaction.set(userTransactionsRef, {
+            
+            transaction.set(txRef, {
                 type: 'spend',
                 amount: amount,
                 description: description || 'Spent credits',
@@ -130,20 +131,20 @@ export const spendCredits = functions.https.onCall(async (data, context) => {
 export const grantProAccess = functions.https.onCall(async (data, context) => {
     const uid = assertAuth(context);
     const profileRef = db.collection('profiles').doc(uid);
+    const txRef = db.collection('transactions').doc(uid).collection('history').doc();
     const proCredits = 5000;
 
     try {
         await db.runTransaction(async (transaction) => {
             const profileDoc = await transaction.get(profileRef);
-            if (!profileDoc.exists) {
+            if (!profileDoc.exists()) {
                 throw new functions.https.HttpsError("not-found", "User profile not found.");
             }
             const currentBalance = profileDoc.data()?.credits || 0;
             const newBalance = currentBalance + proCredits;
             transaction.update(profileRef, { credits: newBalance });
 
-            const userTransactionsRef = db.collection('transactions').doc(uid).collection('history').doc();
-            transaction.set(userTransactionsRef, {
+            transaction.set(txRef, {
                 type: 'earn',
                 amount: proCredits,
                 description: 'Upgraded to Pro Plan',
@@ -174,6 +175,7 @@ export const createTask = functions.https.onCall(async (data, context) => {
 
   const creatorProfileRef = db.collection('profiles').doc(uid);
   const marketplaceRef = db.collection('marketplace').doc();
+  const txRef = db.collection('transactions').doc(uid).collection('history').doc();
 
   try {
     await db.runTransaction(async (transaction) => {
@@ -192,7 +194,6 @@ export const createTask = functions.https.onCall(async (data, context) => {
         transaction.update(creatorProfileRef, { credits: newBalance });
 
         // Create transaction record
-        const txRef = db.collection('transactions').doc(uid).collection('history').doc();
         transaction.set(txRef, {
             type: 'spend',
             amount: credit_reward,
@@ -337,11 +338,15 @@ export const approveTask = functions.https.onCall(async (data, context) => {
             const assigneeId = taskData.assigned_to;
             const amount = taskData.credit_reward;
             const assigneeProfileRef = db.collection('profiles').doc(assigneeId);
-            const assigneeDoc = await transaction.get(assigneeProfileRef);
+            const creatorProfileRef = db.collection('profiles').doc(creatorId);
+
+            const [assigneeDoc, creatorDoc] = await Promise.all([
+                transaction.get(assigneeProfileRef),
+                transaction.get(creatorProfileRef)
+            ]);
 
             if (!assigneeDoc.exists) {
                 // If assignee doesn't exist, refund the creator
-                const creatorProfileRef = db.collection('profiles').doc(creatorId);
                 transaction.update(creatorProfileRef, { credits: admin.firestore.FieldValue.increment(amount) });
                 transaction.update(taskRef, { 
                     status: 'CANCELLED',
@@ -428,5 +433,7 @@ export const updateUserProfile = functions.https.onCall(async (data, context) =>
         return { success: false, message: "Error updating user profile." };
     }
 });
+
+    
 
     
