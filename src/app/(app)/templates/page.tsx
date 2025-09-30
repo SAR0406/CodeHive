@@ -84,6 +84,8 @@ export default function TemplatesPage() {
       setSelectedTemplate(null);
     }
   };
+  
+  const templatePlaceholders = PlaceHolderImages.filter(p => p.id.startsWith('template-'));
 
   return (
     <>
@@ -110,8 +112,8 @@ export default function TemplatesPage() {
                 </Card>
             ))
           ) : (
-            templates.map((template) => {
-              const placeholder = PlaceHolderImages.find((p) => p.id === `template-${template.id.toString()}`);
+            templates.map((template, idx) => {
+              const placeholder = templatePlaceholders[idx % templatePlaceholders.length];
               return (
                 <Card key={template.id} className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:shadow-accent/10 hover:-translate-y-1">
                   {placeholder && (

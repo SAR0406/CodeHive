@@ -1,8 +1,8 @@
 
 'use client'
 
-import type { Database } from "firebase/database";
-import { ref, onValue } from "firebase/database";
+import type { Firestore } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 
 export interface Mentor {
   id: string;
@@ -12,16 +12,15 @@ export interface Mentor {
   cost: number;
 }
 
-export function onMentorsUpdate(db: Database, callback: (mentors: Mentor[]) => void): () => void {
-    const mentorsRef = ref(db, 'mentors');
+export function onMentorsUpdate(db: Firestore, callback: (mentors: Mentor[]) => void): () => void {
+    const mentorsRef = collection(db, 'mentors');
 
-    const unsubscribe = onValue(mentorsRef, (snapshot) => {
-        if (snapshot.exists()) {
-            const data = snapshot.val();
-            const mentorsArray = Object.keys(data).map(key => ({
-                id: key,
-                ...data[key]
-            }));
+    const unsubscribe = onSnapshot(mentorsRef, (snapshot) => {
+        if (!snapshot.empty) {
+            const mentorsArray = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as Mentor));
             callback(mentorsArray);
         } else {
             callback([]);

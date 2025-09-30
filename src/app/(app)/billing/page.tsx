@@ -73,6 +73,11 @@ export default function BillingPage() {
         setLoadingPack(null);
     }, 2000);
   }
+  
+  const toDate = (timestamp: { seconds: number, nanoseconds: number }) => {
+    if (!timestamp) return new Date();
+    return new Date(timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000);
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -172,7 +177,7 @@ export default function BillingPage() {
                            {tx.type === 'spend' ? <TrendingDown className="size-5 text-destructive" /> : <TrendingUp className="size-5 text-green-500" />}
                            <div>
                             <p className="font-medium line-clamp-1">{tx.description}</p>
-                            <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}</p>
+                            <p className="text-xs text-muted-foreground">{formatDistanceToNow(toDate(tx.created_at), { addSuffix: true })}</p>
                            </div>
                         </div>
                         <div className={`font-semibold ${tx.type === 'spend' ? 'text-destructive' : 'text-green-500'}`}>

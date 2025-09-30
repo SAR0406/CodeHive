@@ -1,7 +1,7 @@
 
 'use client'
-import type { Database } from "firebase/database";
-import { ref, onValue } from "firebase/database";
+import type { Firestore } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 
 export interface Template {
   id: string;
@@ -10,16 +10,15 @@ export interface Template {
   cost: number;
 }
 
-export function onTemplatesUpdate(db: Database, callback: (templates: Template[]) => void): () => void {
-    const templatesRef = ref(db, 'templates');
+export function onTemplatesUpdate(db: Firestore, callback: (templates: Template[]) => void): () => void {
+    const templatesRef = collection(db, 'templates');
     
-    const unsubscribe = onValue(templatesRef, (snapshot) => {
-        if (snapshot.exists()) {
-            const data = snapshot.val();
-            const templatesArray = Object.keys(data).map(key => ({
-                id: key,
-                ...data[key]
-            }));
+    const unsubscribe = onSnapshot(templatesRef, (snapshot) => {
+        if (!snapshot.empty) {
+            const templatesArray = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as Template));
             callback(templatesArray);
         } else {
             callback([]);

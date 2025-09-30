@@ -107,6 +107,8 @@ export default function LearnPage() {
       setSelectedItem(null);
     }
   };
+  
+  const mentorPlaceholders = PlaceHolderImages.filter(p => p.id.startsWith('mentor-'));
 
   return (
     <>
@@ -127,8 +129,8 @@ export default function LearnPage() {
                 <Card key={i}><CardContent className="p-6 h-64 flex items-center justify-center"><Loader2 className="animate-spin text-muted-foreground" /></CardContent></Card>
               ))
             ) : (
-              mentors.map((mentor) => {
-                const placeholder = PlaceHolderImages.find((p) => p.id === `mentor-${mentor.id.toString()}`);
+              mentors.map((mentor, idx) => {
+                const placeholder = mentorPlaceholders[idx % mentorPlaceholders.length];
                 return (
                   <Card key={mentor.id} className="text-center transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 flex flex-col">
                     <CardContent className="pt-6 flex flex-col items-center gap-4 flex-grow">

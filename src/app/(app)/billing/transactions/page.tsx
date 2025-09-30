@@ -42,6 +42,11 @@ export default function TransactionsPage() {
     return () => unsubscribe();
   }, [user, db]);
 
+  const toDate = (timestamp: { seconds: number, nanoseconds: number }) => {
+    if (!timestamp) return new Date();
+    return new Date(timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000);
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -79,7 +84,7 @@ export default function TransactionsPage() {
                 transactions.map((tx) => (
                   <TableRow key={tx.id}>
                     <TableCell className="font-medium">{tx.description}</TableCell>
-                    <TableCell>{format(new Date(tx.created_at), 'PPp')}</TableCell>
+                    <TableCell>{format(toDate(tx.created_at), 'PPp')}</TableCell>
                     <TableCell className="text-center">
                       <Badge variant={tx.type === 'spend' ? 'destructive' : 'secondary'} className="capitalize gap-1">
                         {tx.type === 'spend' ? 
@@ -93,7 +98,7 @@ export default function TransactionsPage() {
                       {tx.type === 'spend' ? '-' : '+'}
                       {tx.amount.toLocaleString()}
                     </TableCell>
-                     <TableCell className="text-right">{tx.balance_after.toLocaleString()}</TableCell>
+                     <TableCell className="text-right">{tx.balance_after?.toLocaleString() ?? 'N/A'}</TableCell>
                   </TableRow>
                 ))
               ) : (

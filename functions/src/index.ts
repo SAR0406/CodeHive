@@ -4,7 +4,7 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
 admin.initializeApp();
-const rtdb = admin.database();
+const db = admin.firestore();
 
 /**
  * ------------------------
@@ -41,13 +41,12 @@ export const seedDatabase = functions.https.onCall(async (_data, context) => {
         throw new functions.https.HttpsError("permission-denied", "You are not authorized to perform this action.");
     }
     
-    const seedMetaRef = rtdb.ref("internal/seedStatus");
-    const seedMetaDoc = await seedMetaRef.once("value");
-    if (seedMetaDoc.exists() && seedMetaDoc.val()?.completed) {
+    const seedMetaDoc = await db.collection("internal").doc("seedStatus").get();
+    if (seedMetaDoc.exists && seedMetaDoc.data()?.completed) {
       return { success: true, message: "Database has already been seeded." };
     }
 
-    const updates: Record<string, any> = {};
+    const batch = db.batch();
     const collections: Record<string, any[]> = {
         credit_packs: require("./seed/seed-credit-packs.json"),
         learning_modules: require("./seed/seed-learning-modules.json"),
@@ -57,23 +56,23 @@ export const seedDatabase = functions.https.onCall(async (_data, context) => {
     };
 
     for (const [collectionName, data] of Object.entries(collections)) {
-        const ref = rtdb.ref(collectionName);
-        const snapshot = await ref.limitToFirst(1).once("value");
-        if (!snapshot.exists()) {
+        const collectionRef = db.collection(collectionName);
+        const snapshot = await collectionRef.limit(1).get();
+        if (snapshot.empty) {
             console.log(`Seeding ${collectionName}...`);
             data.forEach((item) => {
-                const docRef = ref.push();
-                const newItem = { ...item, id: docRef.key, created_at: admin.database.ServerValue.TIMESTAMP };
-                 if (collectionName === 'marketplace') {
+                const docRef = collectionRef.doc();
+                const newItem = { ...item, id: docRef.id, created_at: admin.firestore.FieldValue.serverTimestamp() };
+                if (collectionName === 'marketplace') {
                     newItem.created_by = ADMIN_UID;
                 }
-                updates[`${collectionName}/${docRef.key}`] = newItem;
+                batch.set(docRef, newItem);
             });
         }
     }
 
-    updates["internal/seedStatus"] = { completed: true, seeded_at: admin.database.ServerValue.TIMESTAMP };
-    await rtdb.ref().update(updates);
+    batch.set(db.collection("internal").doc("seedStatus"), { completed: true, seeded_at: admin.firestore.FieldValue.serverTimestamp() });
+    await batch.commit();
 
     return { success: true, message: "Database seeded successfully." };
 
@@ -96,30 +95,31 @@ export const spendCredits = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError("invalid-argument", "Amount must be a positive number.");
     }
 
-    const profileRef = rtdb.ref(`profiles/${uid}`);
+    const profileRef = db.collection('profiles').doc(uid);
     try {
-        await profileRef.transaction((profile) => {
-            if (profile) {
-                const currentCredits = profile.credits ?? 0;
-                if (currentCredits < amount) {
-                    // Not enough credits, abort transaction
-                    return; 
-                }
-                const newBalance = currentCredits - amount;
-                profile.credits = newBalance;
-
-                // Record transaction
-                const userTransactionsRef = rtdb.ref(`transactions/${uid}`).push();
-                userTransactionsRef.set({
-                    type: 'spend',
-                    amount: amount,
-                    description: description || 'Spent credits',
-                    created_at: admin.database.ServerValue.TIMESTAMP,
-                    balance_after: newBalance,
-                });
-                return profile;
+        const newBalance = await db.runTransaction(async (transaction) => {
+            const profileDoc = await transaction.get(profileRef);
+            if (!profileDoc.exists) {
+                throw new functions.https.HttpsError("not-found", "User profile not found.");
             }
+            const currentCredits = profileDoc.data()?.credits ?? 0;
+            if (currentCredits < amount) {
+                throw new functions.https.HttpsError("failed-precondition", "Insufficient credits.");
+            }
+            const newBalance = currentCredits - amount;
+            transaction.update(profileRef, { credits: newBalance });
+
+            const userTransactionsRef = db.collection('transactions').doc(uid).collection('history').doc();
+            transaction.set(userTransactionsRef, {
+                type: 'spend',
+                amount: amount,
+                description: description || 'Spent credits',
+                created_at: admin.firestore.FieldValue.serverTimestamp(),
+                balance_after: newBalance,
+            });
+            return newBalance;
         });
+
         return { success: true, message: "Credits deducted successfully." };
     } catch (e) {
         handleError(e, "Error spending credits.");
@@ -130,27 +130,29 @@ export const spendCredits = functions.https.onCall(async (data, context) => {
 
 export const grantProAccess = functions.https.onCall(async (data, context) => {
     const uid = assertAuth(context);
-    const profileRef = rtdb.ref(`profiles/${uid}`);
+    const profileRef = db.collection('profiles').doc(uid);
     const proCredits = 5000;
 
     try {
-      await profileRef.transaction((profile) => {
-        if (profile) {
-            const currentBalance = profile.credits || 0;
+        const newBalance = await db.runTransaction(async (transaction) => {
+            const profileDoc = await transaction.get(profileRef);
+            if (!profileDoc.exists) {
+                throw new functions.https.HttpsError("not-found", "User profile not found.");
+            }
+            const currentBalance = profileDoc.data()?.credits || 0;
             const newBalance = currentBalance + proCredits;
-            profile.credits = newBalance;
+            transaction.update(profileRef, { credits: newBalance });
 
-            const userTransactionsRef = rtdb.ref(`transactions/${uid}`).push();
-            userTransactionsRef.set({
+            const userTransactionsRef = db.collection('transactions').doc(uid).collection('history').doc();
+            transaction.set(userTransactionsRef, {
                 type: 'earn',
                 amount: proCredits,
                 description: 'Upgraded to Pro Plan',
-                created_at: admin.database.ServerValue.TIMESTAMP,
+                created_at: admin.firestore.FieldValue.serverTimestamp(),
                 balance_after: newBalance,
             });
-            return profile;
-        }
-      });
+            return newBalance;
+        });
 
       return { success: true, message: `Pro access granted. ${proCredits} credits added.` };
     } catch (e) {
@@ -172,49 +174,46 @@ export const createTask = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError("invalid-argument", "Please provide a valid title, description, and credit reward.");
   }
 
-  const profileRef = rtdb.ref(`profiles/${uid}`);
+  const profileRef = db.collection('profiles').doc(uid);
+  const marketplaceRef = db.collection('marketplace');
   
   try {
-    const profileSnap = await profileRef.once('value');
-    if (!profileSnap.exists()) {
-         throw new functions.https.HttpsError("not-found", "User profile not found.");
-    }
-    const currentCredits = profileSnap.val().credits ?? 0;
-    if (currentCredits < credit_reward) {
-        throw new functions.https.HttpsError("failed-precondition", "Insufficient credits to create this task.");
-    }
+    await db.runTransaction(async (transaction) => {
+        const profileDoc = await transaction.get(profileRef);
+        if (!profileDoc.exists()) {
+            throw new functions.https.HttpsError("not-found", "User profile not found.");
+        }
+        const currentCredits = profileDoc.data()?.credits ?? 0;
+        if (currentCredits < credit_reward) {
+            throw new functions.https.HttpsError("failed-precondition", "Insufficient credits to create this task.");
+        }
 
-    const newBalance = currentCredits - credit_reward;
-    const newTaskRef = rtdb.ref('marketplace').push();
-    const newTaskId = newTaskRef.key;
+        const newBalance = currentCredits - credit_reward;
+        transaction.update(profileRef, { credits: newBalance });
 
-    const updates: Record<string, any> = {};
-    // 1. Update profile credits
-    updates[`/profiles/${uid}/credits`] = newBalance;
-    // 2. Add transaction log
-    const txRef = rtdb.ref(`transactions/${uid}`).push();
-    updates[`/transactions/${uid}/${txRef.key}`] = {
-        type: 'spend',
-        amount: credit_reward,
-        description: `Escrow for task: ${task_title}`,
-        created_at: admin.database.ServerValue.TIMESTAMP,
-        balance_after: newBalance,
-        meta: { escrow: true, taskId: newTaskId }
-    };
-    // 3. Create task
-    updates[`/marketplace/${newTaskId}`] = {
-        id: newTaskId,
-        task_title: task_title,
-        description: description,
-        credit_reward: credit_reward,
-        tags: tags || [],
-        created_by: uid,
-        status: 'OPEN',
-        created_at: admin.database.ServerValue.TIMESTAMP,
-        updated_at: admin.database.ServerValue.TIMESTAMP,
-    };
-    
-    await rtdb.ref().update(updates);
+        const newTaskRef = marketplaceRef.doc();
+        transaction.set(newTaskRef, {
+            id: newTaskRef.id,
+            task_title,
+            description,
+            credit_reward,
+            tags: tags || [],
+            created_by: uid,
+            status: 'OPEN',
+            created_at: admin.firestore.FieldValue.serverTimestamp(),
+            updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        
+        const txRef = db.collection('transactions').doc(uid).collection('history').doc();
+        transaction.set(txRef, {
+            type: 'spend',
+            amount: credit_reward,
+            description: `Escrow for task: ${task_title}`,
+            created_at: admin.firestore.FieldValue.serverTimestamp(),
+            balance_after: newBalance,
+            meta: { escrow: true, taskId: newTaskRef.id }
+        });
+    });
 
     return { success: true, message: 'Task created and credits escrowed.' };
   } catch (e) {
@@ -232,31 +231,27 @@ export const acceptTask = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError("invalid-argument", "Task ID is required.");
   }
 
-  const taskRef = rtdb.ref(`marketplace/${taskId}`);
+  const taskRef = db.collection('marketplace').doc(taskId);
 
   try {
-    const result = await taskRef.transaction(task => {
-        if (task) {
-             if (!task) {
-                throw new functions.https.HttpsError("not-found", "Task not found.");
-            }
-            if (task.status !== 'OPEN') {
-                throw new functions.https.HttpsError("failed-precondition", "This task is not open for assignment.");
-            }
-            if (task.created_by === uid) {
-                throw new functions.https.HttpsError("failed-precondition", "You cannot accept your own task.");
-            }
-            task.assigned_to = uid;
-            task.status = 'ASSIGNED';
-            task.updated_at = admin.database.ServerValue.TIMESTAMP;
-            return task;
+    await db.runTransaction(async (transaction) => {
+        const taskDoc = await transaction.get(taskRef);
+        if (!taskDoc.exists) {
+            throw new functions.https.HttpsError("not-found", "Task not found.");
         }
-        return task;
+        const taskData = taskDoc.data();
+        if (taskData?.status !== 'OPEN') {
+            throw new functions.https.HttpsError("failed-precondition", "This task is not open for assignment.");
+        }
+        if (taskData?.created_by === uid) {
+            throw new functions.https.HttpsError("failed-precondition", "You cannot accept your own task.");
+        }
+        transaction.update(taskRef, {
+            assigned_to: uid,
+            status: 'ASSIGNED',
+            updated_at: admin.firestore.FieldValue.serverTimestamp()
+        });
     });
-
-    if (!result.committed) {
-         throw new functions.https.HttpsError("aborted", "Could not accept task, it may have been modified.");
-    }
     
     return { success: true, message: 'Task assigned to you.' };
   } catch (e) {
@@ -273,26 +268,23 @@ export const completeTask = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError("invalid-argument", "Task ID is required.");
   }
 
-  const taskRef = rtdb.ref(`marketplace/${taskId}`);
+  const taskRef = db.collection('marketplace').doc(taskId);
 
   try {
-    const taskDoc = await taskRef.once("value");
-
-    if (!taskDoc.exists()) {
+    const taskDoc = await taskRef.get();
+    if (!taskDoc.exists) {
         throw new functions.https.HttpsError("not-found", "Task not found.");
     }
-
-    const taskData = taskDoc.val();
-    if (taskData.assigned_to !== uid) {
+    const taskData = taskDoc.data();
+    if (taskData?.assigned_to !== uid) {
         throw new functions.https.HttpsError("permission-denied", "You are not the assignee for this task.");
     }
-    if (taskData.status !== 'ASSIGNED') {
+    if (taskData?.status !== 'ASSIGNED') {
         throw new functions.https.HttpsError("failed-precondition", "This task is not in an 'ASSIGNED' state.");
     }
-
     await taskRef.update({
         status: 'COMPLETED',
-        updated_at: admin.database.ServerValue.TIMESTAMP,
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
     });
 
     return { success: true, message: 'Task marked as complete.' };
@@ -310,82 +302,72 @@ export const approveTask = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError("invalid-argument", "Missing a valid taskId.");
     }
 
-    const taskRef = rtdb.ref(`marketplace/${taskId}`);
+    const taskRef = db.collection('marketplace').doc(taskId);
 
     try {
-       const taskSnap = await taskRef.once('value');
-       const taskData = taskSnap.val();
+        await db.runTransaction(async (transaction) => {
+            const taskDoc = await transaction.get(taskRef);
+            const taskData = taskDoc.data();
 
-        if (!taskData) {
-            throw new functions.https.HttpsError("not-found", "Task not found.");
-        }
-        if (taskData.created_by !== creatorId) {
-            throw new functions.https.HttpsError("permission-denied", "Only the task creator can approve payment.");
-        }
-        if (taskData.status === 'PAID') {
-            throw new functions.https.HttpsError("failed-precondition", "This task has already been paid out.");
-        }
-        if (taskData.status !== 'COMPLETED') {
-            throw new functions.https.HttpsError("failed-precondition", "Task is not completed yet.");
-        }
-        if (!taskData.assigned_to) {
-            throw new functions.https.HttpsError("failed-precondition", "Task has no assignee to pay.");
-        }
+            if (!taskData) {
+                throw new functions.https.HttpsError("not-found", "Task not found.");
+            }
+            if (taskData.created_by !== creatorId) {
+                throw new functions.https.HttpsError("permission-denied", "Only the task creator can approve payment.");
+            }
+            if (taskData.status === 'PAID') {
+                throw new functions.https.HttpsError("failed-precondition", "This task has already been paid out.");
+            }
+            if (taskData.status !== 'COMPLETED') {
+                throw new functions.https.HttpsError("failed-precondition", "Task is not completed yet.");
+            }
+            if (!taskData.assigned_to) {
+                throw new functions.https.HttpsError("failed-precondition", "Task has no assignee to pay.");
+            }
 
-        const assigneeId = taskData.assigned_to;
-        const amount = taskData.credit_reward;
-        const assigneeProfileRef = rtdb.ref(`profiles/${assigneeId}`);
-        const assigneeSnap = await assigneeProfileRef.once('value');
+            const assigneeId = taskData.assigned_to;
+            const amount = taskData.credit_reward;
+            const assigneeProfileRef = db.collection('profiles').doc(assigneeId);
+            const assigneeDoc = await transaction.get(assigneeProfileRef);
 
-        const updates: Record<string, any> = {};
-
-        if (!assigneeSnap.exists()) {
-            // Refund the creator
-            const creatorProfileRef = rtdb.ref(`profiles/${creatorId}`);
-            const creatorSnap = await creatorProfileRef.once('value');
-            if (creatorSnap.exists()) {
-                const creatorBalance = creatorSnap.val().credits || 0;
-                const newCreatorBalance = creatorBalance + amount;
+            if (!assigneeDoc.exists) {
+                const creatorProfileRef = db.collection('profiles').doc(creatorId);
+                transaction.update(creatorProfileRef, { credits: admin.firestore.FieldValue.increment(amount) });
+                transaction.update(taskRef, { 
+                    status: 'CANCELLED',
+                    notes: 'Assignee profile not found.',
+                    updated_at: admin.firestore.FieldValue.serverTimestamp()
+                });
                 
-                updates[`/profiles/${creatorId}/credits`] = newCreatorBalance;
-                
-                const creatorTxRef = rtdb.ref(`transactions/${creatorId}`).push();
-                updates[`/transactions/${creatorId}/${creatorTxRef.key}`] = {
+                const creatorTxRef = db.collection('transactions').doc(creatorId).collection('history').doc();
+                transaction.set(creatorTxRef, {
                     type: 'earn',
                     amount: amount,
                     description: `Refund for task: ${taskData.task_title} (assignee not found)`,
-                    created_at: admin.database.ServerValue.TIMESTAMP,
-                    balance_after: newCreatorBalance,
-                };
+                    created_at: admin.firestore.FieldValue.serverTimestamp(),
+                });
+                return;
             }
-            updates[`/marketplace/${taskId}/status`] = 'CANCELLED';
-            updates[`/marketplace/${taskId}/notes`] = 'Assignee profile not found.';
-            updates[`/marketplace/${taskId}/updated_at`] = admin.database.ServerValue.TIMESTAMP;
+            
+            transaction.update(assigneeProfileRef, { 
+                credits: admin.firestore.FieldValue.increment(amount),
+                reputation: admin.firestore.FieldValue.increment(1),
+            });
 
-            await rtdb.ref().update(updates);
-            throw new functions.https.HttpsError("not-found", "Assignee profile not found. Credits refunded.");
-        }
-        
-        const assigneeCredits = assigneeSnap.val().credits || 0;
-        const newAssigneeBalance = assigneeCredits + amount;
-        
-        updates[`/profiles/${assigneeId}/credits`] = newAssigneeBalance;
-        updates[`/profiles/${assigneeId}/reputation`] = admin.database.ServerValue.increment(1);
-
-        const assigneeTxRef = rtdb.ref(`transactions/${assigneeId}`).push();
-        updates[`/transactions/${assigneeId}/${assigneeTxRef.key}`] = {
-            type: 'earn',
-            amount: amount,
-            description: `Reward for task: ${taskData.task_title}`,
-            created_at: admin.database.ServerValue.TIMESTAMP,
-            balance_after: newAssigneeBalance,
-            meta: { taskId: taskId }
-        };
-        
-        updates[`/marketplace/${taskId}/status`] = 'PAID';
-        updates[`/marketplace/${taskId}/updated_at`] = admin.database.ServerValue.TIMESTAMP;
-        
-        await rtdb.ref().update(updates);
+            const assigneeTxRef = db.collection('transactions').doc(assigneeId).collection('history').doc();
+            transaction.set(assigneeTxRef, {
+                type: 'earn',
+                amount: amount,
+                description: `Reward for task: ${taskData.task_title}`,
+                created_at: admin.firestore.FieldValue.serverTimestamp(),
+                meta: { taskId: taskId }
+            });
+            
+            transaction.update(taskRef, {
+                status: 'PAID',
+                updated_at: admin.firestore.FieldValue.serverTimestamp()
+            });
+        });
 
         return { success: true, message: 'Credits transferred successfully.' };
 
@@ -404,7 +386,7 @@ export const approveTask = functions.https.onCall(async (data, context) => {
 export const updateUserProfile = functions.https.onCall(async (data, context) => {
     const uid = assertAuth(context);
     const { displayName, photoURL } = data;
-    const profileRef = rtdb.ref(`profiles/${uid}`);
+    const profileRef = db.collection('profiles').doc(uid);
     const updateData: { [key: string]: any } = {};
 
     try {
@@ -419,7 +401,7 @@ export const updateUserProfile = functions.https.onCall(async (data, context) =>
         if (Object.keys(updateData).length === 0) {
             throw new functions.https.HttpsError("invalid-argument", "No valid fields to update were provided.");
         }
-        updateData.updated_at = admin.database.ServerValue.TIMESTAMP;
+        updateData.updated_at = admin.firestore.FieldValue.serverTimestamp();
 
         await profileRef.update(updateData);
         return { success: true, message: "Profile updated successfully." };

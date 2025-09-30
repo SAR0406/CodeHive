@@ -1,8 +1,8 @@
 
 'use client'
 
-import type { Database } from "firebase/database";
-import { ref, onValue } from "firebase/database";
+import type { Firestore } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 
 export interface CreditPack {
   id: string;
@@ -12,16 +12,15 @@ export interface CreditPack {
   description: string;
 }
 
-export function onCreditPacksUpdate(db: Database, callback: (packs: CreditPack[]) => void): () => void {
-    const packsRef = ref(db, 'credit_packs');
+export function onCreditPacksUpdate(db: Firestore, callback: (packs: CreditPack[]) => void): () => void {
+    const packsRef = collection(db, 'credit_packs');
     
-    const unsubscribe = onValue(packsRef, (snapshot) => {
-        if (snapshot.exists()) {
-            const data = snapshot.val();
-            const packsArray = Object.keys(data).map(key => ({
-                id: key,
-                ...data[key]
-            }));
+    const unsubscribe = onSnapshot(packsRef, (snapshot) => {
+        if (!snapshot.empty) {
+            const packsArray = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as CreditPack));
             callback(packsArray);
         } else {
             callback([]);

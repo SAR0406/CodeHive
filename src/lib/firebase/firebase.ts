@@ -1,7 +1,7 @@
 
 'use client';
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
-import { getDatabase, type Database } from 'firebase/database';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getAnalytics } from "firebase/analytics";
 
@@ -18,14 +18,14 @@ const firebaseConfig = {
 
 let app: FirebaseApp;
 let auth: Auth;
-let db: Database;
+let db: Firestore;
 let analytics;
 
 // This code will only run on the client side
 try {
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
   auth = getAuth(app);
-  db = getDatabase(app);
+  db = getFirestore(app);
   if (typeof window !== 'undefined') {
     analytics = getAnalytics(app);
   }

@@ -1,34 +1,31 @@
 
 'use client';
 
-import type { Database } from 'firebase/database';
-import { ref, query, orderByChild, onValue } from 'firebase/database';
+import type { Firestore } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 
 export interface Transaction {
   id: string;
   type: 'spend' | 'earn';
   amount: number;
   description: string;
-  created_at: number; // RTDB timestamp is a number
+  created_at: { seconds: number, nanoseconds: number }; // Firestore Timestamp
   balance_after: number;
 }
 
 export function onTransactionsUpdate(
-  db: Database,
+  db: Firestore,
   userId: string,
   callback: (transactions: Transaction[]) => void
 ): () => void {
-  const transactionsRef = query(ref(db, `transactions/${userId}`), orderByChild('created_at'));
+  const transactionsRef = query(collection(db, 'transactions', userId, 'history'), orderBy('created_at', 'desc'));
 
-  const unsubscribe = onValue(
+  const unsubscribe = onSnapshot(
     transactionsRef,
     (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const transactionsArray = Object.keys(data)
-            .map(key => ({ id: key, ...data[key] }))
-            .reverse(); // To get descending order
-        callback(transactionsArray as Transaction[]);
+      if (!snapshot.empty) {
+        const transactionsArray = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction));
+        callback(transactionsArray);
       } else {
         callback([]);
       }

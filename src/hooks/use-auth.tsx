@@ -9,7 +9,7 @@ import {
 } from 'react';
 import type { User } from 'firebase/auth';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { ref, get, set, onValue, serverTimestamp } from 'firebase/database';
+import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { useFirebase } from '@/lib/firebase/client-provider';
 import { useRouter } from 'next/navigation';
 
@@ -50,13 +50,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   // Function to create a user profile if it doesn't exist
   const createUserProfile = async (user: User) => {
     if (!db) return;
-    const profileRef = ref(db, 'profiles/' + user.uid);
-    const profileSnap = await get(profileRef);
+    const profileRef = doc(db, 'profiles', user.uid);
+    const profileSnap = await getDoc(profileRef);
 
     if (!profileSnap.exists()) {
       // User is new, create a profile with default values
       try {
-        await set(profileRef, {
+        await setDoc(profileRef, {
           id: user.uid,
           email: user.email,
           display_name: user.displayName,
@@ -82,9 +82,27 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       setLoading(true);
       if (currentUser) {
         // User is signed in.
-        // Ensure their profile exists before we proceed.
         await createUserProfile(currentUser);
         setUser(currentUser);
+        
+        // Now that user is set, setup the profile listener
+        const profileRef = doc(db, 'profiles', currentUser.uid);
+        const unsubProfile = onSnapshot(profileRef, (docSnap) => {
+          if (docSnap.exists()) {
+              setCredits(docSnap.data() as ProfileData);
+          } else {
+              setCredits(null);
+          }
+          setLoading(false); // Set loading to false after profile is fetched
+        }, (error) => {
+            console.error("Error listening to profile changes:", error);
+            setCredits(null);
+            setLoading(false);
+        });
+
+        // Return cleanup for the profile listener
+        return () => unsubProfile();
+
       } else {
         // User is signed out.
         setUser(null);
@@ -93,37 +111,9 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       }
     });
 
-    // Cleanup the subscription when the component unmounts.
+    // Cleanup the auth subscription when the component unmounts.
     return () => unsubscribe();
   }, [auth, db]);
-
-  useEffect(() => {
-    // This effect listens for changes to the user's profile in the database.
-    if (user && db) {
-      const profileRef = ref(db, 'profiles/' + user.uid);
-      
-      const unsubscribe = onValue(profileRef, (snapshot) => {
-        if (snapshot.exists()) {
-            setCredits(snapshot.val() as ProfileData);
-        } else {
-            // This case might happen if the profile is deleted manually.
-            setCredits(null);
-        }
-        // Once we have the user and their profile data, loading is complete.
-        setLoading(false);
-      }, (error) => {
-          console.error("Error listening to profile changes:", error);
-          setCredits(null);
-          setLoading(false);
-      });
-
-      // Cleanup the channel when the component unmounts or the user changes.
-      return () => unsubscribe();
-    } else if (!user) {
-        // If there's no user, we are not loading their profile.
-        setLoading(false);
-    }
-  }, [user, db]);
 
   // The value provided to the context consumers.
   const value = {
