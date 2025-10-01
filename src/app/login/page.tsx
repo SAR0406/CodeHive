@@ -21,39 +21,28 @@ export default function LoginPage() {
 
   if (loading || user) {
     return (
-      
-        
-          
-        
-        Loading your session...
-      
+      <div className="dark app-container flex flex-col items-center justify-center bg-background gap-4">
+        <CodeHiveIcon className="size-12 text-accent animate-pulse" />
+        <p className="text-muted-foreground">Loading your session...</p>
+      </div>
     );
   }
 
   return (
-    
-      
-        
-          
-            
-                 CodeHiveIcon className="size-10 text-white" />
-                
-            
-            
-              Build, learn, and collaborate with the power of AI.
-            
-        
-      
-        
-          
-            
-                 CodeHiveIcon className="size-8 text-white" />
-                
-            
-          
-          
-        
-      
-    
+    <div className="dark app-container flex flex-col md:flex-row items-center justify-center bg-background gap-4 p-4">
+      <div className="w-full md:w-1/2 h-64 md:h-full flex items-center justify-center relative">
+         <Spline
+          className="pointer-events-none"
+          scene="https://prod.spline.design/gm0ksJtPHZQblNTV/scene.splinecode"
+        />
+      </div>
+      <div className="w-full max-w-md flex flex-col items-center justify-center">
+        <Link href="/" className="flex items-center gap-2 mb-8 md:hidden">
+            <CodeHiveIcon className="size-8 text-white" />
+            <span className="font-bold text-xl font-headline text-white">CodeHive</span>
+        </Link>
+        <LoginForm />
+      </div>
+    </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -40,11 +41,12 @@ export default function MarketplacePage() {
   const { toast } = useToast();
   
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [isLoadingTasks, setIsLoadingTasks = useState(true);
-  const [isActionLoading, setIsActionLoading = useState(false);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(true);
+  const [selectedTask, setSelectedTask] = useState<{ task: Task, action: ActionType } | null>(null);
+  const [isActionLoading, setIsActionLoading] = useState(false);
   
-  const [isCreateDialogOpen, setIsCreateDialogOpen = useState(false);
-  const [isCreateLoading, setIsCreateLoading = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCreateLoading, setIsCreateLoading] = useState(false);
 
   useEffect(() => {
     if (!db) return;
@@ -174,141 +176,133 @@ export default function MarketplacePage() {
 
   return (
     <>
-      
-        
-          
-            
-              
-              
-              
-              Find tasks, contribute to projects, and earn credits.
-            
-             
-               
-               Create New Task
-             
-          
-        
+      <div className="flex flex-col gap-8">
+        <div className="flex justify-between items-start">
+            <div>
+                <h1 className="font-headline text-3xl md:text-4xl font-semibold flex items-center gap-3">
+                    <LayoutTemplate className="size-8 text-accent" />
+                    <span>Marketplace</span>
+                </h1>
+                <p className="text-muted-foreground mt-2">Find tasks, contribute to projects, and earn credits.</p>
+            </div>
+            <Button onClick={() => setIsCreateDialogOpen(true)} disabled={!user}>
+                <PlusCircle className="mr-2" /> Create New Task
+            </Button>
+        </div>
 
-        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoadingTasks ? (
              Array.from({ length: 6 }).map((_, i) => (
-                
-                    
-                        
-                        
-                    
-                    
-                        
-                    
-                     
-                        
-                        
-                    
-                
+                <Card key={i}>
+                    <CardHeader>
+                        <Skeleton className="h-5 w-3/4" />
+                        <Skeleton className="h-4 w-1/4" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-10 w-full" />
+                    </CardContent>
+                    <CardFooter className='flex justify-between'>
+                        <Skeleton className="h-8 w-24" />
+                        <Skeleton className="h-10 w-32" />
+                    </CardFooter>
+                </Card>
              ))
           ) : (
             tasks.map((task) => {
               const { label, action, icon: Icon, disabled, variant } = getActionForTask(task);
               return (
-                
-                  
-                    
-                      
-                        
-                        {task.task_title}
-                        
-                        {task.status}
-                      
-                      
-                        {task.description}
-                      
-                    
-                    
+                <Card key={task.id} className="flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1">
+                  <div>
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="leading-tight">{task.task_title}</CardTitle>
+                        <Badge variant={task.status === 'OPEN' ? 'default' : 'secondary'} className="capitalize">{task.status.toLowerCase()}</Badge>
+                      </div>
+                      <CardDescription className="line-clamp-2">{task.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-wrap gap-2">
                       {task.tags && task.tags.map((tag: string) => (
-                         {task.credit_reward.toLocaleString()}
-                        
-                        {label}
-                      
-                    
-                  
-                
+                        <Badge key={tag} variant="outline">{tag}</Badge>
+                      ))}
+                    </CardContent>
+                  </div>
+                  <CardFooter className="flex justify-between items-center bg-muted/50 p-4 rounded-b-lg">
+                    <div className="font-bold text-lg text-primary flex items-center gap-2">
+                      <Star className="w-5 h-5 text-yellow-400 fill-current" />
+                      {task.credit_reward.toLocaleString()}
+                    </div>
+                    <Button onClick={() => handleTaskAction(task, action)} disabled={disabled} variant={variant}>
+                      <Icon className="mr-2" />
+                      {label}
+                    </Button>
+                  </CardFooter>
+                </Card>
               );
             })
           )}
-        
-      
+        </div>
+      </div>
 
-       
-          
-            
-              
-                {getDialogText().title}
-                {getDialogText().description}
-              
-            
-            
-              Cancel
-              
-                
-                  
+       <AlertDialog open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{getDialogText().title}</AlertDialogTitle>
+            <AlertDialogDescription>{getDialogText().description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isActionLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmAction} disabled={isActionLoading}>
+              {isActionLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Confirming...
-                
-                 
-                  Confirm
-                
-              
-            
-          
-        
+                </>
+              ) : (
+                'Confirm'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-       
-          
-            
-              
-                
-                Post a job to the marketplace. Credits will be held in escrow until you approve the work.
-              
-              
-                
-                
-                  
-                  e.g., Design a new logo
-                 
-              
-              
-                
-                
-                  Provide a detailed description of the task...
-                 
-              
-               
-                
-                
-                  e.g., react, ui, design
-                 
-              
-              
-                
-                
-                  e.g., 500
-                 
-              
-            
-            
-              Cancel
-              
-                
-                  
-                  
-                   Posting...
-                   Post Task & Reserve Credits
-                
-              
-            
-          
-        
-      
-    
+       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogContent className="sm:max-w-[525px]">
+                <form onSubmit={handleCreateTask}>
+                    <DialogHeader>
+                        <DialogTitle>Create New Task</DialogTitle>
+                        <DialogDescription>
+                            Post a job to the marketplace. Credits will be held in escrow until you approve the work.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="task_title">Task Title</Label>
+                            <Input id="task_title" name="task_title" placeholder="e.g., Design a new logo" required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="description">Description</Label>
+                            <Textarea id="description" name="description" placeholder="Provide a detailed description of the task..." required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="tags">Tags (comma-separated)</Label>
+                            <Input id="tags" name="tags" placeholder="e.g., react, ui, design" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="credit_reward">Credit Reward</Label>
+                            <Input id="credit_reward" name="credit_reward" type="number" placeholder="e.g., 500" required />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
+                        <Button type="submit" disabled={isCreateLoading}>
+                            {isCreateLoading ? (
+                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Posting...</>
+                            ) : 'Post Task & Reserve Credits'}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+      </>
   );
 }
