@@ -1,16 +1,15 @@
+
 "use client"
 
 import * as React from "react"
-import { Bar, BarChart, CartesianGrid, XAxis, LineChart, Line, AreaChart, Area } from "recharts"
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import { useTheme } from "next-themes"
 
 const chartConfig = {
   desktop: {
@@ -24,7 +23,7 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function DashboardCharts() {
-    const [chartData, setChartData] = React.useState([]);
+    const [chartData, setChartData] = React.useState<any[]>([]);
 
     React.useEffect(() => {
         // Defer random data generation to client-side only
@@ -41,55 +40,67 @@ export function DashboardCharts() {
 
     if (chartData.length === 0) {
         return (
-             Loading chart...
+             <div className="flex h-full w-full items-center justify-center p-4 text-sm text-muted-foreground">Loading chart...</div>
         );
     }
   
   return (
-    
-        
-            
-                
-                bottom: 0,
-            }}
-        >
-            
-            
-                
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                tickFormatter={(value) => value.slice(0, 3)}
-                className="fill-muted-foreground text-xs"
+    <ChartContainer config={chartConfig} className="h-full w-full">
+      <AreaChart
+        accessibilityLayer
+        data={chartData}
+        margin={{
+            left: -20,
+            right: 10,
+            top: 10,
+            bottom: 0,
+        }}
+      >
+        <CartesianGrid vertical={false} strokeDasharray="3 3" />
+        <XAxis
+          dataKey="month"
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          tickFormatter={(value) => value.slice(0, 3)}
+          className="fill-muted-foreground text-xs"
+        />
+        <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+        <defs>
+          <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
+            <stop
+              offset="5%"
+              stopColor="var(--color-desktop)"
+              stopOpacity={0.8}
             />
-            
-            
-                
-                    
-                    
-                    offset="5%" stopColor="var(--color-desktop)" stopOpacity={0.8} />
-                    
-                
-                
-                    
-                    
-                    offset="5%" stopColor="var(--color-mobile)" stopOpacity={0.8} />
-                    
-                
-            
-            
-                
-                
-                
-                stackId="a"
+            <stop offset="95%" stopColor="var(--color-desktop)" stopOpacity={0.1} />
+          </linearGradient>
+          <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
+            <stop
+              offset="5%"
+              stopColor="var(--color-mobile)"
+              stopOpacity={0.8}
             />
-             
-                
-                
-                
-                stackId="a"
-            />
-        
-    
+            <stop offset="95%" stopColor="var(--color-mobile)" stopOpacity={0.1} />
+          </linearGradient>
+        </defs>
+        <Area
+          dataKey="desktop"
+          type="natural"
+          fill="url(#fillDesktop)"
+          fillOpacity={0.4}
+          stroke="var(--color-desktop)"
+          stackId="a"
+        />
+         <Area
+          dataKey="mobile"
+          type="natural"
+          fill="url(#fillMobile)"
+          fillOpacity={0.4}
+          stroke="var(--color-mobile)"
+          stackId="a"
+        />
+      </AreaChart>
+    </ChartContainer>
   )
 }
