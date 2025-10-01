@@ -1,4 +1,3 @@
-
 'use client';
 import { Button } from '@/components/ui/button';
 import { AmazonLogo, CodeHiveIcon, DellLogo, MicrosoftLogo, OracleLogo, SapLogo, ShopifyLogo, SlackLogo, WebflowLogo, WixLogo, WordpressLogo, CreateContentIcon, OptimizeContentIcon, DistributeContentIcon, ZapierLogo } from '@/components/icons';

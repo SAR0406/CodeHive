@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -40,7 +39,7 @@ export default function TemplatesPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
+  const [isLoadingTemplates, setIsLoadingTemplates = useState(true);
 
   useEffect(() => {
     if (!db) return;
@@ -89,86 +88,88 @@ export default function TemplatesPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-8">
-        <div>
-          <h1 className="font-headline text-3xl md:text-4xl font-semibold flex items-center gap-3">
-            <Library className="size-8 text-accent" />
-            <span>Template Library</span>
-          </h1>
-          <p className="text-muted-foreground mt-2">Fork a template to get a head start on your next project.</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      
+        
+          
+            
+              
+              
+              
+              Fork a template to get a head start on your next project.
+            
+          
+        
           {isLoadingTemplates ? (
             Array.from({ length: 4 }).map((_, i) => (
-                <Card key={i}>
-                    <Skeleton className="aspect-video w-full" />
-                    <CardHeader>
-                        <Skeleton className="h-6 w-3/4" />
-                        <Skeleton className="h-4 w-1/2" />
-                    </CardHeader>
-                    <CardFooter>
-                        <Skeleton className="h-10 w-full" />
-                    </CardFooter>
-                </Card>
+                
+                    
+                    
+                        
+                        
+                    
+                    
+                        
+                    
+                
             ))
           ) : (
             templates.map((template, idx) => {
               const placeholder = templatePlaceholders[idx % templatePlaceholders.length];
               return (
-                <Card key={template.id} className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:shadow-accent/10 hover:-translate-y-1">
+                
                   {placeholder && (
-                    <div className="aspect-video bg-muted overflow-hidden">
-                      <Image
-                        src={placeholder.imageUrl}
-                        alt={template.title}
+                    
+                      
+                         template.title}
                         width={600}
                         height={400}
                         data-ai-hint={placeholder.imageHint}
                         className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
                       />
-                    </div>
+                    
                   )}
-                  <CardHeader>
-                    <CardTitle className="text-xl">{template.title}</CardTitle>
-                    <CardDescription>{template.description}</CardDescription>
-                  </CardHeader>
-                  <CardFooter>
-                    <Button className="w-full" onClick={() => handleForkClick(template)} disabled={!user}>
-                      <GitFork className="mr-2 h-4 w-4" />
-                      Fork Template ({template.cost} Credits)
-                    </Button>
-                  </CardFooter>
-                </Card>
+                  
+                    
+                       template.title}
+                      {template.description}
+                    
+                  
+                  
+                    
+                      
+                       ({template.cost} Credits)
+                     
+                  
+                
               );
             })
           )}
-        </div>
-      </div>
+        
+      
 
-      <AlertDialog open={!!selectedTemplate} onOpenChange={(open) => !open && setSelectedTemplate(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Fork</AlertDialogTitle>
-            <AlertDialogDescription>
-              {`Are you sure you want to fork the template "${selectedTemplate?.title}"? This will deduct `}
-              <span className="font-bold text-primary">{selectedTemplate?.cost} credits</span> from your account.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmFork} disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+       
+          
+            
+              
+                Confirm Fork
+                Are you sure you want to fork the template "{selectedTemplate?.title}"? This will deduct 
+                Credits from your account.
+              
+            
+            
+              Cancel
+              
+                
+                  
                   Confirming...
-                </>
-              ) : (
-                'Confirm & Fork'
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+                
+                 
+                  Confirm & Fork
+                
+              
+            
+          
+        
+    
   );
 }

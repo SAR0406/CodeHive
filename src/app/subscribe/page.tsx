@@ -1,4 +1,3 @@
-
 'use client';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
@@ -56,8 +55,7 @@ export default function SubscribePage() {
     const { user } = useAuth();
     const { app } = useFirebase();
     const router = useRouter();
-    const { toast } = useToast();
-    const [isLoading, setIsLoading] = useState(false);
+    const { toast } = useState(false);
 
     const handlePlanClick = async (plan: any) => {
         if (plan.cta === 'Contact Sales') {
@@ -99,60 +97,61 @@ export default function SubscribePage() {
     }
 
     return (
-        <div className="flex min-h-screen flex-col items-center p-4 bg-background text-foreground">
-            <header className="w-full max-w-6xl mx-auto py-8">
-                 <Link href="/" className="flex items-center gap-2">
-                    <CodeHiveIcon className="size-8 text-white" />
-                    <span className="font-bold text-2xl font-headline text-white">CodeHive</span>
-                </Link>
-            </header>
+        
+            
+                 CodeHiveIcon className="size-8 text-white" />
+                
+            
 
-            <main className="flex flex-col items-center text-center gap-8 py-12">
-                <h1 className="font-headline text-4xl md:text-5xl font-bold">Choose Your Plan</h1>
-                <p className="text-lg text-muted-foreground max-w-2xl">Start for free and scale as you grow. All plans include access to our core features, with more credits and advanced tools for our paid users.</p>
+            
+                
+                    Choose Your Plan
+                    Start for free and scale as you grow. All plans include access to our core features, with more credits and advanced tools for our paid users.
+                
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8 w-full max-w-6xl">
+                
                     {plans.map((plan) => (
-                        <Card key={plan.name} className={`flex flex-col ${plan.isPopular ? 'border-accent shadow-accent/20 shadow-xl' : ''}`}>
-                            {plan.isPopular && <div className="bg-accent text-accent-foreground text-xs font-bold text-center py-1 rounded-t-lg">MOST POPULAR</div>}
-                            <CardHeader className="text-center">
-                                <CardTitle className="text-2xl font-headline">{plan.name}</CardTitle>
-                                <CardDescription className="text-4xl font-bold">
-                                    {plan.price === null ? <span className="text-2xl">Custom</span> : `$${plan.price}`}
-                                    {plan.price !== null && <span className="text-sm font-normal text-muted-foreground">/ month</span>}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex-grow">
-                                <ul className="space-y-3 text-left">
+                        
+                            {plan.isPopular &&  MOST POPULAR }
+                            
+                                
+                                    {plan.name}
+                                    
+                                        {plan.price === null ? Custom : `$${plan.price}`}
+                                        {plan.price !== null && / month}
+                                    
+                                
+                            
+                            
+                                
                                     {plan.features.map(feature => (
-                                        <li key={feature} className="flex items-center gap-3">
-                                            <Check className="text-green-500" size={16} />
-                                            <span>{feature}</span>
-                                        </li>
+                                        
+                                            
+                                                
+                                            
+                                            
+                                        
                                     ))}
                                      {plan.credits !== null && (
-                                        <li className="flex items-center gap-3">
-                                            <Star className="text-amber-400 fill-current" size={16} />
-                                            <span>{plan.credits.toLocaleString()} credits</span>
-                                        </li>
+                                        
+                                            
+                                                
+                                            
+                                            
+                                        
 
                                      )}
-                                </ul>
-                            </CardContent>
-                            <CardFooter>
-                                <Button 
-                                    className="w-full" 
-                                    variant={plan.isPopular ? 'default' : 'secondary'}
-                                    onClick={() => handlePlanClick(plan)}
-                                    disabled={isLoading}
-                                >
-                                    {isLoading && plan.isPopular ? <Loader2 className="animate-spin" /> : (user && plan.name === 'Free' ? 'Go to Dashboard' : plan.cta)}
-                                </Button>
-                            </CardFooter>
-                        </Card>
+                                
+                            
+                            
+                                
+                                     {isLoading && plan.isPopular ?  Go to Dashboard' : plan.cta)}
+                                
+                            
+                        
                     ))}
-                </div>
-            </main>
-        </div>
+                
+            
+        
     );
 }
