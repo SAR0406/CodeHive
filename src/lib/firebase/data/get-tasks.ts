@@ -3,7 +3,7 @@
 
 import type { FirebaseApp } from "firebase/app";
 import type { Firestore } from "firebase/firestore";
-import { collection, onSnapshot, query, orderBy, where } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, where, addDoc, serverTimestamp, doc } from "firebase/firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
 
 export interface Task {
@@ -22,6 +22,7 @@ export interface Task {
 // --- Types for callable functions ---
 
 interface CreateTaskData {
+    uid: string;
     task_title: string;
     description: string;
     credit_reward: number;
@@ -44,18 +45,26 @@ const getCallable = <RequestData, ResponseData>(app: FirebaseApp, functionName: 
   return httpsCallable<RequestData, ResponseData>(functions, functionName);
 };
 
-// --- Write Operations (using httpsCallable) ---
+// --- Write Operations ---
 
-export async function createTask(app: FirebaseApp, taskData: CreateTaskData): Promise<FunctionResult> {
-    const createTaskFn = getCallable<CreateTaskData, FunctionResult>(app, 'createTask');
+/**
+ * Creates a task request in Firestore, which is then processed by a Cloud Function trigger.
+ * This provides a more robust and scalable way to handle task creation.
+ */
+export async function createTaskRequest(db: Firestore, taskData: CreateTaskData): Promise<string> {
     try {
-        const result = await createTaskFn(taskData);
-        return result.data as FunctionResult;
+        const requestRef = await addDoc(collection(db, 'task_requests'), {
+            ...taskData,
+            status: 'processing',
+            created_at: serverTimestamp(),
+        });
+        return requestRef.id;
     } catch (error: any) {
-        console.error("Error calling createTask:", error);
-        throw new Error(error.message || 'Failed to create task.');
+        console.error("Error creating task request:", error);
+        throw new Error(error.message || 'Failed to submit task request.');
     }
 }
+
 
 export async function acceptTask(app: FirebaseApp, taskId: string): Promise<FunctionResult> {
     const acceptTaskFn = getCallable<TaskActionData, FunctionResult>(app, 'acceptTask');
@@ -116,6 +125,29 @@ export function onTasksUpdateForUser(db: Firestore, userId: string, callback: (t
     }, (error) => {
         console.error("Error fetching real-time user tasks:", error);
         callback([]);
+    });
+
+    return unsubscribe;
+}
+
+/**
+ * Listens to a specific task request document to provide real-time feedback on its processing status.
+ * @param db - Firestore instance.
+ * @param requestId - The ID of the task request document to listen to.
+ * @param callback - Function to call with the status and potential error message.
+ * @returns An unsubscribe function.
+ */
+export function onTaskRequestUpdate(db: Firestore, requestId: string, callback: (status: { status: string; error?: string }) => void): () => void {
+    const requestDocRef = doc(db, 'task_requests', requestId);
+
+    const unsubscribe = onSnapshot(requestDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            callback({ status: data.status, error: data.error });
+        }
+    }, (error) => {
+        console.error("Error listening to task request:", error);
+        callback({ status: 'error', error: 'Failed to listen for task status.' });
     });
 
     return unsubscribe;

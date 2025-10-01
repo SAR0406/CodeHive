@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -30,7 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { LayoutTemplate, Star, Handshake, Loader2, PlusCircle, CheckCircle } from 'lucide-react';
 import type { Task } from '@/lib/firebase/data/get-tasks';
-import { createTask, acceptTask, completeTask, approveTask, onTasksUpdate } from '@/lib/firebase/data/get-tasks';
+import { createTaskRequest, onTaskRequestUpdate, acceptTask, completeTask, approveTask, onTasksUpdate } from '@/lib/firebase/data/get-tasks';
 import { useFirebase } from '@/lib/firebase/client-provider';
 
 type ActionType = 'accept' | 'complete' | 'approve';
@@ -100,7 +101,7 @@ export default function MarketplacePage() {
   
   const handleCreateTask = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user || !app) {
+    if (!user || !db) {
         toast({ title: 'Not Authenticated', description: 'Please log in to create a task.', variant: 'destructive' });
         return;
     };
@@ -125,12 +126,32 @@ export default function MarketplacePage() {
     }
 
     setIsCreateLoading(true);
+
     try {
-        const result = await createTask(app, { task_title, description, credit_reward, tags });
-        toast({ title: 'Task Created!', description: result.message });
+        const requestId = await createTaskRequest(db, { uid: user.uid, task_title, description, credit_reward, tags });
+        
+        toast({
+            title: "Task Submitted!",
+            description: "Your task is being processed. This may take a moment."
+        });
         setIsCreateDialogOpen(false);
+
+        // Listen for the outcome of the backend function
+        const unsubscribe = onTaskRequestUpdate(db, requestId, (update) => {
+            if (update.status === 'error') {
+                toast({
+                    title: 'Error Creating Task',
+                    description: update.error || 'An unexpected error occurred.',
+                    variant: 'destructive',
+                });
+                unsubscribe(); // Stop listening
+            }
+            // If successful, the request doc will be deleted, and the onSnapshot listener will stop.
+            // The main `onTasksUpdate` listener will then pick up the new task.
+        });
+
     } catch (error: any) {
-        toast({ title: 'Error Creating Task', description: error.message || 'An unexpected error occurred.', variant: 'destructive' });
+        toast({ title: 'Error Submitting Task', description: error.message || 'An unexpected error occurred.', variant: 'destructive' });
     } finally {
         setIsCreateLoading(false);
     }
@@ -296,8 +317,8 @@ export default function MarketplacePage() {
                         <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
                         <Button type="submit" disabled={isCreateLoading}>
                             {isCreateLoading ? (
-                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Posting...</>
-                            ) : 'Post Task & Reserve Credits'}
+                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</>
+                            ) : 'Submit Task'}
                         </Button>
                     </DialogFooter>
                 </form>
@@ -306,3 +327,5 @@ export default function MarketplacePage() {
       </>
   );
 }
+
+    
