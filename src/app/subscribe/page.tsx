@@ -1,3 +1,4 @@
+
 'use client';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
@@ -55,7 +56,8 @@ export default function SubscribePage() {
     const { user } = useAuth();
     const { app } = useFirebase();
     const router = useRouter();
-    const { toast } = useState(false);
+    const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(false);
 
     const handlePlanClick = async (plan: any) => {
         if (plan.cta === 'Contact Sales') {
@@ -97,61 +99,61 @@ export default function SubscribePage() {
     }
 
     return (
-        
-            
-                 CodeHiveIcon className="size-8 text-white" />
-                
-            
+        <div className="dark app-container flex flex-col items-center justify-center p-4">
+            <Link href="/" className="flex items-center gap-2 mb-8">
+                <CodeHiveIcon className="size-8 text-white" />
+                <span className="font-bold text-xl font-headline text-white">CodeHive</span>
+            </Link>
 
-            
-                
-                    Choose Your Plan
-                    Start for free and scale as you grow. All plans include access to our core features, with more credits and advanced tools for our paid users.
-                
+            <div className="flex flex-col gap-8 w-full max-w-5xl">
+                <div className="text-center">
+                    <h1 className="font-headline text-4xl md:text-5xl font-semibold">Choose Your Plan</h1>
+                    <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">Start for free and scale as you grow. All plans include access to our core features, with more credits and advanced tools for our paid users.</p>
+                </div>
 
-                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {plans.map((plan) => (
-                        
-                            {plan.isPopular &&  MOST POPULAR }
-                            
-                                
-                                    {plan.name}
-                                    
-                                        {plan.price === null ? Custom : `$${plan.price}`}
-                                        {plan.price !== null && / month}
-                                    
-                                
-                            
-                            
-                                
+                        <Card key={plan.name} className={`flex flex-col ${plan.isPopular ? 'border-primary ring-2 ring-primary shadow-lg shadow-primary/20' : ''}`}>
+                            {plan.isPopular && <div className="absolute top-0 -translate-y-1/2 w-full flex justify-center"><div className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">MOST POPULAR</div></div>}
+                            <CardHeader className="pt-8">
+                                <div className="text-center">
+                                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                                    <CardDescription className="text-4xl font-bold mt-4">
+                                        {plan.price === null ? 'Custom' : `$${plan.price}`}
+                                        {plan.price !== null && <span className="text-base font-normal text-muted-foreground">/ month</span>}
+                                    </CardDescription>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="flex-grow">
+                                <ul className="space-y-4">
                                     {plan.features.map(feature => (
-                                        
-                                            
-                                                
-                                            
-                                            
-                                        
+                                        <li key={feature} className="flex items-start gap-3">
+                                            <div className="bg-green-500/20 text-green-400 rounded-full p-1">
+                                                <Check className="size-4" />
+                                            </div>
+                                            <span>{feature}</span>
+                                        </li>
                                     ))}
                                      {plan.credits !== null && (
-                                        
-                                            
-                                                
-                                            
-                                            
-                                        
+                                        <li className="flex items-start gap-3">
+                                            <div className="bg-yellow-500/20 text-yellow-400 rounded-full p-1">
+                                                <Star className="size-4" />
+                                            </div>
+                                            <span>{plan.credits.toLocaleString()} Credits</span>
+                                        </li>
 
                                      )}
-                                
-                            
-                            
-                                
-                                     {isLoading && plan.isPopular ?  Go to Dashboard' : plan.cta)}
-                                
-                            
-                        
+                                </ul>
+                            </CardContent>
+                            <CardFooter>
+                                <Button onClick={() => handlePlanClick(plan)} className="w-full" variant={plan.isPopular ? 'default' : 'outline'} disabled={isLoading && plan.isPopular}>
+                                     {isLoading && plan.isPopular ? <><Loader2 className="mr-2 animate-spin"/> Processing...</> : (user ? plan.name === 'Free' ? 'Go to Dashboard' : plan.cta : plan.cta)}
+                                </Button>
+                            </CardFooter>
+                        </Card>
                     ))}
-                
-            
-        
+                </div>
+            </div>
+        </div>
     );
 }
