@@ -19,6 +19,7 @@ export interface Task {
   updated_at?: { seconds: number, nanoseconds: number }; // Firestore Timestamp
   submission?: string;
   verification_notes?: string;
+  fraud_risk?: 'LOW' | 'MEDIUM' | 'HIGH';
 }
 
 // --- Types for callable functions ---
@@ -114,10 +115,30 @@ export function onTaskRequestUpdate(db: Firestore, requestId: string, callback: 
         if (docSnap.exists()) {
             const data = docSnap.data();
             callback({ status: data.status, error: data.error });
+        } else {
+             // The document was likely processed and deleted, which is a success case.
+            if (docSnap.data() === undefined) {
+               // Let the UI know it's done.
+            }
         }
     }, (error) => {
         console.error("Error listening to task request:", error);
         callback({ status: 'error', error: 'Failed to listen for task status.' });
+    });
+
+    return unsubscribe;
+}
+
+
+export function onTasksUpdateForUser(db: Firestore, userId: string, callback: (tasks: Task[]) => void): () => void {
+    const q = query(collection(db, 'marketplace'), where('created_by', '==', userId));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
+        callback(tasks);
+    }, (error) => {
+        console.error(`Error fetching real-time tasks for user ${userId}:`, error);
+        callback([]);
     });
 
     return unsubscribe;
