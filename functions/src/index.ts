@@ -176,55 +176,23 @@ export const processTaskRequest = functions.firestore.document('task_requests/{r
             return snap.ref.update({ status: 'error', error: 'Invalid task data provided.' });
         }
 
-        const creatorProfileRef = db.collection('profiles').doc(uid);
         const marketplaceRef = db.collection('marketplace').doc();
-        const txRef = db.collection('transactions').doc(uid).collection('history').doc();
 
         try {
-            await db.runTransaction(async (transaction) => {
-                const creatorDoc = await transaction.get(creatorProfileRef);
-                if (!creatorDoc.exists()) {
-                    throw new Error("User profile not found.");
-                }
-
-                const currentCredits = creatorDoc.data()?.credits ?? 0;
-                if (currentCredits < credit_reward) {
-                    throw new Error("Insufficient credits to post this task.");
-                }
-
-                // 1. Deduct credits from creator
-                const newBalance = currentCredits - credit_reward;
-                transaction.update(creatorProfileRef, { credits: newBalance });
-
-                // 2. Create a transaction record for the deduction
-                transaction.set(txRef, {
-                    type: 'spend',
-                    amount: credit_reward,
-                    description: `Held for task: ${task_title}`,
-                    created_at: admin.firestore.FieldValue.serverTimestamp(),
-                    balance_after: newBalance,
-                    meta: {
-                        escrow: true,
-                        taskId: marketplaceRef.id,
-                        notes: `Credits held for task: ${task_title}`
-                    }
-                });
-
-                // 3. Create the actual task in the public marketplace
-                transaction.set(marketplaceRef, {
-                    id: marketplaceRef.id,
-                    "Task title": task_title,
-                    description,
-                    "Credit Reward": credit_reward,
-                    tags: tags || [],
-                    created_by: uid,
-                    status: 'OPEN',
-                    created_at: admin.firestore.FieldValue.serverTimestamp(),
-                    updated_at: admin.firestore.FieldValue.serverTimestamp(),
-                });
+            // Create the task in the public marketplace without deducting credits
+            await marketplaceRef.set({
+                id: marketplaceRef.id,
+                "Task title": task_title,
+                description,
+                "Credit Reward": credit_reward,
+                tags: tags || [],
+                created_by: uid,
+                status: 'OPEN', // Task is open for anyone to accept
+                created_at: admin.firestore.FieldValue.serverTimestamp(),
+                updated_at: admin.firestore.FieldValue.serverTimestamp(),
             });
             
-            // 4. Clean up the original request document
+            // Clean up the original request document after successful creation
             return snap.ref.delete();
 
         } catch (error: any) {
@@ -235,42 +203,86 @@ export const processTaskRequest = functions.firestore.document('task_requests/{r
     });
 
 export const acceptTask = functions.https.onCall(async (data, context) => {
-  const assigneeId = assertAuth(context);
-  const { taskId } = data;
+    const assigneeId = assertAuth(context);
+    const { taskId } = data;
 
-  if (!taskId) {
-      throw new functions.https.HttpsError("invalid-argument", "Task ID is required.");
-  }
+    if (!taskId) {
+        throw new functions.https.HttpsError("invalid-argument", "Task ID is required.");
+    }
 
-  const taskRef = db.collection('marketplace').doc(taskId);
+    const taskRef = db.collection('marketplace').doc(taskId);
 
-  try {
-    await db.runTransaction(async (transaction) => {
-        const taskDoc = await transaction.get(taskRef);
-        if (!taskDoc.exists) {
-            throw new functions.https.HttpsError("not-found", "Task not found.");
-        }
-        const taskData = taskDoc.data();
-        if (taskData?.status !== 'OPEN') {
-            throw new functions.https.HttpsError("failed-precondition", "This task is not open for assignment.");
-        }
-        if (taskData?.created_by === assigneeId) {
-            throw new functions.https.HttpsError("failed-precondition", "You cannot accept your own task.");
-        }
-        
-        transaction.update(taskRef, {
-            assigned_to: assigneeId,
-            status: 'ASSIGNED',
-            updated_at: admin.firestore.FieldValue.serverTimestamp()
+    try {
+        await db.runTransaction(async (transaction) => {
+            const taskDoc = await transaction.get(taskRef);
+            if (!taskDoc.exists) {
+                throw new functions.httpss.HttpsError("not-found", "Task not found.");
+            }
+            const taskData = taskDoc.data();
+
+            if (!taskData) {
+                throw new functions.https.HttpsError("not-found", "Task data not found.");
+            }
+            if (taskData?.status !== 'OPEN') {
+                throw new functions.https.HttpsError("failed-precondition", "This task is not open for assignment.");
+            }
+            if (taskData?.created_by === assigneeId) {
+                throw new functions.https.HttpsError("failed-precondition", "You cannot accept your own task.");
+            }
+
+            const creatorId = taskData.created_by;
+            const creditReward = taskData["Credit Reward"];
+            const creatorProfileRef = db.collection('profiles').doc(creatorId);
+            const creatorDoc = await transaction.get(creatorProfileRef);
+
+            if (!creatorDoc.exists()) {
+                throw new functions.https.HttpsError("failed-precondition", "Task creator's profile not found.");
+            }
+
+            const currentCredits = creatorDoc.data()?.credits ?? 0;
+            if (currentCredits < creditReward) {
+                // If creator can't afford it, cancel the task
+                transaction.update(taskRef, {
+                    status: 'CANCELLED',
+                    notes: 'Task cancelled due to insufficient funds from creator.',
+                    updated_at: admin.firestore.FieldValue.serverTimestamp()
+                });
+                throw new functions.https.HttpsError("failed-precondition", "The task creator does not have enough credits to fund this task.");
+            }
+
+            // Deduct credits from creator and hold in escrow
+            const newBalance = currentCredits - creditReward;
+            transaction.update(creatorProfileRef, { credits: newBalance });
+
+            // Create a transaction record for the deduction
+            const creatorTxRef = db.collection('transactions').doc(creatorId).collection('history').doc();
+            transaction.set(creatorTxRef, {
+                type: 'spend',
+                amount: creditReward,
+                description: `Held in escrow for task: ${taskData["Task title"]}`,
+                created_at: admin.firestore.FieldValue.serverTimestamp(),
+                balance_after: newBalance,
+                meta: {
+                    escrow: true,
+                    taskId: taskId,
+                }
+            });
+
+            // Assign the task to the user
+            transaction.update(taskRef, {
+                assigned_to: assigneeId,
+                status: 'ASSIGNED',
+                updated_at: admin.firestore.FieldValue.serverTimestamp()
+            });
         });
-    });
-    
-    return { success: true, message: 'Task assigned successfully.' };
-  } catch (e) {
-    handleError(e, "Error accepting task.");
-    return { success: false, message: "Error accepting task" };
-  }
+        
+        return { success: true, message: 'Task assigned successfully. Credits are now in escrow.' };
+    } catch (e) {
+        handleError(e, "Error accepting task.");
+        return { success: false, message: "Error accepting task" };
+    }
 });
+
 
 export const completeTask = functions.https.onCall(async (data, context) => {
   const uid = assertAuth(context);
@@ -299,7 +311,7 @@ export const completeTask = functions.https.onCall(async (data, context) => {
         updated_at: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    return { success: true, message: 'Task marked as complete.' };
+    return { success: true, message: 'Task marked as complete. Awaiting creator approval.' };
   } catch (e) {
     handleError(e, "Error completing task.");
     return { success: false, message: "Error completing task" };
@@ -334,7 +346,7 @@ export const approveTask = functions.https.onCall(async (data, context) => {
                 throw new functions.https.HttpsError("failed-precondition", "This task has already been paid out.");
             }
             if (taskData.status !== 'COMPLETED') {
-                throw new functions.https.HttpsError("failed-precondition", "Task is not completed yet.");
+                throw new functions.httpss.HttpsError("failed-precondition", "Task is not completed yet.");
             }
             if (!taskData.assigned_to) {
                 throw new functions.https.HttpsError("failed-precondition", "Task has no assignee to pay.");
@@ -343,15 +355,12 @@ export const approveTask = functions.https.onCall(async (data, context) => {
             const assigneeId = taskData.assigned_to;
             const amount = taskData["Credit Reward"];
             const assigneeProfileRef = db.collection('profiles').doc(assigneeId);
-            const creatorProfileRef = db.collection('profiles').doc(creatorId);
-
-            const [assigneeDoc, creatorDoc] = await Promise.all([
-                transaction.get(assigneeProfileRef),
-                transaction.get(creatorProfileRef)
-            ]);
+            
+            const assigneeDoc = await transaction.get(assigneeProfileRef);
 
             if (!assigneeDoc.exists) {
-                // If assignee doesn't exist, refund the creator
+                // If assignee doesn't exist, we must refund the creator since credits were already held.
+                const creatorProfileRef = db.collection('profiles').doc(creatorId);
                 transaction.update(creatorProfileRef, { credits: admin.firestore.FieldValue.increment(amount) });
                 transaction.update(taskRef, { 
                     status: 'CANCELLED',
@@ -375,6 +384,7 @@ export const approveTask = functions.https.onCall(async (data, context) => {
             }
             
             // Pay assignee
+            const assigneeCurrentBalance = assigneeDoc.data()?.credits ?? 0;
             transaction.update(assigneeProfileRef, { 
                 credits: admin.firestore.FieldValue.increment(amount),
                 reputation: admin.firestore.FieldValue.increment(1),
@@ -387,6 +397,7 @@ export const approveTask = functions.https.onCall(async (data, context) => {
                 amount: amount,
                 description: `Reward for task: ${taskData["Task title"]}`,
                 created_at: admin.firestore.FieldValue.serverTimestamp(),
+                balance_after: assigneeCurrentBalance + amount,
                 meta: { taskId: taskId }
             });
             
@@ -438,5 +449,7 @@ export const updateUserProfile = functions.https.onCall(async (data, context) =>
         return { success: false, message: "Error updating user profile." };
     }
 });
+
+    
 
     
