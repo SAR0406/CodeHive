@@ -3,7 +3,7 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { CreditCard, Loader2, Star, ArrowRight, TrendingUp, TrendingDown } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -42,7 +42,7 @@ export default function BillingPage() {
     
     const unsubscribeTasks = onTasksUpdateForUser(db, user.uid, (userTasks) => {
         const openTasks = userTasks.filter(task => task.status === 'OPEN' || task.status === 'ASSIGNED' || task.status === 'COMPLETED');
-        const totalEscrow = openTasks.reduce((acc, task) => acc + task.credit_reward, 0);
+        const totalEscrow = openTasks.reduce((acc, task) => acc + task['Credit Reward'], 0);
         setEscrowedCredits(totalEscrow);
     });
 
@@ -180,5 +180,4 @@ export default function BillingPage() {
       </div>
     </div>
   );
-
-    
+}

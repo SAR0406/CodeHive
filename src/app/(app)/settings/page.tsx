@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, CreditCard, HardDrive, LogOut, Moon, Palette, Shield, Sun, User, UserCheck, Database, Loader2 } from "lucide-react";
+import { Bell, CreditCard, HardDrive, LogOut, Moon, Palette, Shield, Sun, User, UserCheck, Database, Loader2, Settings as SettingsIcon } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from 'next-themes';
 import { useAuth } from "@/hooks/use-auth";
@@ -15,10 +16,11 @@ import { seedDatabase } from "@/lib/firebase/credits";
 
 
 export default function SettingsPage() {
-    const { toast } = useTheme()
+    const { toast } = useToast();
+    const { setTheme, theme } = useTheme()
     const { user } = useAuth();
     const { app } = useFirebase();
-    const [isSeeding, setIsSeeding = false);
+    const [isSeeding, setIsSeeding] = useState(false);
 
     // This is a simple way to restrict seeding to a specific admin user for this demo.
     // In a real app, you would use custom claims or a more robust role system.
@@ -59,134 +61,111 @@ export default function SettingsPage() {
 
 
     return (
-        
-            
-                
-                    
-                        
-                    
-                    
-                        Manage your account, appearance, and security settings.
-                    
-                
-            
+        <div className="flex flex-col gap-8">
+             <div>
+                <h1 className="font-headline text-3xl md:text-4xl font-semibold flex items-center gap-3">
+                    <SettingsIcon className="size-8 text-accent" />
+                    <span>Settings</span>
+                </h1>
+                <p className="text-muted-foreground mt-2">
+                    Manage your account, appearance, and security settings.
+                </p>
+            </div>
 
-            
-                
-                    
-                        
-                            
-                            
-                            
-                             My Account
-                            Manage your profile, billing, and subscription plan.
-                            
-                        
-                        
-                            
-                                
-                                    
-                                
-                                
-                                    
-                                        Profile
-                                        Update your name, email, and photo.
-                                    
-                                
-                                Manage
-                            
-                             
-                                
-                                    
-                                
-                                
-                                    
-                                        Billing & Plan
-                                        Manage your subscription and credits.
-                                    
-                                
-                                Manage
-                            
-                        
-                    
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div className="flex flex-col gap-8">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><User /> My Account</CardTitle>
+                            <CardDescription>Manage your profile, billing, and subscription plan.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <Link href="/profile" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted">
+                                <div className="flex items-center gap-3">
+                                    <UserCheck className="text-muted-foreground"/>
+                                    <div>
+                                        <p>Profile</p>
+                                        <p className="text-xs text-muted-foreground">Update your name, email, and photo.</p>
+                                    </div>
+                                </div>
+                                <Button variant="outline">Manage</Button>
+                            </Link>
+                             <Link href="/billing" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted">
+                                <div className="flex items-center gap-3">
+                                    <CreditCard className="text-muted-foreground"/>
+                                    <div>
+                                        <p>Billing & Plan</p>
+                                        <p className="text-xs text-muted-foreground">Manage your subscription and credits.</p>
+                                    </div>
+                                </div>
+                                <Button variant="outline">Manage</Button>
+                            </Link>
+                        </CardContent>
+                    </Card>
 
-                    
-                        
-                            
-                            
-                            
-                             Notifications
-                            Choose how you want to be notified.
-                            
-                        
-                        
-                             
-                                Email Notifications
-                                
-                             
-                             
-                                Push Notifications
-                                
-                             
-                        
-                    
+                    <Card>
+                        <CardHeader>
+                             <CardTitle className="flex items-center gap-2"><Bell /> Notifications</CardTitle>
+                             <CardDescription>Choose how you want to be notified.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                             <div className="flex items-center justify-between">
+                                <Label htmlFor="email-notifications">Email Notifications</Label>
+                                <Switch id="email-notifications" defaultChecked/>
+                             </div>
+                             <div className="flex items-center justify-between">
+                                <Label htmlFor="push-notifications">Push Notifications</Label>
+                                <Switch id="push-notifications" />
+                             </div>
+                        </CardContent>
+                    </Card>
 
                      {user && user.uid === ADMIN_UID && (
-                        
-                            
-                            
-                            
-                             Admin Tools
-                            Initialize the database with sample data. This should only be run once.
-                            
-                        
-                        
-                            
-                                {isSeeding ?  Seeding... : 'Seed Database'}
-                            
-                        
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2"><Database /> Admin Tools</CardTitle>
+                                <CardDescription>Initialize the database with sample data. This should only be run once.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Button onClick={handleSeedDatabase} disabled={isSeeding}>
+                                    {isSeeding ? <><Loader2 className="mr-2 animate-spin"/> Seeding...</> : 'Seed Database'}
+                                </Button>
+                            </CardContent>
+                        </Card>
                     )}
-                
+                </div>
 
-                
-                    
-                        
-                            
-                            
-                            
-                             Appearance
-                            Customize the look and feel of the app.
-                            
-                        
-                        
-                             
-                                Theme
-                                
-                                    
-                                    
-                                
-                           
-                        
-                    
+                <div className="flex flex-col gap-8">
+                    <Card>
+                         <CardHeader>
+                             <CardTitle className="flex items-center gap-2"><Palette /> Appearance</CardTitle>
+                             <CardDescription>Customize the look and feel of the app.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                             <div className="flex items-center justify-between">
+                                <Label>Theme</Label>
+                                <div className="flex items-center gap-2 rounded-lg bg-muted p-1">
+                                    <Button variant={theme === 'light' ? 'secondary' : 'ghost'} size="icon" onClick={() => setTheme('light')}><Sun /></Button>
+                                    <Button variant={theme === 'dark' ? 'secondary' : 'ghost'} size="icon" onClick={() => setTheme('dark')}><Moon /></Button>
+                                </div>
+                           </div>
+                        </CardContent>
+                    </Card>
 
-                    
-                        
-                            
-                            
-                            
-                             Security
-                            Manage your account security.
-                            
-                        
-                        
-                            
-                                
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><Shield /> Security</CardTitle>
+                            <CardDescription>Manage your account security.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Button variant="destructive" onClick={handleLogoutAll}>
+                                <LogOut className="mr-2" />
                                 Log Out From All Devices
-                            
-                        
-                    
-                
-            
-        
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        </div>
     );
 }
