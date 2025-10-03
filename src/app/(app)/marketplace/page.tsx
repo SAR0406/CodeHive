@@ -29,7 +29,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { LayoutTemplate, Star, Handshake, Loader2, PlusCircle, CheckCircle } from 'lucide-react';
+import { LayoutTemplate, Star, Handshake, Loader2, PlusCircle, CheckCircle, AlertTriangle } from 'lucide-react';
 import type { Task } from '@/lib/firebase/data/get-tasks';
 import { createTaskRequest, onTaskRequestUpdate, acceptTask, completeTask, approveTask, onTasksUpdate } from '@/lib/firebase/data/get-tasks';
 import { useFirebase } from '@/lib/firebase/client-provider';
@@ -146,8 +146,6 @@ export default function MarketplacePage() {
                 });
                 unsubscribe(); // Stop listening
             }
-            // If successful, the request doc will be deleted, and the onSnapshot listener will stop.
-            // The main `onTasksUpdate` listener will then pick up the new task.
         });
 
     } catch (error: any) {
@@ -157,8 +155,26 @@ export default function MarketplacePage() {
     }
   }
 
+  const getBadgeForStatus = (status: Task['status']) => {
+    switch (status) {
+        case 'OPEN':
+            return <Badge variant="default" className="capitalize">{status.toLowerCase()}</Badge>;
+        case 'processing':
+            return <Badge variant="secondary" className="capitalize animate-pulse"><Loader2 className="mr-1 h-3 w-3 animate-spin" /> {status.toLowerCase()}</Badge>;
+        case 'error':
+             return <Badge variant="destructive" className="capitalize"><AlertTriangle className="mr-1 h-3 w-3" /> {status.toLowerCase()}</Badge>;
+        default:
+            return <Badge variant="secondary" className="capitalize">{status.toLowerCase()}</Badge>;
+    }
+  }
+
   const getActionForTask = (task: Task) => {
     if (!user) return { label: 'Log in to Participate', action: 'accept' as ActionType, icon: Handshake, disabled: true, variant: 'secondary' as const };
+    
+    // Default for unprocessed tasks
+    if (task.status === 'processing' || task.status === 'error') {
+         return { label: 'Processing...', action: 'accept' as ActionType, icon: Loader2, disabled: true, variant: 'secondary' as const, className: 'animate-spin' };
+    }
 
     switch (task.status) {
       case 'OPEN':
@@ -230,14 +246,14 @@ export default function MarketplacePage() {
              ))
           ) : (
             tasks.map((task) => {
-              const { label, action, icon: Icon, disabled, variant } = getActionForTask(task);
+              const { label, action, icon: Icon, disabled, variant, className } = getActionForTask(task);
               return (
                 <Card key={task.id} className="flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1">
                   <div>
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <CardTitle className="leading-tight">{task.task_title}</CardTitle>
-                        <Badge variant={task.status === 'OPEN' ? 'default' : 'secondary'} className="capitalize">{task.status.toLowerCase()}</Badge>
+                        {getBadgeForStatus(task.status)}
                       </div>
                       <CardDescription className="line-clamp-2">{task.description}</CardDescription>
                     </CardHeader>
@@ -253,7 +269,7 @@ export default function MarketplacePage() {
                       {task.credit_reward.toLocaleString()}
                     </div>
                     <Button onClick={() => handleTaskAction(task, action)} disabled={disabled} variant={variant}>
-                      <Icon className="mr-2" />
+                      <Icon className={`mr-2 ${className || ''}`} />
                       {label}
                     </Button>
                   </CardFooter>
@@ -262,6 +278,13 @@ export default function MarketplacePage() {
             })
           )}
         </div>
+         { !isLoadingTasks && tasks.length === 0 && (
+            <div className="text-center py-16 text-muted-foreground">
+                <LayoutTemplate className="mx-auto h-12 w-12" />
+                <h3 className="mt-4 text-lg font-semibold">No tasks in the marketplace yet.</h3>
+                <p className="mt-2 text-sm">Be the first to create one!</p>
+            </div>
+        )}
       </div>
 
        <AlertDialog open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
@@ -327,5 +350,3 @@ export default function MarketplacePage() {
       </>
   );
 }
-
-    
