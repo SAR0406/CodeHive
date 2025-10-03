@@ -3,7 +3,7 @@
 
 import type { FirebaseApp } from "firebase/app";
 import type { Firestore } from "firebase/firestore";
-import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp, doc } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp, doc, where } from "firebase/firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
 
 export interface Task {
@@ -12,7 +12,7 @@ export interface Task {
   description: string;
   tags: string[];
   "Credit Reward": number;
-  status: 'OPEN' | 'ASSIGNED' | 'PENDING_APPROVAL' | 'REJECTED' | 'PAID' | 'CANCELLED';
+  status: 'OPEN' | 'ASSIGNED' | 'PENDING_APPROVAL' | 'REJECTED' | 'PAID' | 'CANCELLED' | 'processing';
   created_by: string; // userId
   assigned_to?: string; // userId
   created_at: { seconds: number, nanoseconds: number }; // Firestore Timestamp
@@ -95,13 +95,26 @@ export async function completeTask(app: FirebaseApp, taskId: string, submission:
 // --- Real-time Read Operations ---
 
 export function onTasksUpdate(db: Firestore, callback: (tasks: Task[]) => void): () => void {
-    const q = query(collection(db, 'marketplace'), orderBy('created_at', 'desc'));
+    const q = query(collection(db, 'task_requests'), orderBy('created_at', 'desc'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-        const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
+        const tasks = snapshot.docs.map(doc => {
+            const data = doc.data();
+            // Transform the data from task_requests to match the Task interface
+            return {
+                id: doc.id,
+                "Task title": data['Task title'] || data.task_title, // Handle both field names
+                description: data.description,
+                tags: data.tags || [],
+                "Credit Reward": data['Credit Reward'] || data.credit_reward, // Handle both field names
+                status: data.status,
+                created_by: data.uid, // The request stores the creator UID as 'uid'
+                created_at: data.created_at,
+            } as Task;
+        });
         callback(tasks);
     }, (error) => {
-      console.error("Error fetching real-time tasks from marketplace:", error);
+      console.error("Error fetching real-time tasks from task_requests:", error);
       callback([]); // Send empty array on error
     });
 

@@ -71,6 +71,11 @@ export default function MarketplacePage() {
       toast({ title: 'Authentication Error', description: 'You must be logged in.', variant: 'destructive' });
       return;
     }
+    // Since we now read from task_requests, some actions might not be possible
+    if (task.status === 'processing') {
+      toast({ title: 'Task is Processing', description: 'This task is still being processed and cannot be accepted yet.', variant: 'default' });
+      return;
+    }
     setSelectedTask(task);
     if (action === 'complete') {
         setIsDialogOpen('complete');
@@ -185,6 +190,8 @@ export default function MarketplacePage() {
 
   const getBadgeForStatus = (status: Task['status']) => {
     switch (status) {
+        case 'processing':
+             return <Badge variant="secondary" className="capitalize animate-pulse"><Loader2 className="mr-1 h-3 w-3 animate-spin" /> {status.toLowerCase()}</Badge>;
         case 'OPEN':
             return <Badge variant="default" className="capitalize bg-green-500/80 hover:bg-green-500/90">{status.toLowerCase()}</Badge>;
         case 'ASSIGNED':
@@ -204,6 +211,11 @@ export default function MarketplacePage() {
   const getActionForTask = (task: Task) => {
     if (!user) return { label: 'Log in to Participate', action: 'accept' as ActionType, icon: Handshake, disabled: true, variant: 'secondary' as const };
     
+    // Actions are disabled for tasks that are still processing
+    if (task.status === 'processing') {
+      return { label: 'Processing...', action: 'accept' as ActionType, icon: Loader2, disabled: true, variant: 'secondary' as const, className: 'animate-spin' };
+    }
+
     switch (task.status) {
       case 'OPEN':
         return { label: 'Accept Task', action: 'accept' as ActionType, icon: Handshake, disabled: task.created_by === user.uid, variant: 'default' as const };
