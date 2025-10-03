@@ -1,15 +1,22 @@
 
 'use server';
 /**
- * @fileOverview An AI flow to verify if a completed task meets its requirements.
- *
- * - verifyTask - A function that takes the task details and submission and returns a verification.
- * - VerifyTaskInput - The input type for the verifyTask function.
- * - VerifyTaskOutput - The return type for the verifyTask function.
+ * @fileOverview This file is intended to run in a Node.js environment for Firebase Functions.
+ * It is a copy of the client-side Genkit flow for verifying tasks, adapted for server-side execution.
  */
 
-import { ai } from '@/ai/genkit';
+import { genkit, configureGenkit } from 'genkit';
+import { googleAI } from '@genkit-ai/google-ai';
 import { z } from 'zod';
+
+// Initialize Genkit for the server environment
+configureGenkit({
+  plugins: [
+    googleAI(),
+  ],
+  logLevel: "debug",
+  enableTracingAndMetrics: true,
+});
 
 const VerifyTaskInputSchema = z.object({
   taskTitle: z.string().describe('The original title of the task that was assigned.'),
@@ -26,15 +33,15 @@ const VerifyTaskOutputSchema = z.object({
 export type VerifyTaskOutput = z.infer<typeof VerifyTaskOutputSchema>;
 
 
-export async function verifyTask(input: VerifyTaskInput): Promise<VerifyTaskOutput> {
-  return verifyTaskFlow(input);
-}
-
-const prompt = ai.definePrompt({
-  name: 'verifyTaskPrompt',
-  input: { schema: VerifyTaskInputSchema },
-  output: { schema: VerifyTaskOutputSchema },
-  prompt: `You are an expert project manager and quality assurance specialist for a software development marketplace. Your job is to verify if the work submitted by a user correctly completes the assigned task.
+const verifyTaskFlow = genkit.defineFlow(
+  {
+    name: 'verifyTaskFlow',
+    inputSchema: VerifyTaskInputSchema,
+    outputSchema: VerifyTaskOutputSchema,
+  },
+  async (input) => {
+    
+    const prompt = `You are an expert project manager and quality assurance specialist for a software development marketplace. Your job is to verify if the work submitted by a user correctly completes the assigned task.
 
     Analyze the original task requirements and the user's submission.
 
@@ -45,27 +52,28 @@ const prompt = ai.definePrompt({
 
     - Provide a very brief, one or two-sentence explanation for your decision in 'verificationNotes'.
 
-    TASK TITLE: {{{taskTitle}}}
-    TASK DESCRIPTION: {{{taskDescription}}}
+    TASK TITLE: ${input.taskTitle}
+    TASK DESCRIPTION: ${input.taskDescription}
 
     SUBMISSION TO VERIFY:
     '''
-    {{{taskSubmission}}}
+    ${input.taskSubmission}
     '''
-  `,
-});
+  `;
+    
+    const llmResponse = await genkit.generate({
+      prompt: prompt,
+      model: googleAI('gemini-1.5-flash-latest'),
+      output: {
+        schema: VerifyTaskOutputSchema,
+      },
+    });
 
-const verifyTaskFlow = ai.defineFlow(
-  {
-    name: 'verifyTaskFlow',
-    inputSchema: VerifyTaskInputSchema,
-    outputSchema: VerifyTaskOutputSchema,
-  },
-  async (input) => {
-    // In a real-world scenario, you might add more logic here.
-    // For example, checking if a submitted URL is reachable,
-    // or running a code snippet through a linter.
-    const { output } = await prompt(input);
-    return output!;
+    return llmResponse.output()!;
   }
 );
+
+
+export async function verifyTask(input: VerifyTaskInput): Promise<VerifyTaskOutput> {
+  return await verifyTaskFlow.run(input);
+}

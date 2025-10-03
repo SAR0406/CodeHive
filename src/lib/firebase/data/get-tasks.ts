@@ -3,7 +3,7 @@
 
 import type { FirebaseApp } from "firebase/app";
 import type { Firestore } from "firebase/firestore";
-import { collection, onSnapshot, query, orderBy, where, addDoc, serverTimestamp, doc } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp, doc } from "firebase/firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
 
 export interface Task {
@@ -12,11 +12,13 @@ export interface Task {
   description: string;
   tags: string[];
   "Credit Reward": number;
-  status: 'OPEN' | 'ASSIGNED' | 'COMPLETED' | 'PAID' | 'CANCELLED' | 'processing' | 'error';
+  status: 'OPEN' | 'ASSIGNED' | 'PENDING_APPROVAL' | 'REJECTED' | 'PAID' | 'CANCELLED';
   created_by: string; // userId
   assigned_to?: string; // userId
   created_at: { seconds: number, nanoseconds: number }; // Firestore Timestamp
   updated_at?: { seconds: number, nanoseconds: number }; // Firestore Timestamp
+  submission?: string;
+  verification_notes?: string;
 }
 
 // --- Types for callable functions ---
@@ -33,6 +35,10 @@ interface TaskActionData {
     taskId: string;
 }
 
+interface CompleteTaskData extends TaskActionData {
+    submission: string;
+}
+
 interface FunctionResult {
     success: boolean;
     message: string;
@@ -47,10 +53,6 @@ const getCallable = <RequestData, ResponseData>(app: FirebaseApp, functionName: 
 
 // --- Write Operations ---
 
-/**
- * Creates a task request in Firestore, which is then processed by a Cloud Function trigger.
- * This provides a more robust and scalable way to handle task creation.
- */
 export async function createTaskRequest(db: Firestore, taskData: CreateTaskData): Promise<string> {
     try {
         const requestRef = await addDoc(collection(db, 'task_requests'), {
@@ -77,10 +79,10 @@ export async function acceptTask(app: FirebaseApp, taskId: string): Promise<Func
     }
 }
 
-export async function completeTask(app: FirebaseApp, taskId: string): Promise<FunctionResult> {
-    const completeTaskFn = getCallable<TaskActionData, FunctionResult>(app, 'completeTask');
+export async function completeTask(app: FirebaseApp, taskId: string, submission: string): Promise<FunctionResult> {
+    const completeTaskFn = getCallable<CompleteTaskData, FunctionResult>(app, 'completeTask');
     try {
-        const result = await completeTaskFn({ taskId });
+        const result = await completeTaskFn({ taskId, submission });
         return result.data as FunctionResult;
     } catch (error: any) {
         console.error("Error calling completeTask:", error);
@@ -88,68 +90,23 @@ export async function completeTask(app: FirebaseApp, taskId: string): Promise<Fu
     }
 }
 
-export async function approveTask(app: FirebaseApp, taskId: string): Promise<FunctionResult> {
-    const approveTaskFn = getCallable<TaskActionData, FunctionResult>(app, 'approveTask');
-    try {
-        const result = await approveTaskFn({ taskId });
-        return result.data as FunctionResult;
-    } catch (error: any) {
-        console.error("Error calling approveTask:", error);
-        throw new Error(error.message || 'Failed to approve task.');
-    }
-}
-
 
 // --- Real-time Read Operations ---
 
 export function onTasksUpdate(db: Firestore, callback: (tasks: Task[]) => void): () => void {
-    const q = query(collection(db, 'task_requests'), orderBy('created_at', 'desc'));
+    const q = query(collection(db, 'marketplace'), orderBy('created_at', 'desc'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-        const tasks = snapshot.docs.map(doc => {
-            const data = doc.data();
-            // This maps the data from task_requests to the Task interface the UI expects.
-            return {
-                id: doc.id,
-                "Task title": data["Task title"] || data.task_title, // Handle both field names
-                description: data.description,
-                tags: data.tags || [],
-                "Credit Reward": data["Credit Reward"] || data.credit_reward, // Handle both field names
-                status: data.status || 'processing',
-                created_by: data.uid, // The request creator
-                created_at: data.created_at,
-            } as Task;
-        });
+        const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
         callback(tasks);
     }, (error) => {
-      console.error("Error fetching real-time tasks from task_requests:", error);
+      console.error("Error fetching real-time tasks from marketplace:", error);
       callback([]); // Send empty array on error
     });
 
     return unsubscribe;
 }
 
-export function onTasksUpdateForUser(db: Firestore, userId: string, callback: (tasks: Task[]) => void): () => void {
-    const q = query(collection(db, 'marketplace'), where('created_by', '==', userId), orderBy('created_at', 'desc'));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
-        callback(tasks);
-    }, (error) => {
-        console.error("Error fetching real-time user tasks:", error);
-        callback([]);
-    });
-
-    return unsubscribe;
-}
-
-/**
- * Listens to a specific task request document to provide real-time feedback on its processing status.
- * @param db - Firestore instance.
- * @param requestId - The ID of the task request document to listen to.
- * @param callback - Function to call with the status and potential error message.
- * @returns An unsubscribe function.
- */
 export function onTaskRequestUpdate(db: Firestore, requestId: string, callback: (status: { status: string; error?: string }) => void): () => void {
     const requestDocRef = doc(db, 'task_requests', requestId);
 

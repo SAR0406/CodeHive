@@ -15,9 +15,12 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+    "@genkit-ai/google-ai": "^1.19.3",
     "cors": "^2.8.5",
     "firebase-admin": "^12.0.0",
-    "firebase-functions": "^5.0.0"
+    "firebase-functions": "^5.0.0",
+    "genkit": "^1.19.3",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.12.0",
@@ -29,4 +32,3 @@
   },
   "private": true
 }
-

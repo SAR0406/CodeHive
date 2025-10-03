@@ -29,12 +29,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { LayoutTemplate, Star, Handshake, Loader2, PlusCircle, CheckCircle, AlertTriangle } from 'lucide-react';
+import { LayoutTemplate, Star, Handshake, Loader2, PlusCircle, CheckCircle, AlertTriangle, Send } from 'lucide-react';
 import type { Task } from '@/lib/firebase/data/get-tasks';
-import { createTaskRequest, onTaskRequestUpdate, acceptTask, completeTask, approveTask, onTasksUpdate } from '@/lib/firebase/data/get-tasks';
+import { createTaskRequest, onTaskRequestUpdate, acceptTask, completeTask, onTasksUpdate } from '@/lib/firebase/data/get-tasks';
 import { useFirebase } from '@/lib/firebase/client-provider';
+import { verifyTask } from '@/ai/flows/verify-task-flow';
 
-type ActionType = 'accept' | 'complete' | 'approve';
+type ActionType = 'accept' | 'complete';
+type DialogType = 'create' | 'complete' | 'confirmAction';
 
 export default function MarketplacePage() {
   const { user } = useAuth();
@@ -43,11 +45,14 @@ export default function MarketplacePage() {
   
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(true);
-  const [selectedTask, setSelectedTask] = useState<{ task: Task, action: ActionType } | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [actionType, setActionType] = useState<ActionType | null>(null);
+
   const [isActionLoading, setIsActionLoading] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState<DialogType | null>(null);
   
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isCreateLoading, setIsCreateLoading] = useState(false);
+  const [taskSubmission, setTaskSubmission] = useState('');
+
 
   useEffect(() => {
     if (!db) return;
@@ -61,44 +66,61 @@ export default function MarketplacePage() {
     return () => unsubscribe();
   }, [db]);
 
-
-  const handleTaskAction = (task: Task, action: ActionType) => {
+  const handleTaskActionClick = (task: Task, action: ActionType) => {
     if (!user) {
       toast({ title: 'Authentication Error', description: 'You must be logged in.', variant: 'destructive' });
       return;
     }
-    setSelectedTask({ task, action });
-  };
-
-  const handleConfirmAction = async () => {
-    if (!selectedTask || !user || !app) return;
-
-    setIsActionLoading(true);
-    const { task, action } = selectedTask;
-    
-    try {
-      let resultMessage = '';
-      if (action === 'accept') {
-        const result = await acceptTask(app, task.id);
-        resultMessage = result.message;
-      } else if (action === 'complete') {
-        const result = await completeTask(app, task.id);
-        resultMessage = result.message;
-      } else if (action === 'approve') {
-        const result = await approveTask(app, task.id);
-        resultMessage = result.message;
-      }
-      
-      toast({ title: 'Success!', description: resultMessage });
-    } catch (error: any) {
-      console.error(`Error performing action: ${action}`, error);
-      toast({ title: 'Action Failed', description: error.message || 'Could not complete the action. Please try again.', variant: 'destructive' });
-    } finally {
-      setIsActionLoading(false);
-      setSelectedTask(null);
+    setSelectedTask(task);
+    if (action === 'complete') {
+        setIsDialogOpen('complete');
+    } else {
+        setActionType(action);
+        setIsDialogOpen('confirmAction');
     }
   };
   
+  const handleConfirmAccept = async () => {
+    if (!selectedTask || !user || !app) return;
+
+    setIsActionLoading(true);
+    
+    try {
+      const result = await acceptTask(app, selectedTask.id);
+      toast({ title: 'Success!', description: result.message });
+    } catch (error: any) {
+      console.error(`Error performing action: accept`, error);
+      toast({ title: 'Action Failed', description: error.message || 'Could not complete the action. Please try again.', variant: 'destructive' });
+    } finally {
+      setIsActionLoading(false);
+      setIsDialogOpen(null);
+      setSelectedTask(null);
+    }
+  };
+
+  const handleConfirmComplete = async () => {
+    if (!selectedTask || !user || !app || !taskSubmission) {
+      toast({ title: 'Submission is empty', description: 'Please provide proof of your work.', variant: 'destructive' });
+      return;
+    }
+
+    setIsActionLoading(true);
+
+    try {
+      const result = await completeTask(app, selectedTask.id, taskSubmission);
+      toast({ title: 'Task Submitted for Verification!', description: result.message });
+    } catch (error: any) {
+      console.error(`Error completing task:`, error);
+      toast({ title: 'Submission Failed', description: error.message || 'Could not submit your work. Please try again.', variant: 'destructive' });
+    } finally {
+      setIsActionLoading(false);
+      setIsDialogOpen(null);
+      setSelectedTask(null);
+      setTaskSubmission('');
+    }
+  }
+
+
   const handleCreateTask = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user || !db) {
@@ -125,7 +147,7 @@ export default function MarketplacePage() {
       return;
     }
 
-    setIsCreateLoading(true);
+    setIsActionLoading(true);
 
     try {
         const requestId = await createTaskRequest(db, { 
@@ -138,9 +160,9 @@ export default function MarketplacePage() {
         
         toast({
             title: "Task Submitted!",
-            description: "Your task is being processed. This may take a moment."
+            description: "Your task is being processed and will appear shortly."
         });
-        setIsCreateDialogOpen(false);
+        setIsDialogOpen(null);
 
         // Listen for the outcome of the backend function
         const unsubscribe = onTaskRequestUpdate(db, requestId, (update) => {
@@ -157,65 +179,56 @@ export default function MarketplacePage() {
     } catch (error: any) {
         toast({ title: 'Error Submitting Task', description: error.message || 'An unexpected error occurred.', variant: 'destructive' });
     } finally {
-        setIsCreateLoading(false);
+        setIsActionLoading(false);
     }
   }
 
   const getBadgeForStatus = (status: Task['status']) => {
     switch (status) {
         case 'OPEN':
-            return <Badge variant="default" className="capitalize">{status.toLowerCase()}</Badge>;
-        case 'processing':
-            return <Badge variant="secondary" className="capitalize animate-pulse"><Loader2 className="mr-1 h-3 w-3 animate-spin" /> {status.toLowerCase()}</Badge>;
-        case 'error':
+            return <Badge variant="default" className="capitalize bg-green-500/80 hover:bg-green-500/90">{status.toLowerCase()}</Badge>;
+        case 'ASSIGNED':
+             return <Badge variant="secondary" className="capitalize bg-blue-500/80 hover:bg-blue-500/90 text-white">{status.toLowerCase()}</Badge>;
+        case 'PENDING_APPROVAL':
+            return <Badge variant="secondary" className="capitalize animate-pulse"><Loader2 className="mr-1 h-3 w-3 animate-spin" /> Verifying...</Badge>;
+        case 'PAID':
+            return <Badge variant="outline" className="capitalize border-green-500 text-green-500"><CheckCircle className="mr-1 h-3 w-3" /> {status.toLowerCase()}</Badge>;
+        case 'CANCELLED':
+        case 'REJECTED':
              return <Badge variant="destructive" className="capitalize"><AlertTriangle className="mr-1 h-3 w-3" /> {status.toLowerCase()}</Badge>;
         default:
-            return <Badge variant="secondary" className="capitalize">{status.toLowerCase()}</Badge>;
+            return <Badge variant="secondary" className="capitalize">{status || 'Unknown'}</Badge>;
     }
   }
 
   const getActionForTask = (task: Task) => {
     if (!user) return { label: 'Log in to Participate', action: 'accept' as ActionType, icon: Handshake, disabled: true, variant: 'secondary' as const };
     
-    // Default for unprocessed tasks
-    if (task.status === 'processing' || task.status === 'error') {
-         return { label: 'Processing...', action: 'accept' as ActionType, icon: Loader2, disabled: true, variant: 'secondary' as const, className: 'animate-spin' };
-    }
-
     switch (task.status) {
       case 'OPEN':
         return { label: 'Accept Task', action: 'accept' as ActionType, icon: Handshake, disabled: task.created_by === user.uid, variant: 'default' as const };
       case 'ASSIGNED':
         if (task.assigned_to === user.uid) {
-          return { label: 'Mark as Complete', action: 'complete' as ActionType, icon: CheckCircle, disabled: false, variant: 'default' as const };
+          return { label: 'Submit Work', action: 'complete' as ActionType, icon: Send, disabled: false, variant: 'default' as const };
         }
         return { label: 'Assigned', action: 'accept' as ActionType, icon: Handshake, disabled: true, variant: 'secondary' as const };
-      case 'COMPLETED':
-        if (task.created_by === user.uid) {
-          return { label: 'Approve & Pay', action: 'approve' as ActionType, icon: Star, disabled: false, variant: 'default' as const };
-        }
-        return { label: 'Pending Approval', action: 'complete' as ActionType, icon: CheckCircle, disabled: true, variant: 'secondary' as const };
+      case 'PENDING_APPROVAL':
+        return { label: 'Verifying...', action: 'complete' as ActionType, icon: Loader2, disabled: true, variant: 'secondary' as const, className: 'animate-spin' };
       case 'PAID':
-        return { label: 'Completed & Paid', action: 'approve' as ActionType, icon: Star, disabled: true, variant: 'outline' as const };
+        return { label: 'Completed & Paid', action: 'accept' as ActionType, icon: Star, disabled: true, variant: 'outline' as const };
+      case 'CANCELLED':
+      case 'REJECTED':
+        return { label: task.status, action: 'accept' as ActionType, icon: AlertTriangle, disabled: true, variant: 'destructive' as const };
       default:
-        return { label: 'No Action', action: 'accept' as ActionType, icon: Handshake, disabled: true, variant: 'secondary' as const };
+        return { label: 'Unavailable', action: 'accept' as ActionType, icon: Handshake, disabled: true, variant: 'secondary' as const };
     }
   };
 
-  const getDialogText = () => {
-    if (!selectedTask) return { title: '', description: '' };
-    const { task, action } = selectedTask;
-    switch (action) {
-      case 'accept':
-        return { title: 'Accept Task', description: `Are you sure you want to accept the task "${task['Task title']}"?` };
-      case 'complete':
-        return { title: 'Mark as Complete', description: `Are you ready to mark "${task['Task title']}" as complete? This will notify the creator for approval.` };
-      case 'approve':
-        return { title: 'Approve & Release Credits', description: `Are you sure you want to approve this work? This will transfer ${task['Credit Reward'].toLocaleString()} credits to the assignee.` };
-      default:
-        return { title: 'Confirm Action', description: 'Are you sure you want to proceed?' };
-    }
-  };
+  const closeDialogs = () => {
+    setIsDialogOpen(null);
+    setSelectedTask(null);
+    setActionType(null);
+  }
 
   return (
     <>
@@ -228,7 +241,7 @@ export default function MarketplacePage() {
                 </h1>
                 <p className="text-muted-foreground mt-2">Find tasks, contribute to projects, and earn credits.</p>
             </div>
-            <Button onClick={() => setIsCreateDialogOpen(true)} disabled={!user}>
+            <Button onClick={() => setIsDialogOpen('create')} disabled={!user}>
                 <PlusCircle className="mr-2" /> Create New Task
             </Button>
         </div>
@@ -274,7 +287,7 @@ export default function MarketplacePage() {
                       <Star className="w-5 h-5 text-yellow-400 fill-current" />
                       {task["Credit Reward"].toLocaleString()}
                     </div>
-                    <Button onClick={() => handleTaskAction(task, action)} disabled={disabled} variant={variant}>
+                    <Button onClick={() => handleTaskActionClick(task, action)} disabled={disabled} variant={variant}>
                       <Icon className={`mr-2 ${className || ''}`} />
                       {label}
                     </Button>
@@ -293,35 +306,55 @@ export default function MarketplacePage() {
         )}
       </div>
 
-       <AlertDialog open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
+       <AlertDialog open={isDialogOpen === 'confirmAction'} onOpenChange={(open) => !open && closeDialogs()}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{getDialogText().title}</AlertDialogTitle>
-            <AlertDialogDescription>{getDialogText().description}</AlertDialogDescription>
+            <AlertDialogTitle>Accept Task</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to accept the task "{selectedTask?.['Task title']}"?</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isActionLoading}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmAction} disabled={isActionLoading}>
-              {isActionLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Confirming...
-                </>
-              ) : (
-                'Confirm'
-              )}
+            <AlertDialogAction onClick={handleConfirmAccept} disabled={isActionLoading}>
+              {isActionLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Confirming...</> : 'Confirm'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+       <Dialog open={isDialogOpen === 'complete'} onOpenChange={(open) => !open && closeDialogs()}>
+            <DialogContent>
+                 <DialogHeader>
+                    <DialogTitle>Submit Work for: {selectedTask?.['Task title']}</DialogTitle>
+                    <DialogDescription>
+                        Provide your completed work below. This will be verified by our AI supervisor.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    <Label htmlFor="submission">Proof of Work</Label>
+                    <Textarea 
+                        id="submission"
+                        value={taskSubmission}
+                        onChange={(e) => setTaskSubmission(e.target.value)}
+                        placeholder="e.g., paste a link to your GitHub repo, a code snippet, or a description of what you did."
+                        rows={8}
+                    />
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={closeDialogs} disabled={isActionLoading}>Cancel</Button>
+                    <Button onClick={handleConfirmComplete} disabled={isActionLoading}>
+                        {isActionLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</> : "Submit for AI Verification"}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+       </Dialog>
+
+       <Dialog open={isDialogOpen === 'create'} onOpenChange={(open) => !open && setIsDialogOpen(null)}>
             <DialogContent className="sm:max-w-[525px]">
                 <form onSubmit={handleCreateTask}>
                     <DialogHeader>
                         <DialogTitle>Create New Task</DialogTitle>
                         <DialogDescription>
-                            Post a job to the marketplace. Credits will be held in escrow until you approve the work.
+                            Post a job to the marketplace. Credits will only be deducted when the AI supervisor approves the completed work.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-6">
@@ -343,9 +376,9 @@ export default function MarketplacePage() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
-                        <Button type="submit" disabled={isCreateLoading}>
-                            {isCreateLoading ? (
+                        <Button type="button" variant="outline" onClick={() => setIsDialogOpen(null)}>Cancel</Button>
+                        <Button type="submit" disabled={isActionLoading}>
+                            {isActionLoading ? (
                                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</>
                             ) : 'Submit Task'}
                         </Button>
