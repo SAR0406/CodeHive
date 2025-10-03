@@ -8,10 +8,10 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 
 export interface Task {
   id: string;
-  task_title: string;
+  "Task title": string;
   description: string;
   tags: string[];
-  credit_reward: number;
+  "Credit Reward": number;
   status: 'OPEN' | 'ASSIGNED' | 'COMPLETED' | 'PAID' | 'CANCELLED' | 'processing' | 'error';
   created_by: string; // userId
   assigned_to?: string; // userId
@@ -23,9 +23,9 @@ export interface Task {
 
 interface CreateTaskData {
     uid: string;
-    task_title: string;
+    "Task title": string;
     description: string;
-    credit_reward: number;
+    "Credit Reward": number;
     tags: string[];
 }
 
@@ -103,14 +103,13 @@ export async function approveTask(app: FirebaseApp, taskId: string): Promise<Fun
 // --- Real-time Read Operations ---
 
 export function onTasksUpdate(db: Firestore, callback: (tasks: Task[]) => void): () => void {
-    // Read from task_requests to show all submitted tasks, including those being processed.
-    const q = query(collection(db, 'task_requests'), orderBy('created_at', 'desc'));
+    const q = query(collection(db, 'marketplace'), orderBy('created_at', 'desc'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
         callback(tasks);
     }, (error) => {
-      console.error("Error fetching real-time tasks from task_requests:", error);
+      console.error("Error fetching real-time tasks from marketplace:", error);
       callback([]); // Send empty array on error
     });
 

@@ -169,7 +169,7 @@ export const grantProAccess = functions.https.onCall(async (data, context) => {
 export const processTaskRequest = functions.firestore.document('task_requests/{requestId}')
     .onCreate(async (snap, context) => {
         const requestData = snap.data();
-        const { uid, task_title, description, credit_reward, tags } = requestData;
+        const { uid, "Task title": task_title, description, "Credit Reward": credit_reward, tags } = requestData;
 
         if (!uid || !task_title || typeof credit_reward !== 'number' || credit_reward <= 0) {
             console.error("Invalid task request data:", requestData);
@@ -213,9 +213,9 @@ export const processTaskRequest = functions.firestore.document('task_requests/{r
                 // 3. Create the actual task in the public marketplace
                 transaction.set(marketplaceRef, {
                     id: marketplaceRef.id,
-                    task_title,
+                    "Task title": task_title,
                     description,
-                    credit_reward,
+                    "Credit Reward": credit_reward,
                     tags: tags || [],
                     created_by: uid,
                     status: 'OPEN',
@@ -341,7 +341,7 @@ export const approveTask = functions.https.onCall(async (data, context) => {
             }
 
             const assigneeId = taskData.assigned_to;
-            const amount = taskData.credit_reward;
+            const amount = taskData["Credit Reward"];
             const assigneeProfileRef = db.collection('profiles').doc(assigneeId);
             const creatorProfileRef = db.collection('profiles').doc(creatorId);
 
@@ -363,12 +363,12 @@ export const approveTask = functions.https.onCall(async (data, context) => {
                 transaction.set(creatorTxRef, {
                     type: 'earn',
                     amount: amount,
-                    description: `Refund for task: ${taskData.task_title}`,
+                    description: `Refund for task: ${taskData["Task title"]}`,
                     created_at: admin.firestore.FieldValue.serverTimestamp(),
                      meta: {
                         refund: true,
                         taskId: taskId,
-                        notes: `Refund for task: ${taskData.task_title} (assignee not found)`
+                        notes: `Refund for task: ${taskData["Task title"]} (assignee not found)`
                     }
                 });
                 return;
@@ -385,7 +385,7 @@ export const approveTask = functions.https.onCall(async (data, context) => {
             transaction.set(assigneeTxRef, {
                 type: 'earn',
                 amount: amount,
-                description: `Reward for task: ${taskData.task_title}`,
+                description: `Reward for task: ${taskData["Task title"]}`,
                 created_at: admin.firestore.FieldValue.serverTimestamp(),
                 meta: { taskId: taskId }
             });

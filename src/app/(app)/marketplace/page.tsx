@@ -128,7 +128,13 @@ export default function MarketplacePage() {
     setIsCreateLoading(true);
 
     try {
-        const requestId = await createTaskRequest(db, { uid: user.uid, task_title, description, credit_reward, tags });
+        const requestId = await createTaskRequest(db, { 
+            uid: user.uid, 
+            "Task title": task_title, 
+            description, 
+            "Credit Reward": credit_reward, 
+            tags 
+        });
         
         toast({
             title: "Task Submitted!",
@@ -201,11 +207,11 @@ export default function MarketplacePage() {
     const { task, action } = selectedTask;
     switch (action) {
       case 'accept':
-        return { title: 'Accept Task', description: `Are you sure you want to accept the task "${task.task_title}"?` };
+        return { title: 'Accept Task', description: `Are you sure you want to accept the task "${task['Task title']}"?` };
       case 'complete':
-        return { title: 'Mark as Complete', description: `Are you ready to mark "${task.task_title}" as complete? This will notify the creator for approval.` };
+        return { title: 'Mark as Complete', description: `Are you ready to mark "${task['Task title']}" as complete? This will notify the creator for approval.` };
       case 'approve':
-        return { title: 'Approve & Release Credits', description: `Are you sure you want to approve this work? This will transfer ${task.credit_reward.toLocaleString()} credits to the assignee.` };
+        return { title: 'Approve & Release Credits', description: `Are you sure you want to approve this work? This will transfer ${task['Credit Reward'].toLocaleString()} credits to the assignee.` };
       default:
         return { title: 'Confirm Action', description: 'Are you sure you want to proceed?' };
     }
@@ -252,7 +258,7 @@ export default function MarketplacePage() {
                   <div>
                     <CardHeader>
                       <div className="flex justify-between items-start">
-                        <CardTitle className="leading-tight">{task.task_title}</CardTitle>
+                        <CardTitle className="leading-tight">{task["Task title"]}</CardTitle>
                         {getBadgeForStatus(task.status)}
                       </div>
                       <CardDescription className="line-clamp-2">{task.description}</CardDescription>
@@ -266,7 +272,7 @@ export default function MarketplacePage() {
                   <CardFooter className="flex justify-between items-center bg-muted/50 p-4 rounded-b-lg">
                     <div className="font-bold text-lg text-primary flex items-center gap-2">
                       <Star className="w-5 h-5 text-yellow-400 fill-current" />
-                      {task.credit_reward.toLocaleString()}
+                      {task["Credit Reward"].toLocaleString()}
                     </div>
                     <Button onClick={() => handleTaskAction(task, action)} disabled={disabled} variant={variant}>
                       <Icon className={`mr-2 ${className || ''}`} />
