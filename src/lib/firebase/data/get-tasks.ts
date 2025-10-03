@@ -103,13 +103,26 @@ export async function approveTask(app: FirebaseApp, taskId: string): Promise<Fun
 // --- Real-time Read Operations ---
 
 export function onTasksUpdate(db: Firestore, callback: (tasks: Task[]) => void): () => void {
-    const q = query(collection(db, 'marketplace'), orderBy('created_at', 'desc'));
+    const q = query(collection(db, 'task_requests'), orderBy('created_at', 'desc'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-        const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
+        const tasks = snapshot.docs.map(doc => {
+            const data = doc.data();
+            // This maps the data from task_requests to the Task interface the UI expects.
+            return {
+                id: doc.id,
+                "Task title": data["Task title"] || data.task_title, // Handle both field names
+                description: data.description,
+                tags: data.tags || [],
+                "Credit Reward": data["Credit Reward"] || data.credit_reward, // Handle both field names
+                status: data.status || 'processing',
+                created_by: data.uid, // The request creator
+                created_at: data.created_at,
+            } as Task;
+        });
         callback(tasks);
     }, (error) => {
-      console.error("Error fetching real-time tasks from marketplace:", error);
+      console.error("Error fetching real-time tasks from task_requests:", error);
       callback([]); // Send empty array on error
     });
 
